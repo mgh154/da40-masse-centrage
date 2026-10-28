@@ -182,7 +182,7 @@ td.neg{color:var(--muted)}
 .fres{grid-column:1 / -1;margin:0;font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
 .fres:empty{display:none}
 .fres.bad{color:var(--bad);font-weight:600}
-.fres a,.fres .flink{display:inline;padding:0 4px;min-height:0;font-weight:700;color:var(--sky)}
+.fres a,.fres .flink{display:inline-block;padding:8px 14px;min-height:40px;margin:2px 4px 2px 0;border:1.5px solid var(--sky);border-radius:8px;font-weight:700;color:var(--sky);text-decoration:none;background:transparent;font-size:.9rem}
 body[data-tab="wind"] .fbar,body[data-tab="crp"] .fbar{display:none}
 body main{padding-bottom:170px}
 body[data-tab="wind"] main,body[data-tab="crp"] main{padding-bottom:40px}
@@ -198,6 +198,11 @@ main{padding-left:max(14px, env(safe-area-inset-left, 0px));padding-right:max(14
 .pm{position:absolute;right:38px;min-width:38px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--sky);font:700 1.05rem var(--body);cursor:pointer}
 button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
 .cfm{margin-top:4px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.ftpl{grid-column:1 / -1;margin:0;font-size:.85rem;color:var(--muted)}
+.ftpl.bad{color:var(--bad);font-weight:600}
+.flist .ftl{margin-top:6px;font-size:.85rem;color:var(--muted)}
+.flist .ftl .flink{display:inline;padding:6px 8px;min-height:36px;font-weight:700}
 .pc .fields{align-items:end}
 .grid{grid-template-columns:minmax(0,1fr)}
 .grid>*,.pgrid>*,.pc-grid>*{min-width:0}
@@ -356,10 +361,11 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 <div class="fbar" id="fbar">
   <div class="fbar-in">
     <button type="button" class="flink" id="fsum" aria-expanded="false" aria-controls="flist">Fiche New CAG ▾</button>
-    <ul class="flist" id="flist" hidden><li class="fopt"><label class="fstar"><input type="checkbox" id="fstar"><span>Imprimer aussi les valeurs « à vérifier » (marquées *). Sinon elles restent en N/D.</span></label></li></ul>
+    <ul class="flist" id="flist" hidden><li class="fopt"><label class="fstar"><input type="checkbox" id="fstar"><span>Imprimer aussi les valeurs « à vérifier » (marquées *). Sinon elles restent en N/D.</span></label></li><li class="ftl"><span id="ftlt"></span> <button type="button" class="flink" id="frep">Remplacer</button> <button type="button" class="flink" id="fdel">Effacer</button></li></ul>
     <button type="button" class="fbtn" id="fbtn">Télécharger la fiche New CAG remplie</button>
+    <p class="ftpl" id="ftpl" hidden></p>
     <p class="fres" id="fres" role="status"></p>
-    <input type="file" id="ffile" accept="application/pdf,.pdf" hidden>
+    <input type="file" id="ffile" class="vh" accept="application/pdf,.pdf" tabindex="-1" aria-hidden="true">
   </div>
 </div>
 
@@ -1016,9 +1022,25 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       document.head.appendChild(s);
     });
   }
+  var TMETA = "da40-tpl-v1";
+  function tplMeta(){ try { return JSON.parse(localStorage.getItem(TMETA) || "null"); } catch(e){ return null; } }
   function fstate(st){
     tplState = st;
-    $("fbtn").textContent = st === "none" ? "Choisir le PDF modèle New CAG (une seule fois)" : "Télécharger la fiche New CAG remplie";
+    var need = st !== "ready", m = tplMeta(), p = $("ftpl");
+    $("fbtn").textContent = need ? "Choisir le PDF modèle New CAG (une seule fois)" : "Télécharger la fiche New CAG remplie";
+    p.hidden = !need; p.className = "ftpl" + (st === "lost" ? " bad" : "");
+    p.textContent = st === "lost"
+      ? "Le navigateur a effacé le modèle enregistré (cela arrive sur iPhone après plusieurs jours sans visite, ou quand les données du site sont supprimées). Choisis à nouveau le PDF New CAG : il reste sur cet appareil et n’est jamais envoyé sur Internet."
+      : (st === "none" ? "Aucun modèle sur cet appareil. Choisis le PDF New CAG une seule fois : il reste sur cet appareil et n’est jamais envoyé sur Internet." : "");
+    $("ftlt").textContent = st === "ready" ? "Modèle New CAG enregistré sur cet appareil" + (m && m.date ? " (importé le " + m.date + ")" : "") + ". Il n’est jamais envoyé sur Internet." : "Aucun modèle enregistré sur cet appareil.";
+    $("fdel").hidden = st !== "ready";
+  }
+  function eraseTpl(){
+    if (!window.confirm("Effacer le modèle New CAG de cet appareil ? Il faudra le choisir à nouveau pour générer la fiche.")) return;
+    idb("readwrite", function(st){ return st.delete("tpl"); }).catch(function(){}).then(function(){
+      tplBytes = null; try { localStorage.removeItem(TMETA); } catch(e){}
+      fstate("none"); say("Modèle effacé de cet appareil.");
+    });
   }
 
   /* Valeur de la fiche : null (N/D) si absente, ou si une entrée est « à vérifier » et que l'option * est décochée */
@@ -1075,16 +1097,16 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var used = data.apts.filter(function(a){ return a.used; }).length;
     $("fsum").textContent = (items.length ? items.length + " valeur" + (items.length > 1 ? "s" : "") + " en N/D" : "Fiche complète") + (used ? "" : " · aucun aérodrome choisi") + " ▾";
     $("fsum").className = "flink" + (items.length ? " nd" : " full");
-    var ul = $("flist"), keep = ul.querySelector(".fopt");
-    Array.prototype.slice.call(ul.querySelectorAll("li:not(.fopt)")).forEach(function(li){ ul.removeChild(li); });
+    var ul = $("flist"), keeps = Array.prototype.slice.call(ul.querySelectorAll(".fopt, .ftl"));
+    Array.prototype.slice.call(ul.querySelectorAll("li:not(.fopt):not(.ftl)")).forEach(function(li){ ul.removeChild(li); });
     items.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
     if (!items.length){ var li0 = document.createElement("li"); li0.textContent = "Toutes les cases utilisées seront remplies."; ul.appendChild(li0); }
-    ul.appendChild(keep);
+    keeps.forEach(function(li){ ul.appendChild(li); });
   }
 
   function say(t, bad){ var e = $("fres"); e.className = "fres" + (bad ? " bad" : ""); e.textContent = t; }
   function deliver(bytes){
-    var name = "Fiche-NewCAG-DA40-" + ((window.__mb && window.__mb.ac) || "") + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
+    var name = "Fiche-NewCAG-DA40-" + ((window.__mb && window.__mb.ac) || "") + "-" + (function(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); })(new Date()) + ".pdf";
     var blob = new Blob([bytes], {type: "application/pdf"});
     if (lastUrl) try { URL.revokeObjectURL(lastUrl); } catch(e){}
     lastUrl = URL.createObjectURL(blob);
@@ -1101,7 +1123,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     } catch(e){}
   }
   function makePdf(){
-    if (tplState === "none"){ $("ffile").click(); return; }
+    if (tplState !== "ready"){ $("ffile").click(); return; }
     var btn = $("fbtn");
     btn.disabled = true; say("Création de la fiche ...");
     Promise.all([getTpl(), loadLib()]).then(function(a){
@@ -1118,7 +1140,17 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       return a[1].PDFDocument.load(a[0]).then(function(doc){
         var pg = doc.getPages(), s = pg[0] && pg[0].getSize();
         if (pg.length !== 1 || !s || Math.abs(s.width - 595) > 4 || Math.abs(s.height - 842) > 4) throw new Error("Ce PDF n’a pas le format de la fiche (1 page A4).");
-        return idb("readwrite", function(st){ return st.put(a[0], "tpl"); }).then(function(){ tplBytes = a[0]; fstate("ready"); say("Modèle enregistré sur cet appareil. Touche « Télécharger la fiche New CAG remplie »."); });
+        return idb("readwrite", function(st){ return st.put(a[0], "tpl"); }).then(function(){ return true; }, function(){ return false; }).then(function(kept){
+          tplBytes = a[0];
+          if (kept){
+            var d = new Date(), p2 = function(n){ return ("0" + n).slice(-2); };
+            try { localStorage.setItem(TMETA, JSON.stringify({date: p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear(), size: a[0].byteLength})); } catch(e){}
+            try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
+          }
+          fstate("ready");
+          say(kept ? "Modèle enregistré sur cet appareil : tu n’auras pas à le choisir à nouveau. Touche « Télécharger la fiche New CAG remplie »."
+                   : "Modèle chargé pour cette visite seulement : ce navigateur ne peut pas le conserver (navigation privée ?). Il faudra le choisir à nouveau la prochaine fois.", !kept);
+        });
       });
     }).catch(function(e){ say(e && e.message && e.message.indexOf("Ce PDF") === 0 ? e.message : "PDF illisible : choisis le PDF de la fiche New CAG.", true); });
   }
@@ -1295,7 +1327,9 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var g = t.closest("[data-goto]");
     if (g){ var h2 = $("h-" + g.dataset.goto); if (h2) h2.scrollIntoView({behavior: "smooth", block: "start"}); }
   });
-  getTpl().then(function(){ fstate("ready"); }).catch(function(){ fstate("none"); });
+  getTpl().then(function(){ fstate("ready"); }).catch(function(){ fstate(tplMeta() ? "lost" : "none"); });
+  $("frep").addEventListener("click", function(){ $("ffile").click(); });
+  $("fdel").addEventListener("click", eraseTpl);
   setTimeout(function(){ loadLib().catch(function(){}); }, 2500);
   all();
   var h = (location.hash || "").slice(1), saved = null;

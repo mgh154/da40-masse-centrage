@@ -231,6 +231,42 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   section{padding:14px 12px}
   .massbar{font-size:.9rem}
 }
+
+/* ===== Tableau PERFORMANCE DATA (reprend celui de la fiche New CAG) ===== */
+.pdt{margin-top:16px;padding:14px 12px}
+.pdt h2{font:700 1.1rem var(--body);letter-spacing:.02em;margin:0}
+.pdt-sub{margin:2px 0 10px;font-size:.85rem;color:var(--muted)}
+.pdt-wrap{border:2px solid var(--ink);border-radius:2px;background:var(--input)}
+.pdtab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.95rem}
+.pdtab td{border:1px solid var(--muted);padding:6px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere;min-width:0}
+.pdt-ap{border-bottom:1px solid var(--ink)}
+.pdt-ap td.c-ap{width:34%}
+.pdtab tr:first-child td{border-top:0}
+.pdtab tr td:first-child{border-left:0}.pdtab tr td:last-child{border-right:0}
+.pdt-v tr:last-child td{border-bottom:0}
+.pdtab .lbl{display:block;font-size:.76rem;color:var(--muted);line-height:1.2;margin-bottom:2px}
+.pdtab .role{display:block;font-size:.72rem;color:var(--sky);font-weight:600;margin-bottom:2px}
+.pdtab b{font:700 1.2rem/1.2 var(--cond);font-variant-numeric:tabular-nums}
+.pdtab b small,.pdtab small{font:500 .78rem var(--body);color:var(--muted)}
+.pdtab b.bad{color:var(--bad)}
+.pdtab i{font-style:normal;color:var(--warn);margin-left:1px}
+.pdtab .nd{font:600 .95rem var(--cond);color:var(--muted);border-bottom:1px dotted var(--muted);cursor:help}
+.pdtab .none{color:var(--muted)}
+.pdtab .wx{font-size:.85rem;overflow-wrap:anywhere}
+.pdtab .wx.bad{color:var(--bad);font-weight:600}
+.pdtab .ml{display:flex;gap:6px;align-items:baseline;line-height:1.35}
+.pdtab .ml .tag{font-size:.7rem;color:var(--muted);min-width:2.1em;font-weight:600}
+.pdtab .le{display:block;margin-top:2px;font-size:.72rem;color:var(--muted)}
+.pdt-note{font-size:.8rem}
+.legendbadges{display:block;margin:14px 0 0}
+.legendbadges summary{cursor:pointer;font-weight:600;color:var(--sky);min-height:44px;display:flex;align-items:center}
+.legendbadges .lgrid{display:grid;gap:8px;padding:4px 0 8px}
+@media (max-width:640px){
+  .pdtab{font-size:.9rem}
+  .pdtab td{padding:6px 5px}
+  .pdtab b{font-size:1.1rem}
+  .pdtab .lbl{font-size:.7rem}
+}
 </style>
 </head>
 <body>
@@ -332,7 +368,13 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 <div class="massbar">Masse au décollage <b id="pm-to">—</b> · Masse à l’atterrissage <b id="pm-ld">—</b> <span class="hint">(issues de l’onglet Masse &amp; centrage)</span></div>
 <div class="sumstrip" id="sum"></div>
 <div class="pc-grid" id="pcards"></div>
-<div class="legendbadges"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span><span><span class="bdg conf">CONFIRMÉ</span> valeur automatique contrôlée par toi (bouton « J’ai contrôlé ces valeurs »)</span></div>
+<section class="pdt" aria-labelledby="h-pdt">
+<h2 id="h-pdt">PERFORMANCE DATA</h2>
+<p class="pdt-sub">to be completed for departure, arrival and alternate airports</p>
+<div id="pdt" class="pdt-wrap"></div>
+<p class="note pdt-note">Même tableau que sur la fiche New CAG : il se remplit seul avec les données ci-dessus, et ce sont ces mêmes valeurs que le bouton « Télécharger la fiche New CAG remplie » écrit dans le PDF. N/D = absent ou non vérifié (passe la souris ou touche la case pour voir pourquoi), * = valeur non vérifiée imprimée à ta demande, — = aérodrome non choisi.</p>
+</section>
+<details class="legendbadges"><summary>Que signifient AUTO, SAISI, À VÉRIFIER, CONFIRMÉ, AIP ?</summary><div class="lgrid"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span><span><span class="bdg conf">CONFIRMÉ</span> valeur automatique contrôlée par toi (bouton « J’ai contrôlé ces valeurs »)</span></div></details>
 <p class="note"><b>Ce que l’outil ne fait jamais :</b> inventer une valeur manquante ou lire les graphiques de l’AFM hors des courbes numérisées. Dans ces cas il l’écrit et laisse la case vide pour que tu saisisses la valeur relevée toi-même. La TODA et la LDA ne sont jamais déduites de la longueur de piste : elles viennent de l’AIP, saisies par toi ou lues dans <code>declared.json</code> lorsqu’elles y sont vérifiées.</p>
 <p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est en degrés vrais : l’axe de piste de la base est lui aussi en degrés vrais (un QFU magnétique saisi à la place ajoute l’écart de la variation, 2 à 3° environ en Belgique). TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Limites du calcul : altitude pression de 0 à 10 000 ft, température de −35 à +50 °C, masse jusqu’à 1 150 kg, vent arrière jusqu’à 5 m/s au décollage, aucun vent arrière à l’atterrissage. Vérifie toujours avec l’AFM de l’avion.</p>
 </div>
@@ -1089,6 +1131,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function ficheSummary(){
     if (!$("fsum")) return;
     var data = collect({star: $("fstar").checked}), items = [];
+    renderPdt(data);
     data.apts.forEach(function(a){
       if (!a.used) return;
       Object.keys(FNAMES).forEach(function(f){ if (a[f] && a[f].v === null) items.push(a.name + " · " + FNAMES[f] + " : " + (a[f].why || "donnée absente")); });
@@ -1102,6 +1145,41 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     items.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
     if (!items.length){ var li0 = document.createElement("li"); li0.textContent = "Toutes les cases utilisées seront remplies."; ul.appendChild(li0); }
     keeps.forEach(function(li){ ul.appendChild(li); });
+  }
+
+  /* Tableau PERFORMANCE DATA affiché sur le site : mêmes données que la fiche PDF */
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); }
+  function pcell(a, key, unit){
+    if (!a.used) return '<span class="none" title="Aérodrome non choisi">—</span>';
+    var c = a[key];
+    if (!c || c.v === null || c.v === undefined) return '<span class="nd" title="' + esc(c && c.why ? c.why : "donnée absente") + '" tabindex="0">N/D</span>';
+    return '<b class="' + (c.bad ? "bad" : "") + '">' + esc(fmt(Math.round(c.v), 0)) + (c.star ? '<i title="valeur non vérifiée">*</i>' : "") + '</b>' + (unit ? ' <small>' + unit + '</small>' : "");
+  }
+  function pcOne(a, key, unit){ return '<div class="one">' + pcell(a, key, unit) + '</div>'; }
+  function pcMulti(apts, key, unit){
+    return apts.map(function(a){ return '<div class="ml"><span class="tag">' + esc(a.tag) + '</span>' + pcell(a, key, unit) + '</div>'; }).join("");
+  }
+  function renderPdt(data){
+    var box = $("pdt");
+    if (!box) return;
+    var apts = data.apts.map(function(a, i){ a.tag = ["Dép.", "Arr.", "Dég."][i]; return a; }), D = apts[0], A = apts[1], X = apts[2], h = '<table class="pdtab pdt-ap"><tbody>';
+    apts.forEach(function(a, i){
+      var role = ["Départ", "Arrivée", "Dégagement"][i];
+      h += '<tr><td class="c-ap"><span class="lbl">Airport:</span><span class="role">' + role + '</span>' + (a.used && a.icao ? '<b>' + esc(a.icao) + (a.rwy ? ' <small>' + esc(a.rwy) + '</small>' : "") + '</b>' : '<span class="none">—</span>') + '</td>'
+        + '<td class="c-wx"><span class="lbl">Weather:</span>' + (a.used && a.icao ? '<span class="wx' + (a.wxBad ? " bad" : "") + '">' + esc(a.wx) + '</span>' : '<span class="none">—</span>') + '</td></tr>';
+    });
+    h += '</tbody></table><table class="pdtab pdt-v"><tbody>'
+      + '<tr><td><span class="lbl">X-wind components (max 20 kt):</span>' + pcMulti(apts, "xw", "kt") + '</td>'
+      + '<td><span class="lbl">Pressure altitude:</span>' + pcMulti(apts, "pa", "ft") + '</td>'
+      + '<td><span class="lbl">Density altitude:</span>' + pcMulti(apts, "da", "ft") + '</td></tr>'
+      + '<tr><td><span class="lbl">TODR:</span>' + pcOne(D, "todr", "m") + '</td>'
+      + '<td><span class="lbl">TODR × 1.25:</span>' + pcOne(D, "todr125", "m") + '<span class="le">≦ TODA</span></td>'
+      + '<td><span class="lbl">Departure TODA:</span>' + pcOne(D, "toda", "m") + '</td></tr>'
+      + '<tr><td><span class="lbl">LDR:</span><div class="ml"><span class="tag">Arr.</span>' + pcell(A, "ldr", "m") + '</div><div class="ml"><span class="tag">Dég.</span>' + pcell(X, "ldr", "m") + '</div><span class="le">≦ LDA</span></td>'
+      + '<td><span class="lbl">Destination LDA:</span>' + pcOne(A, "lda", "m") + '</td>'
+      + '<td><span class="lbl">Alternate LDA:</span>' + pcOne(X, "lda", "m") + '</td></tr>'
+      + '</tbody></table>';
+    box.innerHTML = h;
   }
 
   function say(t, bad){ var e = $("fres"); e.className = "fres" + (bad ? " bad" : ""); e.textContent = t; }

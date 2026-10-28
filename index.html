@@ -166,6 +166,66 @@ td.neg{color:var(--muted)}
 .sumchip .m{font:700 1.9rem/1.05 var(--cond);font-variant-numeric:tabular-nums}
 .sumchip.ok .m{color:var(--ok)} .sumchip.bad .m{color:var(--bad)}
 .sumchip .s{font-size:.8rem;color:var(--muted)}
+
+/* ===== Fiche New CAG : barre d'action ===== */
+.fbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.14);padding-left:max(14px, env(safe-area-inset-left, 0px));padding-right:max(14px, env(safe-area-inset-right, 0px));padding-bottom:env(safe-area-inset-bottom, 0px)}
+.fbar-in{max-width:1080px;margin:0 auto;padding:8px 0 10px;display:grid;gap:6px 14px;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.fbar-in .flist{grid-column:1 / -1;order:-1}
+.flink{font:600 .9rem var(--body);color:var(--sky);background:none;border:0;padding:8px 0;text-align:left;cursor:pointer;min-height:40px}
+.flink.nd{color:var(--warn)} .flink.full{color:var(--ok)}
+.fbtn{font:700 1rem var(--body);padding:13px 20px;min-height:48px;border-radius:10px;border:0;background:var(--sky);color:var(--on);cursor:pointer}
+.fbtn:disabled{opacity:.6;cursor:progress}
+.flist{list-style:none;margin:0;padding:8px 12px;max-height:38vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--input);font-size:.88rem}
+.flist li{padding:3px 0}
+.fstar{display:flex;gap:10px;align-items:flex-start;margin-top:6px;font-size:.88rem;color:var(--ink)}
+.fstar input{width:22px;height:22px;accent-color:var(--sky);flex:none;margin-top:1px}
+.fres{grid-column:1 / -1;margin:0;font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
+.fres:empty{display:none}
+.fres.bad{color:var(--bad);font-weight:600}
+.fres a,.fres .flink{display:inline;padding:0 4px;min-height:0;font-weight:700;color:var(--sky)}
+body[data-tab="wind"] .fbar,body[data-tab="crp"] .fbar{display:none}
+body main{padding-bottom:170px}
+body[data-tab="wind"] main,body[data-tab="crp"] main{padding-bottom:40px}
+
+/* ===== Confort tactile ===== */
+button,a,input,select,textarea,label{touch-action:manipulation}
+header{padding-left:max(18px, env(safe-area-inset-left, 0px));padding-right:max(18px, env(safe-area-inset-right, 0px))}
+main{padding-left:max(14px, env(safe-area-inset-left, 0px));padding-right:max(14px, env(safe-area-inset-right, 0px))}
+.tabs{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20}
+.pc{scroll-margin-top:76px}
+.bdg.conf{color:var(--ok)}
+.in.signed input{padding-right:84px}
+.pm{position:absolute;right:38px;min-width:38px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--sky);font:700 1.05rem var(--body);cursor:pointer}
+button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.cfm{margin-top:4px}
+.pc .fields{align-items:end}
+.grid{grid-template-columns:minmax(0,1fr)}
+.grid>*,.pgrid>*,.pc-grid>*{min-width:0}
+@media (min-width:900px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
+@media (pointer:coarse), (max-width:640px){
+  .mini{min-height:42px;padding:8px 14px;font-size:.92rem}
+  .rwys button{min-height:46px;padding:8px 14px;font-size:1.05rem}
+  .regs button{min-height:46px}
+  .clear{min-height:48px}
+  .check input{width:24px;height:24px}
+  .tabs button{min-height:46px}
+  .sug li{padding:13px 10px}
+  .pm{height:40px}
+}
+@media (max-width:640px){
+  .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px}
+  .tabs button{font-size:.8rem;padding:6px 2px;line-height:1.15}
+  .fbar-in{grid-template-columns:minmax(0,1fr)}
+  .fbtn{width:100%}
+  .fields{gap:10px 8px}
+  .rv{font-size:1.4rem}
+  .margin b{font-size:2rem}
+  .rtitle{font-size:1.1rem}
+  h1{font-size:2.1rem}
+  .ptitle{font-size:1.6rem}
+  section{padding:14px 12px}
+  .massbar{font-size:.9rem}
+}
 </style>
 </head>
 <body>
@@ -267,7 +327,7 @@ td.neg{color:var(--muted)}
 <div class="massbar">Masse au décollage <b id="pm-to">—</b> · Masse à l’atterrissage <b id="pm-ld">—</b> <span class="hint">(issues de l’onglet Masse &amp; centrage)</span></div>
 <div class="sumstrip" id="sum"></div>
 <div class="pc-grid" id="pcards"></div>
-<div class="legendbadges"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span></div>
+<div class="legendbadges"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span><span><span class="bdg conf">CONFIRMÉ</span> valeur automatique contrôlée par toi (bouton « J’ai contrôlé ces valeurs »)</span></div>
 <p class="note"><b>Ce que l’outil ne fait jamais :</b> inventer une valeur manquante ou lire les graphiques de l’AFM hors des courbes numérisées. Dans ces cas il l’écrit et laisse la case vide pour que tu saisisses la valeur relevée toi-même. La TODA et la LDA ne sont jamais déduites de la longueur de piste : elles viennent de l’AIP, saisies par toi ou lues dans <code>declared.json</code> lorsqu’elles y sont vérifiées.</p>
 <p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est en degrés vrais : l’axe de piste de la base est lui aussi en degrés vrais (un QFU magnétique saisi à la place ajoute l’écart de la variation, 2 à 3° environ en Belgique). TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Limites du calcul : altitude pression de 0 à 10 000 ft, température de −35 à +50 °C, masse jusqu’à 1 150 kg, vent arrière jusqu’à 5 m/s au décollage, aucun vent arrière à l’atterrissage. Vérifie toujours avec l’AFM de l’avion.</p>
 </div>
@@ -293,6 +353,17 @@ td.neg{color:var(--muted)}
 
 </main>
 
+<div class="fbar" id="fbar">
+  <div class="fbar-in">
+    <button type="button" class="flink" id="fsum" aria-expanded="false" aria-controls="flist">Fiche New CAG ▾</button>
+    <ul class="flist" id="flist" hidden><li class="fopt"><label class="fstar"><input type="checkbox" id="fstar"><span>Imprimer aussi les valeurs « à vérifier » (marquées *). Sinon elles restent en N/D.</span></label></li></ul>
+    <button type="button" class="fbtn" id="fbtn">Télécharger la fiche New CAG remplie</button>
+    <p class="fres" id="fres" role="status"></p>
+    <input type="file" id="ffile" accept="application/pdf,.pdf" hidden>
+  </div>
+</div>
+
+<script src="fiche.js" defer></script>
 <script>
 (function(){
   var AC = {
@@ -427,7 +498,11 @@ td.neg{color:var(--muted)}
     }).join("");
 
     draw([{p:zf, k:"zf"}, {p:to, k:"to"}, {p:ld, k:"ld"}]);
-    window.__mb = {to: to.m, ld: ld.m};
+    function rw(r){ return {m: r.m, a: r.a, mo: r.mo}; }
+    function pt(r, bad){ return {m: r.m, mo: r.mo, a: r.a, bad: !!bad}; }
+    window.__mb = {to: to.m, ld: ld.m, ac: state.ac, confirmed: $("confirm").checked, issues: issues.slice(),
+      rows: {bem: rw(r1), front: rw(r2), rear: rw(r3), bag: rw(r4), zf: rw(zf), fuel: rw(rf), ramp: rw(ramp), taxi: rw(rt), to: rw(to), trip: rw(rtr), ld: rw(ld)},
+      pts: {zf: pt(zf, iZf), to: pt(to, iTo), ld: pt(ld, iLd)}};
     document.dispatchEvent(new Event("mbupdate"));
   }
 
@@ -545,6 +620,7 @@ td.neg{color:var(--muted)}
     if (NAMES.indexOf(name) < 0) name = "mb";
     tabs.forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"); });
     NAMES.forEach(function(n){ $("panel-" + n).hidden = (n !== name); });
+    document.body.dataset.tab = name;
     try { localStorage.setItem(TABKEY, name); } catch(e){}
     try { history.replaceState(null, "", "#" + name); } catch(e){}
   }
@@ -584,7 +660,8 @@ td.neg{color:var(--muted)}
     auto:["AUTO", "Donnée récupérée automatiquement auprès d’une source météo officielle"],
     chk:["À VÉRIFIER", "Donnée automatique d’une source non officielle (ou ancienne) : à contrôler dans l’AIP ou sur la fiche"],
     man:["SAISI", "Valeur saisie ou modifiée par toi"],
-    ver:["AIP", "Valeur issue d’un fichier de distances déclarées vérifiées"]
+    ver:["AIP", "Valeur issue d’un fichier de distances déclarées vérifiées"],
+    conf:["CONFIRMÉ", "Valeur automatique que tu as contrôlée (AIP, fiche de pesée)"]
   };
   var prov = {}, cur = {}, ap = null, apP = null, declD = null, declP = null, wxP = null;
 
@@ -824,7 +901,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<div class="f full srch"><label for="' + k + '-ad">Aérodrome (code OACI ou nom)</label>'
       + '<div class="in"><input id="' + k + '-ad" class="txt" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + k + '-sug" autocomplete="off" spellcheck="false" placeholder="Ex. EBCI ou Charleroi"></div>'
       + '<ul class="sug" id="' + k + '-sug" role="listbox" hidden></ul><p class="hint" id="' + k + '-adinfo"></p></div>'
-      + '<div class="f full"><label id="' + k + '-rl">Piste</label><div class="rwys" id="' + k + '-rwys" role="group" aria-labelledby="' + k + '-rl"></div><p class="hint" id="' + k + '-rwyinfo"></p><input type="hidden" id="' + k + '-rwyid"></div>'
+      + '<div class="f full"><label id="' + k + '-rl">Piste</label><div class="rwys" id="' + k + '-rwys" role="group" aria-labelledby="' + k + '-rl"></div><p class="hint" id="' + k + '-rwyinfo"></p><div class="row-btn"><button type="button" class="mini cfm" data-confirm="' + k + '" hidden>J’ai contrôlé ces valeurs (AIP)</button></div><input type="hidden" id="' + k + '-rwyid"></div>'
       + '<div class="fields">' + fld(k, "elev", "Élévation", "ft") + fld(k, "rwy", "Axe de piste (° vrai)", "°") + fld(k, "wdir", "Vent, direction", "°") + fld(k, "wspd", "Vent, force", "kt")
       + fld(k, "gust", "Rafales", "kt") + fld(k, "qnh", "QNH", "hPa") + fld(k, "temp", "Température extérieure", "°C") + '</div>'
       + '<div class="f full wxbox"><label for="' + k + '-wx">METAR / TAF</label><textarea id="' + k + '-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Rempli automatiquement, ou colle un METAR"></textarea>'
@@ -839,19 +916,13 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function row(label, sub, val, cls){
     return '<div class="rr"><div class="rl">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</div><div class="rv ' + (cls || "") + '">' + val + '</div></div>';
   }
-  function srcWord(id){ var p = prov[id]; return p === "ver" ? "valeur AIP" : (p === "man" ? "valeur saisie" : (p === "chk" ? "à vérifier" : "")); }
+  function srcWord(id){ var p = prov[id]; return p === "ver" ? "valeur AIP" : (p === "man" ? "valeur saisie" : (p === "chk" ? "à vérifier" : (p === "conf" ? "confirmée" : ""))); }
 
-  function render(c){
-    var k = c.k, v = readCard(k), wc = windC(v), pa = null, to = c.kind === "to", mb = window.__mb;
+  /* Calcul d'une carte : partagé par l'affichage et par la fiche PDF */
+  function calcCard(c){
+    var k = c.k, v = readCard(k), wc = windC(v), pa = null, da = null, to = c.kind === "to", mb = window.__mb;
     if (v.elev !== null && v.qnh !== null) pa = v.elev + 30 * (1013 - v.qnh);
-    setT(k + "-pa", pa === null ? "—" : fmt(Math.round(pa), 0) + " ft");
-    if (pa !== null && v.temp !== null) setT(k + "-da", fmt(Math.round(pa + 120 * (v.temp - Math.round(15 - 2 * pa / 1000))), 0) + " ft"); else setT(k + "-da", "—");
-    if (wc && wc.known){
-      setT(k + "-hw", (wc.hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(wc.hw), 1) + " kt", wc.hw < 0 ? "bad" : "");
-      var worst = Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx));
-      setT(k + "-xw", fmt(Math.abs(wc.cr), 1) + " kt" + (wc.cr > 0.05 ? " de droite" : (wc.cr < -0.05 ? " de gauche" : "")) + (wc.gx !== null && v.gust !== null ? " · raf. " + fmt(Math.abs(wc.gx), 1) : ""), worst > 20 ? "bad" : "ok");
-    } else { setT(k + "-hw", wc ? "axe de piste ?" : "—"); setT(k + "-xw", wc ? "axe de piste ?" : "—"); }
-
+    if (pa !== null && v.temp !== null) da = pa + 120 * (v.temp - Math.round(15 - 2 * pa / 1000));
     var m = mb ? (to ? mb.to : mb.ld) : null, manId = to ? "todr" : "ldr", man = num(pid(k, manId)), av = num(pid(k, c.av));
     var miss = [], err = null, val = null, how = "";
     if (man !== null){ val = man; how = "valeur saisie"; }
@@ -866,7 +937,18 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       }
     }
     var req = val === null ? null : (to ? Math.ceil(val * FACTOR) : val);
-    var margin = req !== null && av !== null ? av - req : null;
+    return {k: k, v: v, wc: wc, pa: pa, da: da, m: m, man: man, av: av, miss: miss, err: err, val: val, how: how, req: req, margin: req !== null && av !== null ? av - req : null};
+  }
+
+  function render(c){
+    var k = c.k, to = c.kind === "to", r = calcCard(c), v = r.v, wc = r.wc, pa = r.pa, miss = r.miss, err = r.err, val = r.val, how = r.how, av = r.av, req = r.req, margin = r.margin;
+    setT(k + "-pa", pa === null ? "—" : fmt(Math.round(pa), 0) + " ft");
+    setT(k + "-da", r.da === null ? "—" : fmt(Math.round(r.da), 0) + " ft");
+    if (wc && wc.known){
+      setT(k + "-hw", (wc.hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(wc.hw), 1) + " kt", wc.hw < 0 ? "bad" : "");
+      var worst = Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx));
+      setT(k + "-xw", fmt(Math.abs(wc.cr), 1) + " kt" + (wc.cr > 0.05 ? " de droite" : (wc.cr < -0.05 ? " de gauche" : "")) + (wc.gx !== null && v.gust !== null ? " · raf. " + fmt(Math.abs(wc.gx), 1) : ""), worst > 20 ? "bad" : "ok");
+    } else { setT(k + "-hw", wc ? "axe de piste ?" : "—"); setT(k + "-xw", wc ? "axe de piste ?" : "—"); }
     var cls = margin === null ? "na" : (margin >= 0 ? "ok" : "bad");
     var h = '<div class="rescard"><div class="rhead"><div class="rtitle">' + c.rtitle + '</div><div class="pill ' + cls + '">' + (margin === null ? "INCOMPLET" : (margin >= 0 ? "✓ SUFFISANT" : "✗ INSUFFISANT")) + '</div></div>';
     h += row((to ? "TODR" : "LDR") + " AFM", how, val === null ? "—" : fmt(val, 0) + " m");
@@ -884,21 +966,170 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       ? "TODR × 1,25 : coefficient utilisé dans la fiche de préparation de l’école, appliqué au TODR de l’AFM comme marge de sécurité. Il ne vient pas de l’AFM. Il ne s’applique ici qu’au décollage, piste sèche, en dur et plane."
       : "Aucun coefficient n’est appliqué : la LDR est la valeur brute de l’AFM, piste sèche, en dur et plane" + (c.k === "x" ? ", avec la masse à l’atterrissage prévue (marge de sécurité)." : ".")) + '</p></div>';
     $(k + "-res").innerHTML = h;
+    var cf = document.querySelector('[data-confirm="' + k + '"]');
+    if (cf) cf.hidden = !FIELDS.some(function(f){ return prov[pid(k, f)] === "chk" && $(pid(k, f)); });
     return {margin: margin, cls: cls};
   }
   function renderAll(){
     var res = CARDS.map(render), s = "";
     CARDS.forEach(function(c, i){
       var r = res[i];
-      s += '<div class="sumchip ' + r.cls + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + (r.margin === null ? "incomplet" : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")) + '</div></div>';
+      s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + (r.margin === null ? "incomplet" : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")) + '</div></button>';
     });
     $("sum").innerHTML = s;
     masses();
+    ficheSummary();
   }
   function dist(){ renderAll(); }
 
   function build(){
     $("pcards").innerHTML = CARDS.map(cardHtml).join("");
+  }
+
+  /* ===== Fiche New CAG remplie ===== */
+  var TPL_URL = "newcag-fiche.pdf", PDFLIB_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
+  var tplBytes = null, tplState = "check", lastUrl = null;
+  var FLABEL = {elev: "élévation", rwy: "axe de piste", qnh: "QNH", temp: "température", wdir: "vent", wspd: "vent", gust: "rafales"};
+
+  function idb(mode, fn){
+    return new Promise(function(res, rej){
+      var q = indexedDB.open("da40-newcag", 1);
+      q.onupgradeneeded = function(){ q.result.createObjectStore("f"); };
+      q.onerror = function(){ rej(q.error); };
+      q.onsuccess = function(){
+        var tx = q.result.transaction("f", mode), r = fn(tx.objectStore("f"));
+        tx.oncomplete = function(){ res(r && r.result); };
+        tx.onerror = function(){ rej(tx.error); };
+      };
+    });
+  }
+  function getTpl(){
+    if (tplBytes) return Promise.resolve(tplBytes);
+    return fetch(TPL_URL).then(function(r){ if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .catch(function(){ return idb("readonly", function(s){ return s.get("tpl"); }).then(function(b){ if (!b) throw 0; return b; }); })
+      .then(function(b){ tplBytes = b; return b; });
+  }
+  function loadLib(){
+    if (window.PDFLib) return Promise.resolve(window.PDFLib);
+    return new Promise(function(res, rej){
+      var s = document.createElement("script"); s.src = PDFLIB_URL; s.onload = function(){ res(window.PDFLib); }; s.onerror = function(){ rej(new Error("lib")); };
+      document.head.appendChild(s);
+    });
+  }
+  function fstate(st){
+    tplState = st;
+    $("fbtn").textContent = st === "none" ? "Choisir le PDF modèle New CAG (une seule fois)" : "Télécharger la fiche New CAG remplie";
+  }
+
+  /* Valeur de la fiche : null (N/D) si absente, ou si une entrée est « à vérifier » et que l'option * est décochée */
+  function gate(k, v, deps, why, o){
+    if (v === null || v === undefined || !isFinite(v)) return {v: null, why: why || "donnée absente"};
+    var bad = [];
+    deps.forEach(function(f){ if (prov[pid(k, f)] === "chk" && bad.indexOf(FLABEL[f] || f) < 0) bad.push(FLABEL[f] || f); });
+    if (bad.length) return o.star ? {v: v, star: true} : {v: null, why: (bad.length > 1 ? bad.slice(0, -1).join(", ") + " et " + bad[bad.length - 1] : bad[0]) + " à vérifier"};
+    return {v: v};
+  }
+  function ficheCard(c, o){
+    var k = c.k, r = calcCard(c), v = r.v, wc = r.wc, to = c.kind === "to", m4 = ($(pid(k, "ad")).value.toUpperCase().match(/^\s*([A-Z]{4})(?![A-Z0-9])/) || [])[1];
+    var icao = cur[k] || m4 || "", rid = $(pid(k, "rwyid")).value;
+    var used = !!icao || FIELDS.some(function(f){ return $(pid(k, f)) && $(pid(k, f)).value !== ""; });
+    var out = {k: k, used: used, name: c.title, icao: icao, rwy: rid ? "RWY " + rid : (v.rwy !== null ? "QFU " + Math.round(v.rwy) + "°" : "")};
+    var raw = $(pid(k, "wx")).value.trim().replace(/\s+/g, " "), wxBad = ["wdir", "wspd", "temp", "qnh"].some(function(f){ return prov[pid(k, f)] === "chk"; });
+    out.wx = !raw ? "N/D" : (wxBad ? (o.star ? raw + " *" : "N/D (METAR ancien ou non vérifié)") : raw);
+    out.wxBad = !raw || (wxBad && !o.star);
+    var worst = wc && wc.known ? Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx)) : 0;
+    out.xw = gate(k, wc && wc.known ? Math.round(Math.abs(wc.cr)) : null, v.ws === 0 ? ["wspd"] : ["rwy", "wdir", "wspd"], wc ? "axe de piste manquant" : "vent manquant", o);
+    if (out.xw.v !== null && worst > 20) out.xw.bad = true;
+    out.pa = gate(k, r.pa === null ? null : Math.round(r.pa), ["elev", "qnh"], "élévation ou QNH manquant", o);
+    out.da = gate(k, r.da === null ? null : Math.round(r.da), ["elev", "qnh", "temp"], "élévation, QNH ou température manquant", o);
+    var calcDeps = r.man !== null ? [] : ["elev", "qnh", "temp", "rwy", "wdir", "wspd"], why = r.err || (r.miss.length ? "manque " + r.miss.join(", ") : "");
+    if (to){
+      out.todr = gate(k, r.val, calcDeps, why, o);
+      out.todr125 = gate(k, r.req, calcDeps, why, o);
+      out.toda = gate(k, r.av, [], "à saisir (AIP)", o);
+    } else {
+      out.ldr = gate(k, r.val, calcDeps, why, o);
+      out.lda = gate(k, r.av, [], "à saisir (AIP)", o);
+    }
+    return out;
+  }
+  var FNAMES = {xw: "vent traversier", pa: "altitude pression", da: "altitude densité", todr: "TODR", todr125: "TODR × 1,25", toda: "TODA", ldr: "LDR", lda: "LDA"};
+  function collect(o){
+    var mb = window.__mb, d = new Date(), p2 = function(n){ return ("0" + n).slice(-2); };
+    var apts = CARDS.map(function(c){ return ficheCard(c, o); });
+    var data = {
+      mb: mb ? {rows: mb.rows} : null, ac: mb ? mb.ac : null, pts: mb ? mb.pts : null, issues: mb ? mb.issues : [], confirmed: mb ? mb.confirmed : false,
+      apts: apts, generated: p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear() + " à " + p2(d.getHours()) + ":" + p2(d.getMinutes()), anyStar: false
+    };
+    apts.forEach(function(a){ Object.keys(FNAMES).forEach(function(f){ if (a.used && a[f] && a[f].star) data.anyStar = true; }); });
+    return data;
+  }
+  function ficheSummary(){
+    if (!$("fsum")) return;
+    var data = collect({star: $("fstar").checked}), items = [];
+    data.apts.forEach(function(a){
+      if (!a.used) return;
+      Object.keys(FNAMES).forEach(function(f){ if (a[f] && a[f].v === null) items.push(a.name + " · " + FNAMES[f] + " : " + (a[f].why || "donnée absente")); });
+    });
+    if (!window.__mb) items.unshift("Masse et centrage : onglet Masse & centrage incomplet");
+    var used = data.apts.filter(function(a){ return a.used; }).length;
+    $("fsum").textContent = (items.length ? items.length + " valeur" + (items.length > 1 ? "s" : "") + " en N/D" : "Fiche complète") + (used ? "" : " · aucun aérodrome choisi") + " ▾";
+    $("fsum").className = "flink" + (items.length ? " nd" : " full");
+    var ul = $("flist"), keep = ul.querySelector(".fopt");
+    Array.prototype.slice.call(ul.querySelectorAll("li:not(.fopt)")).forEach(function(li){ ul.removeChild(li); });
+    items.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+    if (!items.length){ var li0 = document.createElement("li"); li0.textContent = "Toutes les cases utilisées seront remplies."; ul.appendChild(li0); }
+    ul.appendChild(keep);
+  }
+
+  function say(t, bad){ var e = $("fres"); e.className = "fres" + (bad ? " bad" : ""); e.textContent = t; }
+  function deliver(bytes){
+    var name = "Fiche-NewCAG-DA40-" + ((window.__mb && window.__mb.ac) || "") + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
+    var blob = new Blob([bytes], {type: "application/pdf"});
+    if (lastUrl) try { URL.revokeObjectURL(lastUrl); } catch(e){}
+    lastUrl = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = lastUrl; a.download = name; a.style.display = "none"; document.body.appendChild(a); a.click(); a.remove();
+    var res = $("fres"); res.className = "fres"; res.textContent = "Fiche prête : " + name + " ";
+    var open = document.createElement("a"); open.href = lastUrl; open.target = "_blank"; open.rel = "noopener"; open.textContent = "Ouvrir"; res.appendChild(open);
+    try {
+      var file = new File([blob], name, {type: "application/pdf"});
+      if (navigator.canShare && navigator.canShare({files: [file]})){
+        var b = document.createElement("button"); b.type = "button"; b.className = "flink"; b.textContent = "Partager";
+        b.addEventListener("click", function(){ navigator.share({files: [file], title: name}).catch(function(){}); });
+        res.appendChild(document.createTextNode(" · ")); res.appendChild(b);
+      }
+    } catch(e){}
+  }
+  function makePdf(){
+    if (tplState === "none"){ $("ffile").click(); return; }
+    var btn = $("fbtn");
+    btn.disabled = true; say("Création de la fiche ...");
+    Promise.all([getTpl(), loadLib()]).then(function(a){
+      if (!window.NewCAG) throw new Error("fiche.js");
+      return window.NewCAG.fill(a[1], a[0].slice ? a[0].slice(0) : a[0], collect({star: $("fstar").checked}));
+    }).then(deliver).catch(function(e){
+      say(e && e.message === "lib" ? "Impossible de charger l’outil PDF (réseau). Réessaie en ligne." : "Impossible de créer la fiche : " + (e && e.message ? e.message : "erreur"), true);
+    }).then(function(){ btn.disabled = false; });
+  }
+  function importTpl(file){
+    if (!file) return;
+    say("Vérification du PDF ...");
+    Promise.all([file.arrayBuffer(), loadLib()]).then(function(a){
+      return a[1].PDFDocument.load(a[0]).then(function(doc){
+        var pg = doc.getPages(), s = pg[0] && pg[0].getSize();
+        if (pg.length !== 1 || !s || Math.abs(s.width - 595) > 4 || Math.abs(s.height - 842) > 4) throw new Error("Ce PDF n’a pas le format de la fiche (1 page A4).");
+        return idb("readwrite", function(st){ return st.put(a[0], "tpl"); }).then(function(){ tplBytes = a[0]; fstate("ready"); say("Modèle enregistré sur cet appareil. Touche « Télécharger la fiche New CAG remplie »."); });
+      });
+    }).catch(function(e){ say(e && e.message && e.message.indexOf("Ce PDF") === 0 ? e.message : "PDF illisible : choisis le PDF de la fiche New CAG.", true); });
+  }
+  function confirmCard(k){
+    FIELDS.forEach(function(f){ var id = pid(k, f); if ($(id) && prov[id] === "chk"){ prov[id] = "conf"; badge(id); } });
+    renderAll(); save();
+  }
+  function addSign(id){
+    var e = $(id); if (!e || e.parentNode.className.indexOf("signed") >= 0) return;
+    var b = document.createElement("button"); b.type = "button"; b.className = "pm"; b.textContent = "±"; b.setAttribute("aria-label", "Changer le signe de la valeur");
+    e.parentNode.className += " signed"; e.parentNode.insertBefore(b, e.nextSibling);
   }
 
   /* Triangle des vitesses */
@@ -1044,6 +1275,28 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if ($(pid(c.k, "wx")).value) $(c.k + "-wxs").textContent = "METAR conservé de la dernière visite : « Recharger le METAR » l’actualise.";
     Promise.all([loadAp(), loadDecl()]).then(function(){ adInfo(c.k); drawRwys(c.k); renderAll(); });
   });
+  ["d-elev", "a-elev", "x-elev", "d-temp", "a-temp", "x-temp", "w-var", "c-oat"].forEach(addSign);
+  $("fbtn").addEventListener("click", makePdf);
+  $("ffile").addEventListener("change", function(e){ importTpl(e.target.files[0]); e.target.value = ""; });
+  $("fstar").addEventListener("change", ficheSummary);
+  $("fsum").addEventListener("click", function(){ var l = $("flist"); l.hidden = !l.hidden; $("fsum").setAttribute("aria-expanded", l.hidden ? "false" : "true"); });
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if (!t.closest) return;
+    var cf = t.closest("[data-confirm]");
+    if (cf){ confirmCard(cf.dataset.confirm); return; }
+    var pm = t.closest(".pm");
+    if (pm){
+      var inp = pm.parentNode.querySelector("input"), s = inp.value.replace(/^\s+/, "");
+      inp.value = /^[-−]/.test(s) ? s.replace(/^[-−]\s*/, "") : "-" + s;
+      inp.dispatchEvent(new Event("input", {bubbles: true})); inp.focus();
+      return;
+    }
+    var g = t.closest("[data-goto]");
+    if (g){ var h2 = $("h-" + g.dataset.goto); if (h2) h2.scrollIntoView({behavior: "smooth", block: "start"}); }
+  });
+  getTpl().then(function(){ fstate("ready"); }).catch(function(){ fstate("none"); });
+  setTimeout(function(){ loadLib().catch(function(){}); }, 2500);
   all();
   var h = (location.hash || "").slice(1), saved = null;
   try { saved = localStorage.getItem(TABKEY); } catch(e){}

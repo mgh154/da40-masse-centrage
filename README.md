@@ -11,4 +11,10 @@ Page unique : ouvrir `index.html` dans un navigateur.
 - **TODA / LDA** : jamais déduites. Elles se saisissent à la main depuis l'AIP, ou se déclarent dans `declared.json` une fois vérifiées (étiquette « AIP »).
 - **Distances AFM** : lecture numérisée des graphiques de l'AFM DA 40 D rév. 7 (± 5 %), sans extrapolation hors des courbes : hors domaine, l'outil le dit et ne calcule rien.
 
+## Fiche New CAG remplie
+
+Le bouton « Télécharger la fiche New CAG remplie » écrit les données de la page par-dessus le PDF d'origine (`fiche.js`, bibliothèque pdf-lib) : tableau Mass and Balance, points sur les deux graphiques, tableau Performance Data. Une valeur absente, ou « à vérifier », reste en N/D (case à cocher pour les imprimer quand même, marquées `*`).
+
+Le PDF modèle (`newcag-fiche.pdf`) est un document de l'école : il n'est pas dans le dépôt (`.gitignore`). Sans lui, le bouton demande de le choisir une fois ; il est ensuite gardé sur l'appareil (IndexedDB). Pour le publier avec le site, déposer `newcag-fiche.pdf` à la racine et retirer la ligne du `.gitignore`.
+
 Données basées sur la fiche New CAG « Mass and balance data », rév. 4.1 du 18 juin 2026. Outil d'aide uniquement, à vérifier avec l'AFM et le FI : il ne constitue pas une autorisation de vol.

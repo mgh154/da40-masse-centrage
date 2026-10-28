@@ -13,7 +13,7 @@
 :root{
   --bg:#e8edf1; --panel:#ffffff; --ink:#14263d; --muted:#5a6a7d; --line:#d3dbe3;
   --sky:#2563a8; --ok:#1d7a4b; --bad:#c2352b; --warn:#a96f14;
-  --envfill:rgba(37,99,168,.09); --input:#f3f6f9; --head:#14263d; --headink:#f2f6fa;
+  --on:#ffffff; --envfill:rgba(37,99,168,.09); --input:#f3f6f9; --head:#14263d; --headink:#f2f6fa;
   --body:"Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --cond:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   box-sizing:border-box;
@@ -24,13 +24,13 @@
   :root:not([data-theme="light"]){
     --bg:#0e1825; --panel:#152435; --ink:#e5ecf3; --muted:#94a4b6; --line:#2a3d52;
     --sky:#6ea9e6; --ok:#4fc58c; --bad:#f2766d; --warn:#e2a94e;
-    --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
+    --on:#0e1825; --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0e1825; --panel:#152435; --ink:#e5ecf3; --muted:#94a4b6; --line:#2a3d52;
   --sky:#6ea9e6; --ok:#4fc58c; --bad:#f2766d; --warn:#e2a94e;
-  --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
+  --on:#0e1825; --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
@@ -100,6 +100,7 @@ td.neg{color:var(--muted)}
 .fields3{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
 @media (min-width:520px){.fields3{grid-template-columns:1fr 1fr 1fr}}
 .in input.txt{font:500 1rem var(--body);padding-right:11px;text-transform:uppercase}
+.in input.txt::placeholder{text-transform:none}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px;font-size:.92rem}
 .kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:4px 0}
 .kv b{font:600 1.05rem var(--cond);font-variant-numeric:tabular-nums}
@@ -124,6 +125,47 @@ td.neg{color:var(--muted)}
 .conv{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px}
 .conv .in input{padding-right:54px}
 .conv b{color:var(--muted)}
+
+.bdg{display:inline-block;margin-left:7px;padding:0 6px;border-radius:4px;font:700 .66rem var(--body);letter-spacing:.05em;vertical-align:1px;border:1px solid currentColor;white-space:nowrap}
+.bdg:empty{display:none}
+.bdg.auto{color:var(--sky)} .bdg.chk{color:var(--warn)} .bdg.man{color:var(--muted)} .bdg.ver{color:var(--ok)}
+.legendbadges{display:grid;gap:6px;font-size:.84rem;color:var(--muted);margin:16px 0 0}
+.legendbadges .bdg{margin:0 6px 0 0}
+.pc-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:start}
+.pc .srch{position:relative}
+.sug{list-style:none;margin:4px 0 0;padding:4px;position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);max-height:280px;overflow:auto}
+.sug li{padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;gap:10px;align-items:baseline}
+.sug li b{font:700 1.05rem var(--cond);min-width:48px}
+.sug li span{color:var(--muted);font-size:.88rem;min-width:0;overflow-wrap:anywhere}
+.sug li:hover,.sug li[aria-selected="true"]{background:var(--input)}
+.sug li.none{cursor:default;color:var(--muted)}
+.rwys{display:flex;flex-wrap:wrap;gap:6px}
+.rwys button{font:600 .95rem var(--cond);letter-spacing:.03em;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--input);color:var(--ink);cursor:pointer}
+.rwys button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:var(--on)}
+.pc .wxbox{margin-top:12px}
+.rescard{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:var(--input);padding:14px}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.rtitle{font:700 1.2rem var(--cond);letter-spacing:.07em}
+.pill{font:700 .8rem var(--body);padding:3px 10px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.pill.ok{color:var(--ok)} .pill.bad{color:var(--bad)} .pill.na{color:var(--muted)}
+.rr{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.rl{font-size:.95rem;min-width:0}
+.rl small{display:block;color:var(--muted);font-size:.78rem}
+.rv{font:700 1.55rem/1.1 var(--cond);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rv.dim{font-size:1.05rem;color:var(--muted);font-weight:600}
+.margin{margin-top:12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-radius:8px;padding:10px 12px;border:2px solid var(--line);background:var(--panel)}
+.margin span{font-weight:600}
+.margin b{font:700 2.3rem/1 var(--cond);font-variant-numeric:tabular-nums}
+.margin.ok{border-color:var(--ok);color:var(--ok)} .margin.bad{border-color:var(--bad);color:var(--bad)}
+.rnote{font-size:.8rem;color:var(--muted);margin:10px 0 0}
+.rneed{margin:12px 0 0;font-weight:600;color:var(--warn)}
+.sumstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.sumchip{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:8px;padding:8px 12px}
+.sumchip.ok{border-left-color:var(--ok)} .sumchip.bad{border-left-color:var(--bad)}
+.sumchip .t{font-size:.85rem;color:var(--muted);font-weight:500}
+.sumchip .m{font:700 1.9rem/1.05 var(--cond);font-variant-numeric:tabular-nums}
+.sumchip.ok .m{color:var(--ok)} .sumchip.bad .m{color:var(--bad)}
+.sumchip .s{font-size:.8rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -221,11 +263,13 @@ td.neg{color:var(--muted)}
 
 <div class="panel" id="panel-performance" hidden>
 <h2 class="ptitle">Données de performance</h2>
-<p class="lead">Renseigne les conditions prévues pour chaque aérodrome. Les distances TODR et LDR sont à relever dans l’AFM pour les conditions, la masse et la configuration retenues.</p>
+<p class="lead">Choisis l’aérodrome par son code OACI : le METAR, l’élévation et les pistes se chargent. Chaque valeur porte une étiquette qui dit d’où elle vient, et tu peux tout modifier.</p>
 <div class="massbar">Masse au décollage <b id="pm-to">—</b> · Masse à l’atterrissage <b id="pm-ld">—</b> <span class="hint">(issues de l’onglet Masse &amp; centrage)</span></div>
-<div class="cards">
-<section class="card"><h2>Départ</h2><div class="fields"><div class="f full"><label for="d-ad">Aérodrome et piste</label><div class="in"><input id="d-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="d-wx">Météo / METAR / TAF</label><textarea id="d-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p><p class="hint" id="d-wxs"></p></div><div class="f"><label for="d-elev">Élévation</label><div class="in"><input id="d-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="d-qnh">QNH</label><div class="in"><input id="d-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="d-temp">Température extérieure</label><div class="in"><input id="d-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="d-rwy">Axe de piste</label><div class="in"><input id="d-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="d-wdir">Vent, direction</label><div class="in"><input id="d-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="d-wspd">Vent, force</label><div class="in"><input id="d-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="d-gust">Rafales</label><div class="in"><input id="d-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="d-xw">—</b></div><div><span>Face / arrière</span><b id="d-hw">—</b></div><div><span>Altitude pression</span><b id="d-pa">—</b></div><div><span>Altitude densité</span><b id="d-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="d-todr">TODR (AFM)</label><div class="in"><input id="d-todr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="d-toda">TODA départ</label><div class="in"><input id="d-toda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>TODR calculé (AFM)</span><b id="d-tcalc">—</b></div><div><span>TODR × 1,25</span><b id="d-t125">—</b></div><div><span>≤ TODA</span><b id="d-tchk">—</b></div></div></section><section class="card"><h2>Arrivée</h2><div class="fields"><div class="f full"><label for="a-ad">Aérodrome et piste</label><div class="in"><input id="a-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="a-wx">Météo / METAR / TAF</label><textarea id="a-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p><p class="hint" id="a-wxs"></p></div><div class="f"><label for="a-elev">Élévation</label><div class="in"><input id="a-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="a-qnh">QNH</label><div class="in"><input id="a-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="a-temp">Température extérieure</label><div class="in"><input id="a-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="a-rwy">Axe de piste</label><div class="in"><input id="a-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="a-wdir">Vent, direction</label><div class="in"><input id="a-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="a-wspd">Vent, force</label><div class="in"><input id="a-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="a-gust">Rafales</label><div class="in"><input id="a-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="a-xw">—</b></div><div><span>Face / arrière</span><b id="a-hw">—</b></div><div><span>Altitude pression</span><b id="a-pa">—</b></div><div><span>Altitude densité</span><b id="a-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="a-ldr">LDR (AFM)</label><div class="in"><input id="a-ldr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="a-lda">LDA destination</label><div class="in"><input id="a-lda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>LDR calculé (AFM)</span><b id="a-lcalc">—</b></div><div><span>LDR ≤ LDA</span><b id="a-lchk">—</b></div></div></section><section class="card"><h2>Dégagement</h2><div class="fields"><div class="f full"><label for="x-ad">Aérodrome et piste</label><div class="in"><input id="x-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="x-wx">Météo / METAR / TAF</label><textarea id="x-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p><p class="hint" id="x-wxs"></p></div><div class="f"><label for="x-elev">Élévation</label><div class="in"><input id="x-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="x-qnh">QNH</label><div class="in"><input id="x-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="x-temp">Température extérieure</label><div class="in"><input id="x-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="x-rwy">Axe de piste</label><div class="in"><input id="x-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="x-wdir">Vent, direction</label><div class="in"><input id="x-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="x-wspd">Vent, force</label><div class="in"><input id="x-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="x-gust">Rafales</label><div class="in"><input id="x-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="x-xw">—</b></div><div><span>Face / arrière</span><b id="x-hw">—</b></div><div><span>Altitude pression</span><b id="x-pa">—</b></div><div><span>Altitude densité</span><b id="x-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="x-ldr">LDR dégagement (AFM)</label><div class="in"><input id="x-ldr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="x-lda">LDA dégagement</label><div class="in"><input id="x-lda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>LDR calculé (AFM)</span><b id="x-lcalc">—</b></div><div><span>LDR ≤ LDA</span><b id="x-lchk">—</b></div></div><p class="hint">Si le LDR du dégagement est vide, le LDR d’arrivée est utilisé.</p></section></div>
-<p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est donné en degrés vrais. TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Si tu saisis toi-même le TODR ou le LDR, c’est ta valeur qui est utilisée. Vérifie toujours avec l’AFM de l’avion.</p>
+<div class="sumstrip" id="sum"></div>
+<div class="pc-grid" id="pcards"></div>
+<div class="legendbadges"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span></div>
+<p class="note"><b>Ce que l’outil ne fait jamais :</b> inventer une valeur manquante ou lire les graphiques de l’AFM hors des courbes numérisées. Dans ces cas il l’écrit et laisse la case vide pour que tu saisisses la valeur relevée toi-même. La TODA et la LDA ne sont jamais déduites de la longueur de piste : elles viennent de l’AIP, saisies par toi ou lues dans <code>declared.json</code> lorsqu’elles y sont vérifiées.</p>
+<p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est en degrés vrais : l’axe de piste de la base est lui aussi en degrés vrais (un QFU magnétique saisi à la place ajoute l’écart de la variation, 2 à 3° environ en Belgique). TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Limites du calcul : altitude pression de 0 à 10 000 ft, température de −35 à +50 °C, masse jusqu’à 1 150 kg, vent arrière jusqu’à 5 m/s au décollage, aucun vent arrière à l’atterrissage. Vérifie toujours avec l’AFM de l’avion.</p>
 </div>
 <div class="panel" id="panel-wind" hidden>
 <h2 class="ptitle">Triangle des vitesses</h2>
@@ -527,115 +571,334 @@ td.neg{color:var(--muted)}
     if (ad && !$(k + "-ad").value.trim()) $(k + "-ad").value = ad[1];
   }
 
-  /* METAR automatique : l'indicatif OACI saisi charge le dernier METAR (mis à jour toutes les 30 min) */
-  var WXURL = "https://raw.githubusercontent.com/mgh154/da40-masse-centrage/data/metars.json", wxLoad = null;
-  function loadWx(){
-    if (!wxLoad) wxLoad = fetch(WXURL, {cache: "no-store"}).then(function(r){ if (!r.ok) throw 0; return r.json(); }).catch(function(){ wxLoad = null; return null; });
-    return wxLoad;
+  /* ===== Performance ===== */
+  var AP_URL = "airports.json", DECL_URL = "declared.json", WX_URL = "https://raw.githubusercontent.com/mgh154/da40-masse-centrage/data/metars.json";
+  var PKEY = "da40-prov-v1", FACTOR = 1.25;
+  var CARDS = [
+    {k:"d", title:"Départ", kind:"to", rtitle:"DÉCOLLAGE", av:"toda", avLabel:"TODA disponible", sum:"Décollage"},
+    {k:"a", title:"Arrivée", kind:"ld", rtitle:"ATTERRISSAGE", av:"lda", avLabel:"LDA disponible", sum:"Atterrissage"},
+    {k:"x", title:"Dégagement", kind:"ld", rtitle:"ATTERRISSAGE DE DÉGAGEMENT", av:"lda", avLabel:"LDA disponible", sum:"Dégagement"}
+  ];
+  var FIELDS = ["elev","qnh","temp","rwy","wdir","wspd","gust","toda","lda","todr","ldr"];
+  var BADGE = {
+    auto:["AUTO", "Donnée récupérée automatiquement auprès d’une source météo officielle"],
+    chk:["À VÉRIFIER", "Donnée automatique d’une source non officielle (ou ancienne) : à contrôler dans l’AIP ou sur la fiche"],
+    man:["SAISI", "Valeur saisie ou modifiée par toi"],
+    ver:["AIP", "Valeur issue d’un fichier de distances déclarées vérifiées"]
+  };
+  var prov = {}, cur = {}, ap = null, apP = null, declD = null, declP = null, wxP = null;
+
+  function norm(s){ return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); }
+  function pid(k, f){ return k + "-" + f; }
+  function badge(id){
+    var b = $(id + "-b"), p = prov[id];
+    if (!b || !$(id)) return;
+    if (!p || $(id).value === ""){ b.textContent = ""; b.className = "bdg"; b.removeAttribute("title"); return; }
+    b.textContent = BADGE[p][0]; b.className = "bdg " + p; b.title = BADGE[p][1];
   }
-  function icao(k){ var m = $(k + "-ad").value.toUpperCase().match(/^\s*([A-Z]{4})(?![A-Z0-9])/); return m ? m[1] : null; }
-  function wxFor(k){
-    var id = icao(k), st = $(k + "-wxs");
-    if (!id){ st.className = "hint"; st.textContent = ""; return; }
-    st.className = "hint"; st.textContent = "Chargement depuis AviationWeather.gov ...";
-    loadWx().then(function(d){
-      if (icao(k) !== id) return;
-      if (!d){ st.className = "hint bad"; st.textContent = "Météo indisponible : colle le METAR à la main."; return; }
-      var o = d.metars && d.metars[id];
-      if (!o){ st.className = "hint"; st.textContent = id + " n’est pas dans la liste des aérodromes suivis : colle le METAR à la main."; return; }
-      $(k + "-wx").value = o.raw;
-      if (typeof o.elev === "number") $(k + "-elev").value = String(Math.round(o.elev * 3.28084));
-      parseWx(k);
-      var t = new Date(o.obs * 1000), age = Math.max(0, Math.round((Date.now() - t.getTime()) / 60000));
-      st.className = "hint" + (age > 120 ? " bad" : "");
-      st.textContent = "METAR " + id + " de " + ("0" + t.getUTCHours()).slice(-2) + ":" + ("0" + t.getUTCMinutes()).slice(-2) + " UTC (il y a " + (age < 90 ? age + " min" : hm(age)) + "), AviationWeather.gov.";
-      all(); save();
+  function setF(k, f, v, src){
+    var id = pid(k, f), e = $(id);
+    if (!e) return;
+    e.value = (v === null || v === undefined) ? "" : String(v);
+    if (e.value === "") delete prov[id]; else prov[id] = src;
+    badge(id);
+  }
+  function clearCard(k){
+    FIELDS.concat(["wx", "rwyid"]).forEach(function(f){ var e = $(pid(k, f)); if (!e) return; e.value = ""; delete prov[pid(k, f)]; badge(pid(k, f)); });
+    $(k + "-rwys").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
+  }
+  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur})); } catch(e){} }
+
+  /* Données : aérodromes (OurAirports), distances déclarées vérifiées (optionnel), METAR */
+  function getJson(url, opt){ return fetch(url, opt).then(function(r){ if (!r.ok) throw 0; return r.json(); }); }
+  function loadAp(){
+    if (!apP) apP = getJson(AP_URL).then(function(d){
+      ap = d; ap.list = Object.keys(d.a).map(function(c){ var a = d.a[c]; return {c: c, n: a[0], m: a[1], s: norm(a[0] + " " + a[1])}; });
+      return d;
+    }).catch(function(){ apP = null; return null; });
+    return apP;
+  }
+  function loadDecl(){
+    if (!declP) declP = getJson(DECL_URL).then(function(d){ declD = d; return d; }).catch(function(){ declD = {}; return declD; });
+    return declP;
+  }
+  function loadWx(){
+    if (!wxP) wxP = getJson(WX_URL, {cache: "no-store"}).catch(function(){ wxP = null; return null; });
+    return wxP;
+  }
+
+  /* Recherche d'aérodrome */
+  function hideSug(k){ var u = $(k + "-sug"); u.hidden = true; u.innerHTML = ""; $(k + "-ad").setAttribute("aria-expanded", "false"); }
+  function suggest(k){
+    var q = norm($(pid(k, "ad")).value).trim();
+    if (q.length < 2){ hideSug(k); return; }
+    loadAp().then(function(d){
+      if (!d || norm($(pid(k, "ad")).value).trim() !== q) return;
+      var a = [], b = [], i, L = ap.list;
+      for (i = 0; i < L.length && a.length < 8; i++) if (L[i].c.indexOf(q) === 0) a.push(L[i]);
+      for (i = 0; i < L.length && a.length + b.length < 8; i++) if (L[i].c.indexOf(q) !== 0 && L[i].s.indexOf(q) >= 0) b.push(L[i]);
+      var res = a.concat(b).slice(0, 8), u = $(k + "-sug");
+      u.innerHTML = "";
+      if (!res.length){ var li0 = document.createElement("li"); li0.className = "none"; li0.textContent = "Aucun aérodrome trouvé"; u.appendChild(li0); }
+      res.forEach(function(r, n){
+        var li = document.createElement("li"); li.setAttribute("role", "option"); li.dataset.icao = r.c; if (n === 0) li.setAttribute("aria-selected", "true");
+        var bo = document.createElement("b"); bo.textContent = r.c; var sp = document.createElement("span"); sp.textContent = r.n + (r.m ? " · " + r.m : "");
+        li.appendChild(bo); li.appendChild(sp); u.appendChild(li);
+      });
+      u.hidden = false; $(k + "-ad").setAttribute("aria-expanded", "true");
     });
   }
 
-  /* Performance */
-  function card(k){
-    var rwy = num(k + "-rwy"), wd = num(k + "-wdir"), ws = num(k + "-wspd"), g = num(k + "-gust");
-    if (rwy !== null && wd !== null && ws !== null){
-      var a = (wd - rwy) * R, xw = Math.abs(ws * Math.sin(a)), hw = ws * Math.cos(a);
-      var xg = g !== null ? Math.abs(g * Math.sin(a)) : null, worst = xg !== null ? Math.max(xw, xg) : xw;
-      set(k + "-xw", fmt(xw, 1) + " kt" + (xg !== null ? " (raf. " + fmt(xg, 1) + ")" : ""), worst > 20 ? "bad" : "ok");
-      set(k + "-hw", (hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(hw), 1) + " kt", hw < 0 ? "bad" : "");
-    } else { set(k + "-xw", "—"); set(k + "-hw", "—"); }
-    var el = num(k + "-elev"), q = num(k + "-qnh"), t = num(k + "-temp"), pa = null;
-    if (el !== null && q !== null){ pa = el + 30 * (1013 - q); set(k + "-pa", fmt(Math.round(pa), 0) + " ft"); } else set(k + "-pa", "—");
-    if (pa !== null && t !== null){ var tisa = Math.round(15 - 2 * pa / 1000); set(k + "-da", fmt(Math.round(pa + 120 * (t - tisa)), 0) + " ft"); } else set(k + "-da", "—");
+  function selectAd(k, icao){
+    var same = cur[k] === icao;
+    cur[k] = icao; $(pid(k, "ad")).value = icao; hideSug(k);
+    if (!same) clearCard(k);
+    $(k + "-adinfo").textContent = "Chargement des données de " + icao + " ...";
+    Promise.all([loadAp(), loadDecl()]).then(function(){
+      if (cur[k] !== icao) return;
+      var a = ap && ap.a[icao];
+      adInfo(k);
+      if (a && a[2] !== null && prov[pid(k, "elev")] !== "man") setF(k, "elev", a[2], "chk");
+      drawRwys(k);
+      return applyWx(k, icao);
+    }).then(function(){ renderAll(); save(); });
   }
+  function adInfo(k){
+    var a = ap && cur[k] && ap.a[cur[k]];
+    $(k + "-adinfo").textContent = a ? a[0] + (a[1] ? " · " + a[1] : "") + ". Aérodrome et pistes : OurAirports (base collaborative, non officielle)." : (cur[k] ? cur[k] + " absent de la base d’aérodromes : saisis les valeurs." : "");
+  }
+
+  function rwyEnds(k){
+    var a = ap && cur[k] && ap.a[cur[k]], out = [];
+    if (a) a[3].forEach(function(r){ out.push({id: r[0], h: r[1], len: r[4], surf: r[5]}); out.push({id: r[2], h: r[3], len: r[4], surf: r[5]}); });
+    return out.filter(function(e){ return e.id; });
+  }
+  function drawRwys(k){
+    var box = $(k + "-rwys"), sel = $(pid(k, "rwyid")).value, ends = rwyEnds(k), missing = 0;
+    box.innerHTML = "";
+    ends.forEach(function(e){
+      if (e.h === null){ missing++; return; }
+      var b = document.createElement("button"); b.type = "button"; b.dataset.k = k; b.dataset.rwy = e.id;
+      b.setAttribute("aria-pressed", sel === e.id ? "true" : "false");
+      b.textContent = "Piste " + e.id + " · " + ("00" + Math.round(e.h)).slice(-3) + "°";
+      box.appendChild(b);
+    });
+    if (!box.children.length && cur[k] && ap && ap.a[cur[k]]) $(k + "-rwyinfo").textContent = missing ? "Orientation des pistes absente de la source : saisis l’axe de piste." : "Aucune piste dans la source : saisis l’axe de piste.";
+    else rwyInfo(k);
+  }
+  function rwyInfo(k){
+    var id = $(pid(k, "rwyid")).value, e = rwyEnds(k).filter(function(x){ return x.id === id; })[0], d = declD && declD[cur[k]] && declD[cur[k]][id], t;
+    if (!e){ $(k + "-rwyinfo").textContent = ""; return; }
+    t = "Piste " + id + " · axe " + ("00" + Math.round(e.h)).slice(-3) + "° vrai (OurAirports)";
+    if (e.len !== null) t += " · longueur physique " + fmt(e.len, 0) + " m" + (e.surf ? " (" + e.surf + ")" : "") + ". Ce n’est ni la TODA ni la LDA : saisis celles de l’AIP.";
+    if (d && prov[pid(k, "toda")] === "ver") t += " Distances déclarées : " + (d.src || "source non précisée") + ".";
+    $(k + "-rwyinfo").textContent = t;
+  }
+  function selectRwy(k, id){
+    var e = rwyEnds(k).filter(function(x){ return x.id === id; })[0], d = declD && declD[cur[k]] && declD[cur[k]][id];
+    if (!e) return;
+    $(pid(k, "rwyid")).value = id;
+    setF(k, "rwy", e.h, "chk");
+    ["toda", "lda"].forEach(function(f){ if (prov[pid(k, f)] === "ver") setF(k, f, "", null); });
+    if (d){
+      if (typeof d.toda === "number" && prov[pid(k, "toda")] !== "man") setF(k, "toda", d.toda, "ver");
+      if (typeof d.lda === "number" && prov[pid(k, "lda")] !== "man") setF(k, "lda", d.lda, "ver");
+    }
+    rwyInfo(k);
+    Array.prototype.forEach.call($(k + "-rwys").children, function(b){ b.setAttribute("aria-pressed", b.dataset.rwy === id ? "true" : "false"); });
+  }
+
+  /* METAR */
+  function parseWx(k, src){
+    var m = $(pid(k, "wx")).value.toUpperCase();
+    var w = m.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/);
+    if (w){
+      setF(k, "wdir", w[1] === "VRB" ? "" : String(parseInt(w[1], 10)), src);
+      setF(k, "wspd", String(parseInt(w[2], 10)), src);
+      setF(k, "gust", w[3] ? String(parseInt(w[3], 10)) : "", src);
+    }
+    var t = m.match(/\b(M?\d{2})\/(M?\d{2})?\b/);
+    if (t) setF(k, "temp", String(parseInt(t[1].replace("M", "-"), 10)), src);
+    var q = m.match(/\bQ(\d{4})\b/);
+    if (q) setF(k, "qnh", String(parseInt(q[1], 10)), src);
+  }
+  function applyWx(k, icao){
+    var st = $(k + "-wxs");
+    st.className = "hint"; st.textContent = "Chargement depuis AviationWeather.gov ...";
+    return loadWx().then(function(d){
+      if (cur[k] !== icao) return;
+      if (!d){ st.className = "hint bad"; st.textContent = "METAR indisponible (AviationWeather.gov non joignable) : colle le METAR à la main."; return; }
+      var o = d.metars && d.metars[icao];
+      if (!o){ st.className = "hint"; st.textContent = icao + " : pas de METAR récent dans la liste suivie (airports.txt). Colle le METAR à la main."; return; }
+      var t = new Date(o.obs * 1000), age = Math.max(0, Math.round((Date.now() - t.getTime()) / 60000)), old = age > 120;
+      $(pid(k, "wx")).value = o.raw;
+      parseWx(k, old ? "chk" : "auto");
+      var day = t.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC"});
+      var hh = ("0" + t.getUTCHours()).slice(-2) + ":" + ("0" + t.getUTCMinutes()).slice(-2);
+      st.className = "hint" + (old ? " bad" : "");
+      st.textContent = "Source : AviationWeather.gov · METAR du " + day + " à " + hh + " UTC · il y a " + (age < 90 ? age + " min" : hm(age)) + (old ? " : METAR ancien, à vérifier." : ".");
+    });
+  }
+
+  /* Calculs */
+  function readCard(k){
+    function g(f){ return num(pid(k, f)); }
+    return {elev: g("elev"), qnh: g("qnh"), temp: g("temp"), rwy: g("rwy"), wd: g("wdir"), ws: g("wspd"), gust: g("gust")};
+  }
+  function windC(v){
+    if (v.ws === null) return null;
+    if (v.ws === 0) return {known: true, hw: 0, cr: 0, gx: 0};
+    if (v.wd === null || v.rwy === null) return {known: false};
+    var a = (v.wd - v.rwy) * R;
+    return {known: true, hw: v.ws * Math.cos(a), cr: v.ws * Math.sin(a), gx: v.gust !== null ? v.gust * Math.sin(a) : null};
+  }
+
 var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[140.0,508.0],[180.0,494.0],[200.0,486.0],[220.0,479.0],[240.0,471.0],[260.0,464.0],[280.0,456.0],[300.0,449.0],[320.0,441.0],[340.0,433.0],[360.0,425.0],[380.0,417.0],[400.0,409.0],[420.0,402.0],[440.0,393.0],[460.0,384.0],[480.0,375.0],[526.2,354.2],[580.0,287.0],[600.0,262.0],[624.0,232.0]],[[40.0,625.0],[60.0,619.0],[80.0,613.0],[100.0,607.0],[140.0,595.0],[180.0,584.0],[200.0,578.0],[220.0,572.0],[240.0,566.0],[260.0,560.0],[280.0,554.0],[300.0,547.0],[320.0,541.0],[340.0,535.0],[360.0,528.0],[380.0,522.0],[400.0,515.0],[420.0,509.0],[440.0,503.0],[460.0,496.0],[480.0,489.0],[516.5,476.8],[580.0,407.0],[600.0,385.0],[640.0,333.0],[660.0,304.0],[680.0,274.0],[700.0,243.0],[707.1,232.0]],[[40.0,686.0],[60.0,681.0],[80.0,676.0],[100.0,671.0],[140.0,662.0],[180.0,652.0],[200.0,647.0],[220.0,642.0],[240.0,636.0],[260.0,632.0],[280.0,627.0],[300.0,622.0],[320.0,617.0],[340.0,612.0],[360.0,607.0],[380.0,602.0],[400.0,596.0],[420.0,590.0],[440.0,585.0],[460.0,579.0],[480.0,573.0],[525.3,560.2],[580.0,500.0],[600.0,478.0],[640.0,431.0],[660.0,405.0],[680.0,379.0],[700.0,351.0],[720.0,322.0],[740.0,292.0],[760.0,263.0],[780.0,234.0],[781.4,232.0]],[[40.0,734.0],[60.0,730.0],[80.0,726.0],[100.0,722.0],[140.0,714.0],[180.0,706.0],[200.0,702.0],[220.0,698.0],[240.0,694.0],[260.0,689.0],[280.0,685.0],[300.0,680.0],[320.0,676.0],[340.0,671.0],[360.0,667.0],[380.0,663.0],[400.0,658.0],[420.0,654.0],[440.0,649.0],[460.0,644.0],[480.0,640.0],[526.5,629.1],[580.0,573.0],[600.0,552.0],[640.0,509.0],[660.0,487.0],[680.0,463.0],[700.0,438.0],[720.0,412.0],[740.0,385.0],[760.0,359.0],[780.0,335.0],[800.0,313.0],[820.0,289.0],[840.0,264.0],[860.0,238.0],[864.6,232.0]],[[40.0,773.0],[60.0,769.0],[80.0,766.0],[100.0,762.0],[140.0,756.0],[180.0,748.0],[200.0,745.0],[220.0,742.0],[240.0,738.0],[260.0,735.0],[280.0,732.0],[300.0,728.0],[320.0,724.0],[340.0,719.0],[360.0,715.0],[380.0,711.0],[400.0,708.0],[420.0,705.0],[440.0,701.0],[460.0,697.0],[480.0,693.0],[524.0,684.2],[580.0,631.0],[600.0,612.0],[640.0,573.0],[660.0,552.0],[680.0,530.0],[700.0,507.0],[720.0,484.0],[740.0,461.0],[760.0,439.0],[780.0,419.0],[800.0,400.0],[820.0,381.0],[840.0,360.0],[860.0,339.0]],[[40.0,801.0],[60.0,798.0],[80.0,795.0],[100.0,792.0],[140.0,786.0],[180.0,779.0],[200.0,776.0],[220.0,773.0],[240.0,770.0],[260.0,767.0],[280.0,765.0],[300.0,761.0],[320.0,758.0],[340.0,755.0],[360.0,751.0],[380.0,747.0],[400.0,744.0],[420.0,741.0],[440.0,737.0],[460.0,734.0],[480.0,731.0],[531.4,722.4],[580.0,703.0],[600.0,695.0],[640.0,670.0],[660.0,652.0],[680.0,634.0],[700.0,616.0],[720.0,598.0],[740.0,578.0],[760.0,558.0],[780.0,544.0],[800.0,531.0],[820.0,518.0],[840.0,504.0],[860.0,489.0]],[[40.0,825.0],[60.0,821.0],[80.0,819.0],[140.0,819.0],[180.0,806.0],[200.0,803.0],[220.0,800.0],[240.0,798.0],[260.0,795.0],[280.0,793.0],[300.0,790.0],[320.0,787.0],[340.0,784.0],[360.0,781.0],[380.0,777.0],[400.0,774.0],[420.0,772.0],[440.0,769.0],[460.0,767.0],[522.2,759.2],[580.0,739.0],[600.0,732.0],[640.0,719.0],[660.0,711.0],[680.0,702.0],[700.0,692.0],[720.0,680.0],[740.0,664.0],[760.0,648.0],[780.0,637.0],[800.0,627.0],[820.0,617.0],[840.0,606.0],[860.0,596.0]],[[40.0,847.0],[60.0,844.0],[80.0,842.0],[140.0,835.0],[180.0,830.0],[200.0,828.0],[220.0,825.0],[240.0,822.0],[260.0,820.0],[280.0,817.0],[300.0,814.0],[320.0,812.0],[340.0,809.0],[360.0,807.0],[380.0,803.0],[400.0,801.0],[420.0,799.0],[440.0,796.0],[460.0,794.0],[480.0,792.0],[502.5,789.4],[580.0,770.0],[600.0,765.0],[640.0,753.0],[660.0,747.0],[680.0,741.0],[700.0,734.0],[720.0,728.0],[740.0,720.0],[760.0,713.0],[780.0,706.0],[800.0,699.0],[820.0,692.0],[840.0,684.0],[860.0,675.0]]],"p2":[[[936,232],[962,330],[1027,560],[1090,707],[1152,811]],[[902,261],[962,487],[1027,654],[1090,767.5],[1152,851]],[[902,438],[962,597.5],[1027,725],[1090,815.5],[1152,882.5]],[[902,557],[962,679],[1027,778.5],[1090,851],[1152,908.6]],[[902,647],[962,742],[1027,822],[1090,882.5],[1152,930.7]],[[902,689],[962,773],[1027,843],[1090,898.5],[1152,941]],[[902,736.5],[962,806],[1027,868.5],[1090,916.5],[1152,953.6]],[[902,776],[962,836],[1027,889],[1090,931],[1152,965.3]],[[902,803],[962,857.5],[1027,905],[1090,942],[1152,974]],[[902,827.5],[962,876],[1027,918],[1090,952],[1152,982]],[[902,849],[962,891],[1027,930],[1090,962],[1152,987.5]]],"s":[432.5,527.5,600,657.5,704,733.5,764,796.5,825.5,866,894.5,917,952.5],"e":[550,632,692,741,779,804,830,858,881,915,939,957,985],"t":[253,369,457,528,583,620,657,700,735,787,824,855,900]},"ld":{"p1":[[[40,469],[812,230]],[[40,516],[860,292]],[[40,559],[860,354]],[[40,606],[860,409]],[[40,649],[860,463]],[[40,688],[860,518]]],"p2":[[[906.0,254.0],[920.5,268.5],[935.5,284.5],[948.5,298.0],[962.5,312.5],[975.5,325.5],[987.5,338.0],[1001.5,352.5],[1017.5,367.5],[1032.5,382.5],[1046.0,395.5],[1058.0,406.5],[1071.0,418.5],[1083.0,429.5],[1095.0,441.5],[1107.0,452.5],[1119.0,463.5],[1131.0,474.5],[1143.0,485.5],[1148.0,490.5]],[[906.0,354.0],[918.0,364.5],[930.0,375.5],[942.0,385.5],[954.0,396.5],[966.0,406.5],[978.0,417.5],[990.0,427.5],[1002.0,438.0],[1014.0,448.5],[1026.0,460.0],[1038.0,468.5],[1050.0,478.5],[1062.0,487.5],[1074.0,497.5],[1086.0,507.0],[1098.0,516.5],[1110.0,526.5],[1122.0,536.0],[1134.0,545.5],[1146.0,555.5],[1148.0,556.5]],[[906.0,427.0],[919.0,438.5],[931.0,448.5],[943.0,457.5],[955.0,467.5],[967.0,477.5],[979.0,487.0],[991.0,496.5],[1003.0,506.5],[1015.0,516.5],[1027.0,525.5],[1039.0,534.5],[1051.0,543.0],[1063.0,551.5],[1075.0,560.0],[1087.0,568.5],[1099.0,577.5],[1111.0,585.5],[1123.0,594.5],[1135.0,603.0],[1147.0,611.5],[1148.0,612.5]],[[906.0,505.0],[918.0,514.5],[930.0,523.5],[942.0,532.5],[954.0,541.5],[966.0,550.5],[978.0,559.5],[990.0,568.5],[1002.0,577.0],[1014.0,586.0],[1026.0,594.0],[1038.0,602.5],[1050.0,610.0],[1062.0,617.5],[1074.0,625.5],[1086.0,632.0],[1098.0,639.5],[1110.0,647.0],[1122.0,654.5],[1134.0,662.0],[1146.0,669.5],[1148.0,670.5]],[[906.0,582.0],[918.0,590.0],[930.0,597.5],[942.0,605.0],[954.0,612.5],[966.0,619.5],[978.0,627.5],[990.0,634.5],[1002.0,642.0],[1014.0,649.5],[1026.0,648.5],[1038.5,664.5],[1056.0,674.0],[1068.0,680.5],[1080.0,687.5],[1092.0,694.5],[1104.0,701.0],[1116.0,707.5],[1128.0,714.5],[1140.0,721.5],[1148.0,725.5]],[[906.0,660.0],[918.0,667.0],[930.0,674.0],[942.0,680.5],[954.0,687.5],[966.0,694.5],[978.0,701.0],[990.0,707.5],[1002.0,714.5],[1014.0,721.5],[1026.0,727.5],[1038.0,734.0],[1050.0,740.0],[1062.0,745.5],[1074.0,751.5],[1086.0,757.5],[1098.0,763.5],[1110.0,770.0],[1122.0,775.0],[1134.0,781.0],[1146.0,787.0],[1148.0,788.0]]],"p3":[[[1194.0,256.0],[1203.5,269.0],[1212.5,281.0],[1221.5,293.0],[1230.0,305.0],[1239.0,317.0],[1247.5,329.0],[1256.5,341.0],[1265.5,353.0],[1274.5,365.0],[1283.5,377.0],[1292.0,389.0],[1301.0,401.0],[1309.5,413.0],[1318.5,425.0],[1327.5,437.0],[1337.0,449.0],[1347.0,461.0],[1357.5,473.0],[1367.5,485.0],[1377.5,497.0],[1387.5,509.0],[1397.5,521.0],[1407.5,533.0],[1417.5,545.0],[1427.5,557.0],[1437.5,569.0],[1447.5,581.0],[1457.5,593.0],[1467.5,605.0],[1471.0,609.0]],[[1194.0,360.0],[1204.0,373.0],[1213.5,385.0],[1223.5,397.0],[1232.5,409.0],[1242.5,421.0],[1252.0,433.0],[1261.5,445.0],[1271.5,457.0],[1280.5,469.0],[1290.5,481.0],[1300.0,493.0],[1309.5,505.0],[1319.5,517.0],[1328.5,529.0],[1339.5,541.0],[1351.5,554.0],[1365.5,569.5],[1379.5,583.5],[1393.0,599.0],[1406.5,614.5],[1420.5,628.5],[1434.5,643.5],[1447.5,657.5],[1461.5,673.5],[1470.5,682.5]],[[1194.0,446.0],[1204.5,459.0],[1214.5,471.0],[1224.5,483.0],[1234.5,495.0],[1245.0,507.0],[1255.0,519.0],[1265.0,531.0],[1275.0,543.0],[1285.5,555.0],[1295.5,567.0],[1305.5,579.0],[1315.5,591.0],[1325.5,603.0],[1335.5,615.0],[1348.5,628.5],[1362.5,641.5],[1374.5,653.5],[1386.5,666.5],[1398.5,678.5],[1410.5,690.5],[1422.5,701.5],[1434.5,713.5],[1446.5,726.5],[1458.5,738.5],[1470.5,750.5],[1471.5,751.5]],[[1194.0,543.0],[1205.5,556.0],[1216.5,568.0],[1227.5,581.0],[1239.5,594.5],[1252.5,607.5],[1263.5,619.5],[1274.0,632.0],[1285.5,645.5],[1297.5,657.5],[1308.5,670.0],[1320.5,683.0],[1331.5,695.0],[1347.0,709.5],[1359.0,720.5],[1371.0,732.0],[1383.0,743.5],[1395.0,754.5],[1407.0,765.5],[1420.5,778.0],[1433.5,789.5],[1445.5,801.5],[1458.0,812.5],[1470.0,823.5],[1472.0,825.5]],[[1194.0,624.0],[1206.5,638.0],[1219.5,652.0],[1232.5,664.5],[1246.5,680.5],[1259.5,694.0],[1274.5,709.5],[1287.5,724.0],[1301.5,739.5],[1315.5,756.0],[1314.5,762.0],[1321.0,770.0],[1335.0,774.5],[1347.0,783.5],[1359.0,793.5],[1371.0,803.5],[1383.0,813.5],[1395.0,823.5],[1407.0,833.5],[1419.0,843.5],[1431.0,853.5],[1443.0,863.5],[1455.0,873.5],[1467.0,883.5],[1472.0,887.5]],[[1194.0,717.0],[1209.0,732.5],[1221.0,743.5],[1233.0,754.5],[1245.0,766.5],[1257.0,777.5],[1269.5,790.0],[1282.0,801.5],[1294.0,812.5],[1306.0,824.5],[1318.0,835.5],[1330.0,847.5],[1342.0,856.5],[1354.0,865.0],[1366.0,873.5],[1378.0,882.5],[1390.0,891.5],[1402.0,900.0],[1414.0,908.5],[1426.0,917.5],[1438.0,926.5],[1450.0,935.0],[1462.0,943.5],[1472.0,951.0]],[[1194.0,795.0],[1206.0,805.5],[1218.0,816.0],[1230.0,826.5],[1242.0,836.5],[1254.0,847.5],[1266.0,857.5],[1278.0,868.5],[1290.0,878.5],[1302.0,889.0],[1314.0,899.5],[1326.0,909.5],[1338.0,919.0],[1350.0,926.5],[1362.0,934.5],[1374.0,942.0],[1386.0,950.0],[1398.0,957.5],[1410.0,965.5],[1422.0,973.0],[1434.0,981.0],[1446.0,988.5],[1458.0,996.5],[1470.0,1006.5],[1472.0,1007.0]]]}};
-  function pl(p, x){
+/* AFM:début — lecture des graphiques, sans extrapolation : hors des courbes numérisées, le résultat est NaN.
+     La tolérance de 6 px ne sert qu'aux lignes verticales de référence (902, 1188), dont les courbes numérisées démarrent 4 à 6 px plus loin. */
+  function plS(p, x, tol){
     var n = p.length, i = 1;
-    if (x <= p[0][0]) i = 1; else if (x >= p[n - 1][0]) i = n - 1; else { while (p[i][0] < x) i++; }
+    tol = tol || 0;
+    if (x < p[0][0] - tol || x > p[n - 1][0] + tol) return NaN;
+    while (i < n - 1 && p[i][0] < x) i++;
     var a = p[i - 1], b = p[i];
-    return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]);
+    return b[0] === a[0] ? a[1] : a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]);
   }
-  function fam(vals, keys, k){
-    var n = keys.length, i = 0;
-    if (k >= keys[n - 1]) i = n - 2; else if (k > keys[0]){ while (i < n - 2 && keys[i + 1] <= k) i++; }
-    return vals[i] + (k - keys[i]) / (keys[i + 1] - keys[i]) * (vals[i + 1] - vals[i]);
+  function famS(vals, keys, k){
+    for (var i = 0; i < keys.length - 1; i++){
+      var a = keys[i], b = keys[i + 1];
+      if (!isFinite(a) || !isFinite(b) || k < Math.min(a, b) || k > Math.max(a, b)) continue;
+      var va = vals[i], vb = vals[i + 1];
+      if (!isFinite(va) || !isFinite(vb)) return NaN;
+      return b === a ? va : va + (k - a) / (b - a) * (vb - va);
+    }
+    return NaN;
   }
   function tx(t){ return 36 + 9.741 * (t + 35); }
   function toDist(pa, t, m, wind){
     var x = tx(t), PAK = [0, 2000, 4000, 6000, 7000, 8000, 9000, 10000];
-    var ys = AFM.to.p1.map(function(c){ return pl(c, x); }).reverse();
-    var y1 = fam(ys, PAK, pa);
+    var ys = AFM.to.p1.map(function(c){ return plS(c, x); }).reverse();
+    var y1 = famS(ys, PAK, pa);
     var xm = 902 + (1150 - m) * 0.6275;
-    var st = AFM.to.p2.map(function(c){ return pl(c, 902); }), vl = AFM.to.p2.map(function(c){ return pl(c, xm); });
-    var y2 = fam(vl, st, y1), S = AFM.to.s, E = AFM.to.e, T = AFM.to.t, en = [];
+    var st = AFM.to.p2.map(function(c){ return plS(c, 902, 6); }), vl = AFM.to.p2.map(function(c){ return plS(c, xm, 6); });
+    var y2 = famS(vl, st, y1), S = AFM.to.s, E = AFM.to.e, T = AFM.to.t, en = [];
     for (var j = 0; j < S.length; j++) en.push(wind >= 0 ? S[j] + (E[j] - S[j]) * 14.4 * wind / 282 : S[j] + (T[j] - S[j]) * 14.4 * -wind / 142);
-    var y3 = fam(en, S, y2);
+    var y3 = famS(en, S, y2);
     return 1800 - (y3 - 251) / 0.459375;
   }
   function ldDist(pa, t, m, wind){
     var x = tx(t), PAK = [0, 2000, 4000, 6000, 8000, 10000];
-    var ys = AFM.ld.p1.map(function(c){ return pl(c, x); }).reverse();
-    var y1 = fam(ys, PAK, pa);
+    var ys = AFM.ld.p1.map(function(c){ return plS(c, x); }).reverse();
+    var y1 = famS(ys, PAK, pa);
     var xm = 902 + (1150 - m) * 250 / 300;
-    var st = AFM.ld.p2.map(function(c){ return pl(c, 902); }), vl = AFM.ld.p2.map(function(c){ return pl(c, xm); });
-    var y2 = fam(vl, st, y1), xw = 1188 + 14.4 * Math.max(wind, 0);
-    var s3 = AFM.ld.p3.map(function(c){ return pl(c, 1188); }), v3 = AFM.ld.p3.map(function(c){ return pl(c, xw); });
-    var y3 = fam(v3, s3, y2);
+    var st = AFM.ld.p2.map(function(c){ return plS(c, 902, 6); }), vl = AFM.ld.p2.map(function(c){ return plS(c, xm, 6); });
+    var y2 = famS(vl, st, y1), xw = 1188 + 14.4 * wind;
+    var s3 = AFM.ld.p3.map(function(c){ return plS(c, 1188, 6); }), v3 = AFM.ld.p3.map(function(c){ return plS(c, xw, 6); });
+    var y3 = famS(v3, s3, y2);
     return 1100 - (y3 - 306) / 0.78;
   }
-  function cond(k){
-    var el = num(k + "-elev"), q = num(k + "-qnh"), t = num(k + "-temp");
-    if (el === null || q === null || t === null) return null;
-    var rwy = num(k + "-rwy"), wd = num(k + "-wdir"), ws = num(k + "-wspd"), w = 0, known = false;
-    if (rwy !== null && wd !== null && ws !== null){ w = ws * Math.cos((wd - rwy) * R); known = true; }
-    return {pa: el + 30 * (1013 - q), t: t, w: w, known: known};
+  /* Domaine des graphiques : renvoie {val} (arrondi vers le haut à 10 m) ou {err} avec la raison */
+  function afm(kind, pa, t, m, w){
+    var to = kind === "to";
+    if (pa < 0) return {err: "Altitude pression négative : le graphique AFM commence à 0 ft."};
+    if (pa > 10000) return {err: "Altitude pression au-dessus de 10 000 ft : hors du graphique AFM."};
+    if (t < -35 || t > 50) return {err: "Température hors du graphique AFM (−35 à +50 °C)."};
+    if (m > 1150) return {err: "Masse au-dessus de 1 150 kg : hors du graphique AFM."};
+    if (m < (to ? 750 : 850)) return {err: "Masse sous " + (to ? 750 : 850) + " kg : hors du graphique AFM."};
+    if (w > 19.5) return {err: "Vent de face au-delà de l’échelle du graphique AFM (19,5 kt)."};
+    if (to && w < -9.7) return {err: "Vent arrière au-delà des 5 m/s du graphique AFM."};
+    if (!to && w < 0) return {err: "Vent arrière : non prévu par le graphique d’atterrissage de l’AFM."};
+    var d = to ? toDist(pa, t, m, w) : ldDist(pa, t, m, w);
+    if (!isFinite(d) || d <= 0) return {err: "Conditions hors du domaine des courbes numérisées de l’AFM."};
+    return {val: Math.ceil(d / 10) * 10};
   }
-  function up10(v){ return Math.ceil(v / 10) * 10; }
-  function calc(k, kind){
-    var c = cond(k), mb = window.__mb;
-    if (!mb) return {txt: "Remplis l’onglet Masse & centrage"};
-    if (!c) return {txt: "Élévation, QNH et température requis"};
-    var m = kind === "to" ? mb.to : mb.ld, lo = kind === "to" ? 750 : 850;
-    if (c.t < -35 || c.t > 50 || c.pa < -1000 || c.pa > 10000 || m < lo || m > 1150) return {txt: "Hors des graphiques de l’AFM"};
-    var w = c.w, note = c.known ? "" : " (sans vent)";
-    if (kind === "to"){
-      if (w < -9.7) return {txt: "Vent arrière au-delà des 5 m/s du graphique"};
-      return {val: up10(toDist(c.pa, c.t, m, w)), txt: "≈ " + fmt(up10(toDist(c.pa, c.t, m, w)), 0) + " m" + note};
+/* AFM:fin */
+  /* Cartes : construction et affichage */
+  function fld(k, f, label, unit, full){
+    var id = pid(k, f);
+    return '<div class="f' + (full ? ' full' : '') + '"><label for="' + id + '">' + label + '<span class="bdg" id="' + id + '-b"></span></label><div class="in"><input id="' + id + '" inputmode="decimal" autocomplete="off"><span>' + unit + '</span></div></div>';
+  }
+  function cardHtml(c){
+    var k = c.k, to = c.kind === "to", man = to ? "todr" : "ldr";
+    return '<section class="card pc" aria-labelledby="h-' + k + '"><h2 id="h-' + k + '">' + c.title + '</h2>'
+      + '<div class="f full srch"><label for="' + k + '-ad">Aérodrome (code OACI ou nom)</label>'
+      + '<div class="in"><input id="' + k + '-ad" class="txt" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + k + '-sug" autocomplete="off" spellcheck="false" placeholder="Ex. EBCI ou Charleroi"></div>'
+      + '<ul class="sug" id="' + k + '-sug" role="listbox" hidden></ul><p class="hint" id="' + k + '-adinfo"></p></div>'
+      + '<div class="f full"><label id="' + k + '-rl">Piste</label><div class="rwys" id="' + k + '-rwys" role="group" aria-labelledby="' + k + '-rl"></div><p class="hint" id="' + k + '-rwyinfo"></p><input type="hidden" id="' + k + '-rwyid"></div>'
+      + '<div class="fields">' + fld(k, "elev", "Élévation", "ft") + fld(k, "rwy", "Axe de piste (° vrai)", "°") + fld(k, "wdir", "Vent, direction", "°") + fld(k, "wspd", "Vent, force", "kt")
+      + fld(k, "gust", "Rafales", "kt") + fld(k, "qnh", "QNH", "hPa") + fld(k, "temp", "Température extérieure", "°C") + '</div>'
+      + '<div class="f full wxbox"><label for="' + k + '-wx">METAR / TAF</label><textarea id="' + k + '-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Rempli automatiquement, ou colle un METAR"></textarea>'
+      + '<p class="hint" id="' + k + '-wxs"></p><div class="row-btn"><button type="button" class="mini" data-refresh="' + k + '">Recharger le METAR</button></div></div>'
+      + '<div class="kv"><div><span>Vent de face / arrière</span><b id="' + k + '-hw">—</b></div><div><span>Vent traversier</span><b id="' + k + '-xw">—</b></div><div><span>Altitude pression</span><b id="' + k + '-pa">—</b></div><div><span>Altitude densité</span><b id="' + k + '-da">—</b></div></div>'
+      + '<h3>Distances</h3><div class="fields">' + fld(k, c.av, c.avLabel + " (AIP)", "m") + fld(k, man, (to ? "TODR" : "LDR") + " AFM saisi", "m") + '</div>'
+      + '<p class="hint">Laisse « ' + (to ? "TODR" : "LDR") + ' AFM saisi » vide pour utiliser le calcul d’après les graphiques de l’AFM.</p>'
+      + '<div id="' + k + '-res"></div></section>';
+  }
+  function setT(id, t, cls){ var e = $(id); e.textContent = t; e.className = cls || ""; }
+  function sgn(n){ return (n >= 0 ? "+" : "−") + fmt(Math.abs(n), 0) + " m"; }
+  function row(label, sub, val, cls){
+    return '<div class="rr"><div class="rl">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</div><div class="rv ' + (cls || "") + '">' + val + '</div></div>';
+  }
+  function srcWord(id){ var p = prov[id]; return p === "ver" ? "valeur AIP" : (p === "man" ? "valeur saisie" : (p === "chk" ? "à vérifier" : "")); }
+
+  function render(c){
+    var k = c.k, v = readCard(k), wc = windC(v), pa = null, to = c.kind === "to", mb = window.__mb;
+    if (v.elev !== null && v.qnh !== null) pa = v.elev + 30 * (1013 - v.qnh);
+    setT(k + "-pa", pa === null ? "—" : fmt(Math.round(pa), 0) + " ft");
+    if (pa !== null && v.temp !== null) setT(k + "-da", fmt(Math.round(pa + 120 * (v.temp - Math.round(15 - 2 * pa / 1000))), 0) + " ft"); else setT(k + "-da", "—");
+    if (wc && wc.known){
+      setT(k + "-hw", (wc.hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(wc.hw), 1) + " kt", wc.hw < 0 ? "bad" : "");
+      var worst = Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx));
+      setT(k + "-xw", fmt(Math.abs(wc.cr), 1) + " kt" + (wc.cr > 0.05 ? " de droite" : (wc.cr < -0.05 ? " de gauche" : "")) + (wc.gx !== null && v.gust !== null ? " · raf. " + fmt(Math.abs(wc.gx), 1) : ""), worst > 20 ? "bad" : "ok");
+    } else { setT(k + "-hw", wc ? "axe de piste ?" : "—"); setT(k + "-xw", wc ? "axe de piste ?" : "—"); }
+
+    var m = mb ? (to ? mb.to : mb.ld) : null, manId = to ? "todr" : "ldr", man = num(pid(k, manId)), av = num(pid(k, c.av));
+    var miss = [], err = null, val = null, how = "";
+    if (man !== null){ val = man; how = "valeur saisie"; }
+    else {
+      if (m === null) miss.push("la masse (onglet Masse & centrage)");
+      if (pa === null) miss.push("l’élévation et le QNH");
+      if (v.temp === null) miss.push("la température");
+      if (!wc) miss.push("le vent"); else if (!wc.known) miss.push("l’axe de piste");
+      if (!miss.length){
+        var r = afm(c.kind, pa, v.temp, m, wc.hw);
+        if (r.err) err = r.err; else { val = r.val; how = "AFM " + (to ? "p. 5-12" : "p. 5-20") + " · " + fmt(m, 0) + " kg"; }
+      }
     }
-    if (w < 0) return {val: up10(ldDist(c.pa, c.t, m, 0)), txt: "≈ " + fmt(up10(ldDist(c.pa, c.t, m, 0)), 0) + " m sans vent, vent arrière non prévu par l’AFM : prévois de la marge", warn: true};
-    return {val: up10(ldDist(c.pa, c.t, m, w)), txt: "≈ " + fmt(up10(ldDist(c.pa, c.t, m, w)), 0) + " m" + note};
+    var req = val === null ? null : (to ? Math.ceil(val * FACTOR) : val);
+    var margin = req !== null && av !== null ? av - req : null;
+    var cls = margin === null ? "na" : (margin >= 0 ? "ok" : "bad");
+    var h = '<div class="rescard"><div class="rhead"><div class="rtitle">' + c.rtitle + '</div><div class="pill ' + cls + '">' + (margin === null ? "INCOMPLET" : (margin >= 0 ? "✓ SUFFISANT" : "✗ INSUFFISANT")) + '</div></div>';
+    h += row((to ? "TODR" : "LDR") + " AFM", how, val === null ? "—" : fmt(val, 0) + " m");
+    if (to) h += row("TODR × 1,25", "coefficient de la fiche", req === null ? "—" : fmt(req, 0) + " m");
+    h += row(c.avLabel, srcWord(pid(k, c.av)), av === null ? "à saisir" : fmt(av, 0) + " m", av === null ? "dim" : "");
+    if (margin !== null){
+      h += '<div class="margin ' + cls + '"><span>Marge' + (to ? " (avec × 1,25)" : "") + '</span><b>' + sgn(margin) + '</b></div>';
+      if (to) h += '<p class="rnote">Marge sur le TODR AFM seul : ' + sgn(av - val) + '.</p>';
+    } else {
+      var why = err ? err : (miss.length ? "Il manque " + miss.join(", ") + "." : "");
+      if (val !== null && av === null) why = "Saisis la " + (to ? "TODA" : "LDA") + " de la piste (AIP) pour obtenir la marge.";
+      h += '<p class="rneed">' + (why || "En attente des données.") + (err ? " Saisis la valeur AFM à la main si tu l’as relevée." : "") + '</p>';
+    }
+    h += '<p class="rnote">' + (to
+      ? "TODR × 1,25 : coefficient utilisé dans la fiche de préparation de l’école, appliqué au TODR de l’AFM comme marge de sécurité. Il ne vient pas de l’AFM. Il ne s’applique ici qu’au décollage, piste sèche, en dur et plane."
+      : "Aucun coefficient n’est appliqué : la LDR est la valeur brute de l’AFM, piste sèche, en dur et plane" + (c.k === "x" ? ", avec la masse à l’atterrissage prévue (marge de sécurité)." : ".")) + '</p></div>';
+    $(k + "-res").innerHTML = h;
+    return {margin: margin, cls: cls};
   }
-  function chk(id, ok, extra){ set(id, (ok ? "OK" : "NON") + (extra || ""), ok ? "ok" : "bad"); }
-  function dist(){
-    var c1 = calc("d", "to"), todr = num("d-todr"), toda = num("d-toda");
-    set("d-tcalc", c1.txt, c1.warn ? "bad" : "");
-    if (todr === null && c1.val) todr = c1.val;
-    if (todr !== null){ var t = todr * 1.25; set("d-t125", fmt(Math.round(t), 0) + " m"); if (toda !== null) chk("d-tchk", t <= toda, " (" + fmt(toda, 0) + " m)"); else set("d-tchk", "—"); } else { set("d-t125", "—"); set("d-tchk", "—"); }
-    var c2 = calc("a", "ld"), c3 = calc("x", "ld");
-    set("a-lcalc", c2.txt, c2.warn ? "bad" : ""); set("x-lcalc", c3.txt, c3.warn ? "bad" : "");
-    var ldr = num("a-ldr"); if (ldr === null && c2.val) ldr = c2.val;
-    var lda = num("a-lda");
-    if (ldr !== null && lda !== null) chk("a-lchk", ldr <= lda, " (" + fmt(lda, 0) + " m)"); else set("a-lchk", "—");
-    var lx = num("x-ldr"); if (lx === null) lx = c3.val || ldr; var ax = num("x-lda");
-    if (lx !== null && ax !== null) chk("x-lchk", lx <= ax, " (" + fmt(ax, 0) + " m)"); else set("x-lchk", "—");
+  function renderAll(){
+    var res = CARDS.map(render), s = "";
+    CARDS.forEach(function(c, i){
+      var r = res[i];
+      s += '<div class="sumchip ' + r.cls + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + (r.margin === null ? "incomplet" : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")) + '</div></div>';
+    });
+    $("sum").innerHTML = s;
+    masses();
+  }
+  function dist(){ renderAll(); }
+
+  function build(){
+    $("pcards").innerHTML = CARDS.map(cardHtml).join("");
   }
 
   /* Triangle des vitesses */
@@ -716,23 +979,71 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     other.value = String(Math.round(r * 100) / 100).replace(".", ",");
   }
 
-  function all(){ ["d", "a", "x"].forEach(card); dist(); wind(); crp(); masses(); }
+  function all(){ renderAll(); wind(); crp(); }
   var scope = "#panel-performance input, #panel-performance textarea, #panel-wind input, #panel-crp input";
   function save(){
     try { var o = {}; Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ o[e.id] = e.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
+    saveProv();
+  }
+  function onAd(k, t){
+    var q = t.value.toUpperCase().trim();
+    if (/^[A-Z]{4}$/.test(q)) loadAp().then(function(d){
+      if (d && ap.a[q] && $(pid(k, "ad")).value.toUpperCase().trim() === q) selectAd(k, q); else suggest(k);
+    });
+    else suggest(k);
   }
   document.addEventListener("input", function(e){
     var t = e.target;
     if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp")) return;
-    if (/-wx$/.test(t.id)) parseWx(t.id.split("-")[0]);
-    if (/-ad$/.test(t.id)) wxFor(t.id.split("-")[0]);
+    var m = t.closest("#panel-performance") && /^([dax])-(.+)$/.exec(t.id || "");
+    if (m){
+      var k = m[1], f = m[2];
+      if (f === "ad") onAd(k, t);
+      else if (f === "wx"){ parseWx(k, "man"); $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Source : METAR saisi à la main."; }
+      else if (FIELDS.indexOf(f) >= 0){ if (t.value === "") delete prov[t.id]; else prov[t.id] = "man"; badge(t.id); }
+    }
     if (t.dataset && t.dataset.cv) conv(t);
     all(); save();
   });
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if (!t.closest) return;
+    var li = t.closest(".sug li[data-icao]");
+    if (li){ selectAd(li.parentNode.id.split("-")[0], li.dataset.icao); return; }
+    var b = t.closest(".rwys button");
+    if (b){ selectRwy(b.dataset.k, b.dataset.rwy); renderAll(); save(); return; }
+    var rf = t.closest("[data-refresh]");
+    if (rf){
+      var k = rf.dataset.refresh, c = cur[k];
+      if (!c){ $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Choisis d’abord un aérodrome."; return; }
+      wxP = null; applyWx(k, c).then(function(){ renderAll(); save(); });
+      return;
+    }
+    if (!t.closest(".srch")) CARDS.forEach(function(c){ hideSug(c.k); });
+  });
+  document.addEventListener("keydown", function(e){
+    var t = e.target;
+    if (!t.id || !/^[dax]-ad$/.test(t.id)) return;
+    var k = t.id.charAt(0), u = $(k + "-sug");
+    if (e.key === "Enter"){ var li = u.querySelector("li[data-icao]"); if (li){ e.preventDefault(); selectAd(k, li.dataset.icao); } }
+    else if (e.key === "Escape") hideSug(k);
+  });
+
+  build();
   try {
     var o = JSON.parse(localStorage.getItem(KEY) || "null");
     if (o) Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ if (typeof o[e.id] === "string") e.value = o[e.id]; });
   } catch(e){}
+  try {
+    var pv = JSON.parse(localStorage.getItem(PKEY) || "null");
+    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; }
+  } catch(e){}
+  CARDS.forEach(function(c){
+    FIELDS.forEach(function(f){ var id = pid(c.k, f); if (!$(id)) return; if (!prov[id] && $(id).value !== "") prov[id] = "man"; if (prov[id] && $(id).value === "") delete prov[id]; badge(id); });
+    if (!cur[c.k]) return;
+    if ($(pid(c.k, "wx")).value) $(c.k + "-wxs").textContent = "METAR conservé de la dernière visite : « Recharger le METAR » l’actualise.";
+    Promise.all([loadAp(), loadDecl()]).then(function(){ adInfo(c.k); drawRwys(c.k); renderAll(); });
+  });
   all();
   var h = (location.hash || "").slice(1), saved = null;
   try { saved = localStorage.getItem(TABKEY); } catch(e){}

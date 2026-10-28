@@ -1,0 +1,37 @@
+name: Mise à jour des METAR
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: metar
+  cancel-in-progress: true
+
+jobs:
+  metar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Récupérer les METAR sur AviationWeather.gov
+        run: |
+          ids=$(grep -E '^[A-Z]{4}$' airports.txt | paste -sd, -)
+          mkdir -p out
+          curl -fsS --retry 3 "https://aviationweather.gov/api/data/metar?ids=${ids}&format=json&hours=3" -o raw.json
+          jq -c '{updated: (now | todate), metars: (reduce (sort_by(.obsTime) | .[]) as $m ({}; .[$m.icaoId] = {raw: $m.rawOb, elev: $m.elev, obs: $m.obsTime}))}' raw.json > out/metars.json
+          test "$(jq '.metars | length' out/metars.json)" -gt 0
+
+      - name: Publier sur la branche data
+        run: |
+          cd out
+          git init -q -b data
+          git config user.name "metar-bot"
+          git config user.email "metar-bot@users.noreply.github.com"
+          git add metars.json
+          git commit -q -m "METAR $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data

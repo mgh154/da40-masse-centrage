@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14263d">
+<meta name="description" content="Calculateur de masse et centrage DA40, avec centrogramme interactif.">
+<title>DA40 · Masse et centrage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8edf1; --panel:#ffffff; --ink:#14263d; --muted:#5a6a7d; --line:#d3dbe3;
+  --sky:#2563a8; --ok:#1d7a4b; --bad:#c2352b; --warn:#a96f14;
+  --envfill:rgba(37,99,168,.09); --input:#f3f6f9; --head:#14263d; --headink:#f2f6fa;
+  --body:"Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cond:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1825; --panel:#152435; --ink:#e5ecf3; --muted:#94a4b6; --line:#2a3d52;
+    --sky:#6ea9e6; --ok:#4fc58c; --bad:#f2766d; --warn:#e2a94e;
+    --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1825; --panel:#152435; --ink:#e5ecf3; --muted:#94a4b6; --line:#2a3d52;
+  --sky:#6ea9e6; --ok:#4fc58c; --bad:#f2766d; --warn:#e2a94e;
+  --envfill:rgba(110,169,230,.11); --input:#1b2e43; --head:#0a121c; --headink:#e5ecf3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+header{background:var(--head);color:var(--headink);padding:22px 18px 18px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-family:var(--cond);font-weight:700;font-size:2.4rem;line-height:1;margin:0;letter-spacing:.01em}
+h1 small{display:block;font-weight:500;font-size:1.15rem;opacity:.75;margin-top:6px;letter-spacing:.02em}
+.src{font-size:.85rem;opacity:.7;margin:10px 0 0}
+main{padding:16px 14px 40px}
+.grid{display:grid;gap:16px}
+@media (min-width:900px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+h2{font-family:var(--cond);font-weight:600;font-size:1.45rem;margin:0 0 12px;line-height:1.1}
+h3{font-family:var(--cond);font-weight:600;font-size:1.1rem;margin:18px 0 8px;color:var(--muted)}
+.regs{display:flex;flex-wrap:wrap;gap:6px}
+.regs button{font-family:var(--cond);font-weight:600;font-size:1.05rem;letter-spacing:.03em;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--input);color:var(--ink);cursor:pointer;min-width:74px}
+.regs button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f.full{grid-column:1 / -1}
+label{font-size:.9rem;font-weight:500;color:var(--muted)}
+.in{position:relative;display:flex;align-items:center}
+.in input{width:100%;font:600 1.15rem var(--cond);letter-spacing:.02em;padding:9px 44px 9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--input);color:var(--ink);font-variant-numeric:tabular-nums}
+.in input:focus{outline:2px solid var(--sky);outline-offset:1px;border-color:var(--sky)}
+.in span{position:absolute;right:11px;font-size:.85rem;color:var(--muted);pointer-events:none}
+.hint{font-size:.82rem;color:var(--muted);margin:0}
+.hint.bad{color:var(--bad);font-weight:600}
+.row-btn{display:flex;gap:8px;margin-top:2px}
+.mini{font:500 .82rem var(--body);padding:4px 9px;border-radius:5px;border:1px solid var(--line);background:transparent;color:var(--sky);cursor:pointer}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:.9rem}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--sky);flex:none}
+.clear{margin-top:14px;font:600 .95rem var(--body);padding:10px 14px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;width:100%}
+button:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+
+.status{border-radius:8px;padding:11px 13px;font-weight:600;margin-bottom:14px;border:1px solid var(--line);background:var(--input)}
+.status.ok{border-color:var(--ok);color:var(--ok)}
+.status.bad{border-color:var(--bad);color:var(--bad)}
+.status ul{margin:6px 0 0;padding-left:18px;font-weight:500}
+.phases{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{border-left:4px solid var(--line);padding:4px 0 4px 11px}
+.ph.ok{border-color:var(--ok)} .ph.bad{border-color:var(--bad)}
+.ph .t{font-size:.88rem;color:var(--muted);font-weight:500}
+.ph .m{font:700 2rem/1.05 var(--cond);font-variant-numeric:tabular-nums}
+.ph .m small{font-size:1rem;font-weight:500;color:var(--muted);margin-left:3px}
+.ph .c{font:600 1.05rem var(--cond);font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin:14px 0 0;font-size:.92rem}
+.facts div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:4px 0}
+.facts b{font:600 1.02rem var(--cond);font-variant-numeric:tabular-nums}
+
+.chart{width:100%;height:auto;display:block;margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:430px;font-size:.92rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.82rem}
+tr.sub td{font-weight:700;background:var(--input)}
+td.neg{color:var(--muted)}
+.note{font-size:.84rem;color:var(--muted);margin:14px 0 0}
+.full-span{grid-column:1 / -1}
+.pf h3:first-of-type{margin-top:4px}
+.pgrid{display:grid;gap:16px}
+@media (min-width:900px){.pgrid{grid-template-columns:1fr 1fr}}
+.fields3{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+@media (min-width:520px){.fields3{grid-template-columns:1fr 1fr 1fr}}
+.in input.txt{font:500 1rem var(--body);padding-right:11px;text-transform:uppercase}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px;font-size:.92rem}
+.kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:4px 0}
+.kv b{font:600 1.05rem var(--cond);font-variant-numeric:tabular-nums}
+.kv b.ok{color:var(--ok)} .kv b.bad{color:var(--bad)}
+.formula{font-size:.82rem;color:var(--muted);margin:8px 0 0}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:16px}
+@media (min-width:640px){.tabs{grid-template-columns:repeat(4,1fr)}}
+.tabs button{font:600 1rem var(--body);padding:11px 8px;border:0;border-bottom:3px solid transparent;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--input);color:var(--ink);border-bottom-color:var(--sky)}
+.panel[hidden]{display:none}
+.ptitle{font-size:1.9rem;margin:4px 0 6px}
+.lead{color:var(--muted);margin:0 0 14px;max-width:70ch}
+.massbar{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.95rem}
+.massbar b{font:600 1.1rem var(--cond)}
+.cards{display:grid;gap:16px}
+@media (min-width:900px){.cards{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}}
+.f textarea{width:100%;font:500 1rem var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--input);color:var(--ink);resize:vertical;min-height:64px}
+.f textarea:focus{outline:2px solid var(--sky);outline-offset:1px;border-color:var(--sky)}
+.kv.one{grid-template-columns:1fr}
+.res{font:600 1.05rem var(--cond);margin:10px 0 0;min-height:1.4em}
+.conv{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.conv .in input{padding-right:54px}
+.conv b{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>DA40<small>Préparation du vol</small></h1>
+    <p class="src">Fiche New CAG « Mass and balance data », rév. 4.1 du 18 juin 2026</p>
+  </div>
+</header>
+
+<main class="wrap">
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" data-tab="mb" aria-selected="true">Masse &amp; centrage</button>
+  <button type="button" role="tab" data-tab="performance" aria-selected="false">Performance</button>
+  <button type="button" role="tab" data-tab="wind" aria-selected="false">Wind Triangle</button>
+  <button type="button" role="tab" data-tab="crp" aria-selected="false">CRP-5</button>
+</nav>
+
+<div class="panel" id="panel-mb">
+<div class="grid">
+
+<section aria-labelledby="h-load">
+  <h2 id="h-load">Chargement</h2>
+
+  <label id="lbl-ac">Avion</label>
+  <div class="regs" id="regs" role="group" aria-labelledby="lbl-ac"></div>
+
+  <h3>Masses</h3>
+  <div class="fields">
+    <div class="f"><label for="front">Sièges avant</label><div class="in"><input id="front" inputmode="decimal" autocomplete="off" placeholder="0"><span>kg</span></div></div>
+    <div class="f"><label for="rear">Sièges arrière</label><div class="in"><input id="rear" inputmode="decimal" autocomplete="off" placeholder="0"><span>kg</span></div></div>
+    <div class="f full"><label for="bag">Bagages</label><div class="in"><input id="bag" inputmode="decimal" autocomplete="off" placeholder="0"><span>kg</span></div><p class="hint" id="bag-hint">30 kg maximum.</p></div>
+  </div>
+
+  <h3>Carburant</h3>
+  <div class="fields">
+    <div class="f"><label for="fuel">Au parking</label><div class="in"><input id="fuel" inputmode="decimal" autocomplete="off" placeholder="0"><span>L</span></div>
+      <div class="row-btn"><button type="button" class="mini" id="full">Plein 106 L</button></div></div>
+    <div class="f"><label for="trip">Consommé en vol</label><div class="in"><input id="trip" inputmode="decimal" autocomplete="off" placeholder="0"><span>L</span></div></div>
+    <div class="f full"><p class="hint" id="fuel-hint">106 L utilisables au maximum, densité 0,84 kg/L.</p></div>
+  </div>
+
+  <h3>Données avion et roulage</h3>
+  <div class="fields">
+    <div class="f"><label for="bem">Masse à vide</label><div class="in"><input id="bem" inputmode="decimal" autocomplete="off"><span>kg</span></div></div>
+    <div class="f"><label for="arm">Bras masse à vide</label><div class="in"><input id="arm" inputmode="decimal" autocomplete="off"><span>m</span></div></div>
+    <div class="f full"><label for="taxi">Carburant consommé au roulage</label><div class="in"><input id="taxi" inputmode="decimal" autocomplete="off"><span>kg</span></div><p class="hint">La fiche prévoit 1,5 kg.</p></div>
+  </div>
+
+  <label class="check"><input type="checkbox" id="confirm"><span>J’ai contrôlé la masse à vide et son bras sur la fiche de pesée à jour, et les limites dans l’AFM.</span></label>
+  <button type="button" class="clear" id="clear">Effacer les masses et le carburant</button>
+</section>
+
+<section aria-labelledby="h-res">
+  <h2 id="h-res">Résultats</h2>
+  <div class="status" id="status" role="status">Complète les sièges avant et le carburant.</div>
+  <div class="phases">
+    <div class="ph" id="ph-to"><div class="t">Décollage</div><div class="m" id="to-m">—</div><div class="c" id="to-c">CG —</div></div>
+    <div class="ph" id="ph-ld"><div class="t">Atterrissage</div><div class="m" id="ld-m">—</div><div class="c" id="ld-c">CG —</div></div>
+  </div>
+  <div class="facts">
+    <div><span>Sans carburant</span><b id="f-zf">—</b></div>
+    <div><span>Au parking</span><b id="f-ramp">—</b></div>
+    <div><span>Carburant à l’atterrissage</span><b id="f-fl">—</b></div>
+    <div><span>Catégorie au décollage</span><b id="f-cat">—</b></div>
+  </div>
+
+  <h3>Centrogramme</h3>
+  <svg class="chart" id="chart" viewBox="0 0 380 320" role="img" aria-label="Centrogramme DA40 : masse en fonction de la position du centre de gravité"></svg>
+  <div class="legend">
+    <span><i style="background:var(--sky)"></i>Décollage</span>
+    <span><i style="background:var(--ok)"></i>Atterrissage</span>
+    <span><i style="background:var(--muted)"></i>Sans carburant</span>
+  </div>
+  <h3>Masse et moment</h3>
+  <svg class="chart" id="chart2" viewBox="0 0 380 320" role="img" aria-label="Graphique DA40 : masse en fonction du moment"></svg>
+  <p class="note">Limites de la fiche : avant 2,40 m jusqu’à 980 kg puis 2,46 m à 1 150 kg, arrière 2,59 m, masse entre 780 et 1 150 kg (moments 1 872, 2 020, 2 352, 2 830 et 2 978 kgm sur le graphique des moments). À confirmer dans l’AFM. Le tracé ne constitue pas une autorisation de vol.</p>
+</section>
+
+<section class="full-span" aria-labelledby="h-det">
+  <h2 id="h-det">Détail du centrage</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Élément</th><th>Masse (kg)</th><th>Bras (m)</th><th>Moment (kgm)</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="4">En attente des données du vol.</td></tr></tbody>
+    </table>
+  </div>
+  <p class="note"><b>Référence :</b> New CAG, DA40 Mass and balance data, rév. 4.1 du 18 juin 2026. Bras : sièges avant 2,30 m, sièges arrière 3,25 m, bagages 3,65 m, carburant 2,63 m. Densité 0,84 kg/L. Masse maximale au décollage et à l’atterrissage 1 150 kg. Moment = masse × bras, bras = moment ÷ masse. Faire vérifier la préparation par le FI avant le vol.</p>
+</section>
+
+
+
+</div>
+</div>
+
+<div class="panel" id="panel-performance" hidden>
+<h2 class="ptitle">Données de performance</h2>
+<p class="lead">Renseigne les conditions prévues pour chaque aérodrome. Les distances TODR et LDR sont à relever dans l’AFM pour les conditions, la masse et la configuration retenues.</p>
+<div class="massbar">Masse au décollage <b id="pm-to">—</b> · Masse à l’atterrissage <b id="pm-ld">—</b> <span class="hint">(issues de l’onglet Masse &amp; centrage)</span></div>
+<div class="cards">
+<section class="card"><h2>Départ</h2><div class="fields"><div class="f full"><label for="d-ad">Aérodrome et piste</label><div class="in"><input id="d-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="d-wx">Météo / METAR / TAF</label><textarea id="d-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p></div><div class="f"><label for="d-elev">Élévation</label><div class="in"><input id="d-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="d-qnh">QNH</label><div class="in"><input id="d-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="d-temp">Température extérieure</label><div class="in"><input id="d-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="d-rwy">Axe de piste</label><div class="in"><input id="d-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="d-wdir">Vent, direction</label><div class="in"><input id="d-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="d-wspd">Vent, force</label><div class="in"><input id="d-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="d-gust">Rafales</label><div class="in"><input id="d-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="d-xw">—</b></div><div><span>Face / arrière</span><b id="d-hw">—</b></div><div><span>Altitude pression</span><b id="d-pa">—</b></div><div><span>Altitude densité</span><b id="d-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="d-todr">TODR (AFM)</label><div class="in"><input id="d-todr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="d-toda">TODA départ</label><div class="in"><input id="d-toda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>TODR calculé (AFM)</span><b id="d-tcalc">—</b></div><div><span>TODR × 1,25</span><b id="d-t125">—</b></div><div><span>≤ TODA</span><b id="d-tchk">—</b></div></div></section><section class="card"><h2>Arrivée</h2><div class="fields"><div class="f full"><label for="a-ad">Aérodrome et piste</label><div class="in"><input id="a-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="a-wx">Météo / METAR / TAF</label><textarea id="a-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p></div><div class="f"><label for="a-elev">Élévation</label><div class="in"><input id="a-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="a-qnh">QNH</label><div class="in"><input id="a-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="a-temp">Température extérieure</label><div class="in"><input id="a-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="a-rwy">Axe de piste</label><div class="in"><input id="a-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="a-wdir">Vent, direction</label><div class="in"><input id="a-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="a-wspd">Vent, force</label><div class="in"><input id="a-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="a-gust">Rafales</label><div class="in"><input id="a-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="a-xw">—</b></div><div><span>Face / arrière</span><b id="a-hw">—</b></div><div><span>Altitude pression</span><b id="a-pa">—</b></div><div><span>Altitude densité</span><b id="a-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="a-ldr">LDR (AFM)</label><div class="in"><input id="a-ldr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="a-lda">LDA destination</label><div class="in"><input id="a-lda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>LDR calculé (AFM)</span><b id="a-lcalc">—</b></div><div><span>LDR ≤ LDA</span><b id="a-lchk">—</b></div></div></section><section class="card"><h2>Dégagement</h2><div class="fields"><div class="f full"><label for="x-ad">Aérodrome et piste</label><div class="in"><input id="x-ad" class="txt" inputmode="text" autocomplete="off" placeholder="Ex. EBCI — RWY 24"></div></div><div class="f full"><label for="x-wx">Météo / METAR / TAF</label><textarea id="x-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Conditions prévues à l’heure d’utilisation"></textarea><p class="hint">Colle le METAR ou le TAF : le vent, la température et le QNH se remplissent seuls.</p></div><div class="f"><label for="x-elev">Élévation</label><div class="in"><input id="x-elev" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="x-qnh">QNH</label><div class="in"><input id="x-qnh" inputmode="decimal" autocomplete="off" placeholder=""><span>hPa</span></div></div><div class="f"><label for="x-temp">Température extérieure</label><div class="in"><input id="x-temp" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div><div class="f"><label for="x-rwy">Axe de piste</label><div class="in"><input id="x-rwy" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="x-wdir">Vent, direction</label><div class="in"><input id="x-wdir" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="x-wspd">Vent, force</label><div class="in"><input id="x-wspd" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="x-gust">Rafales</label><div class="in"><input id="x-gust" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div></div><div class="kv"><div><span>Vent de travers</span><b id="x-xw">—</b></div><div><span>Face / arrière</span><b id="x-hw">—</b></div><div><span>Altitude pression</span><b id="x-pa">—</b></div><div><span>Altitude densité</span><b id="x-da">—</b></div></div><h3>Distances</h3><div class="fields"><div class="f"><label for="x-ldr">LDR dégagement (AFM)</label><div class="in"><input id="x-ldr" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div><div class="f"><label for="x-lda">LDA dégagement</label><div class="in"><input id="x-lda" inputmode="decimal" autocomplete="off" placeholder=""><span>m</span></div></div></div><div class="kv"><div><span>LDR calculé (AFM)</span><b id="x-lcalc">—</b></div><div><span>LDR ≤ LDA</span><b id="x-lchk">—</b></div></div><p class="hint">Si le LDR du dégagement est vide, le LDR d’arrivée est utilisé.</p></section></div>
+<p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est donné en degrés vrais. TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Si tu saisis toi-même le TODR ou le LDR, c’est ta valeur qui est utilisée. Vérifie toujours avec l’AFM de l’avion.</p>
+</div>
+<div class="panel" id="panel-wind" hidden>
+<h2 class="ptitle">Triangle des vitesses</h2>
+<p class="lead">Calcule le cap à tenir, la vitesse sol et le temps de vol à partir de la route, de la vitesse vraie et du vent.</p>
+<div class="pgrid">
+<section class="card"><h2>Données</h2><div class="fields"><div class="f"><label for="w-tc">Route vraie</label><div class="in"><input id="w-tc" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="w-tas">Vitesse vraie (TAS)</label><div class="in"><input id="w-tas" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="w-wd">Vent, direction (d’où il vient)</label><div class="in"><input id="w-wd" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="w-ws">Vent, force</label><div class="in"><input id="w-ws" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="w-var">Variation magnétique (Est +)</label><div class="in"><input id="w-var" inputmode="decimal" autocomplete="off" placeholder=""><span>°</span></div></div><div class="f"><label for="w-dist">Distance</label><div class="in"><input id="w-dist" inputmode="decimal" autocomplete="off" placeholder=""><span>NM</span></div></div><div class="f"><label for="w-ff">Consommation</label><div class="in"><input id="w-ff" inputmode="decimal" autocomplete="off" placeholder=""><span>L/h</span></div></div></div><p class="hint" style="margin-top:10px">Ex. variation 2° Est : saisis 2 ; 2° Ouest : saisis −2.</p></section>
+<section class="card"><h2>Résultats</h2><p class="hint bad" id="w-msg"></p><div class="kv one"><div><span>Correction de dérive</span><b id="w-wca">—</b></div><div><span>Cap vrai</span><b id="w-th">—</b></div><div><span>Cap magnétique</span><b id="w-mh">—</b></div><div><span>Vitesse sol</span><b id="w-gs">—</b></div><div><span>Vent</span><b id="w-comp">—</b></div><div><span>Temps de vol</span><b id="w-time">—</b></div><div><span>Carburant</span><b id="w-fuel">—</b></div></div><svg class="chart" id="w-svg" viewBox="0 0 300 220" role="img" aria-label="Triangle des vitesses"></svg><div class="legend"><span><i style="background:var(--sky)"></i>Cap et TAS</span><span><i style="background:var(--warn)"></i>Vent</span><span><i style="background:var(--ok)"></i>Route et vitesse sol</span></div></section>
+</div>
+<p class="note">Cap vrai = route + correction de dérive. Vitesse sol = TAS × cos(correction) − vent × cos(angle du vent). Cap magnétique = cap vrai − variation (Est positive). Les déviations du compas ne sont pas prises en compte.</p>
+</div>
+<div class="panel" id="panel-crp" hidden>
+<h2 class="ptitle">CRP-5</h2>
+<p class="lead">Les calculs de navigation de la règle : vitesse, temps et distance, carburant, vitesse vraie et conversions.</p>
+<div class="pgrid">
+<section class="card"><h2>Vitesse, temps, distance</h2><div class="fields"><div class="f"><label for="c-d">Distance</label><div class="in"><input id="c-d" inputmode="decimal" autocomplete="off" placeholder=""><span>NM</span></div></div><div class="f"><label for="c-v">Vitesse sol</label><div class="in"><input id="c-v" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="c-t">Temps</label><div class="in"><input id="c-t" inputmode="decimal" autocomplete="off" placeholder=""><span>min</span></div></div></div><p class="res" id="c-res"></p><p class="hint">Remplis deux champs : le troisième est calculé.</p></section>
+<section class="card"><h2>Carburant</h2><div class="fields"><div class="f"><label for="c-ff">Consommation</label><div class="in"><input id="c-ff" inputmode="decimal" autocomplete="off" placeholder=""><span>L/h</span></div></div><div class="f"><label for="c-ft">Temps de vol</label><div class="in"><input id="c-ft" inputmode="decimal" autocomplete="off" placeholder=""><span>min</span></div></div><div class="f"><label for="c-fl">Carburant disponible</label><div class="in"><input id="c-fl" inputmode="decimal" autocomplete="off" placeholder=""><span>L</span></div></div></div><p class="res" id="c-f1"></p><p class="res" id="c-f2"></p><p class="hint">Diesel : 0,84 kg/L.</p></section>
+<section class="card"><h2>Vitesse vraie</h2><div class="fields"><div class="f"><label for="c-ias">Vitesse indiquée (IAS)</label><div class="in"><input id="c-ias" inputmode="decimal" autocomplete="off" placeholder=""><span>kt</span></div></div><div class="f"><label for="c-pa">Altitude pression</label><div class="in"><input id="c-pa" inputmode="decimal" autocomplete="off" placeholder=""><span>ft</span></div></div><div class="f"><label for="c-oat">Température extérieure</label><div class="in"><input id="c-oat" inputmode="decimal" autocomplete="off" placeholder=""><span>°C</span></div></div></div><p class="res" id="c-tas"></p><p class="hint">Calcul avec l’atmosphère standard. L’IAS est prise égale à la CAS, sans correction de compressibilité.</p></section>
+<section class="card"><h2>Conversions</h2><div id="conv"></div></section>
+</div>
+</div>
+
+</main>
+
+<script>
+(function(){
+  var AC = {
+    "F-GUPL":{m:799.0,a:2.397}, "F-GUVM":{m:815.0,a:2.390}, "F-GXNC":{m:799.5,a:2.410},
+    "F-HABM":{m:794.0,a:2.404}, "F-HABP":{m:798.5,a:2.400}, "F-HABQ":{m:784.5,a:2.450},
+    "F-HYOP":{m:845.8,a:2.452}, "F-HYOU":{m:830.0,a:2.453}
+  };
+  var ARM = {front:2.30, rear:3.25, bag:3.65, fuel:2.63};
+  var DENS = 0.84, FUELMAX = 106, BAGMAX = 30, MTOM = 1150, MLM = 1150, MMIN = 780, AFT = 2.59, UTIL = 980;
+  function fwd(m){ return m <= UTIL ? 2.40 : 2.40 + (m - UTIL) * 0.06 / 170; }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var ids = ["front","rear","bag","fuel","trip","bem","arm","taxi"];
+  var state = {ac:"F-GUPL"};
+  var KEY = "da40-mb-v1";
+
+  function num(id){ var v = $(id).value.trim().replace(",", "."); if (v === "") return null; var n = parseFloat(v); return isFinite(n) ? n : NaN; }
+  function fmt(n, d){ return n.toLocaleString("fr-FR",{minimumFractionDigits:d, maximumFractionDigits:d}); }
+
+  // Aircraft buttons
+  var regs = $("regs");
+  Object.keys(AC).forEach(function(r){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = r; b.dataset.reg = r;
+    b.addEventListener("click", function(){ selectAc(r, true); });
+    regs.appendChild(b);
+  });
+  function selectAc(r, setData){
+    state.ac = r;
+    Array.prototype.forEach.call(regs.children, function(b){ b.setAttribute("aria-pressed", b.dataset.reg === r ? "true" : "false"); });
+    if (setData){ $("bem").value = fmt(AC[r].m,1); $("arm").value = fmt(AC[r].a,3); }
+    update();
+  }
+
+  function save(){
+    try {
+      var o = {ac:state.ac, confirm:$("confirm").checked};
+      ids.forEach(function(i){ o[i] = $(i).value; });
+      localStorage.setItem(KEY, JSON.stringify(o));
+    } catch(e){}
+  }
+  function load(){
+    var o = null;
+    try { o = JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ o = null; }
+    if (o && AC[o.ac]){
+      ids.forEach(function(i){ if (typeof o[i] === "string") $(i).value = o[i]; });
+      $("confirm").checked = !!o.confirm;
+      selectAc(o.ac, !o.bem);
+    } else {
+      $("taxi").value = "1,5";
+      selectAc("F-GUPL", true);
+    }
+  }
+
+  function inEnv(m, cg){ return m >= MMIN && m <= MTOM && cg >= fwd(m) - 1e-9 && cg <= AFT + 1e-9; }
+  function envIssue(m, cg, max){
+    if (m > max) return "masse " + fmt(m,1) + " kg > " + fmt(max,0) + " kg";
+    if (m < MMIN) return "masse sous le bas du centrogramme (780 kg)";
+    if (cg < fwd(m) - 1e-9) return "CG " + fmt(cg,3) + " m trop avant (limite " + fmt(fwd(m),3) + " m)";
+    if (cg > AFT + 1e-9) return "CG " + fmt(cg,3) + " m trop arrière (limite " + fmt(AFT,2) + " m)";
+    return null;
+  }
+
+  function update(){
+    save();
+    var front = num("front"), rear = num("rear"), bag = num("bag"), fuelL = num("fuel"), tripL = num("trip");
+    var bem = num("bem"), arm = num("arm"), taxi = num("taxi");
+    rear = rear === null ? 0 : rear; bag = bag === null ? 0 : bag; tripL = tripL === null ? 0 : tripL; taxi = taxi === null ? 0 : taxi;
+
+    var bh = $("bag-hint"); bh.className = "hint" + (bag > BAGMAX ? " bad" : ""); bh.textContent = bag > BAGMAX ? "Plus de 30 kg de bagages." : "30 kg maximum.";
+    var fh = $("fuel-hint");
+    var fuelBad = fuelL !== null && fuelL > FUELMAX;
+    fh.className = "hint" + (fuelBad ? " bad" : "");
+    fh.textContent = fuelBad ? "Plus que les 106 L utilisables." : (fuelL ? fmt(fuelL*DENS,2) + " kg au parking. 106 L utilisables au maximum, densité 0,84 kg/L." : "106 L utilisables au maximum, densité 0,84 kg/L.");
+
+    var vals = [front, rear, bag, fuelL, tripL, bem, arm, taxi];
+    if (front === null || fuelL === null || bem === null || arm === null || vals.some(function(v){ return v !== null && (isNaN(v) || v < 0); })){
+      reset(vals.some(function(v){ return v !== null && (isNaN(v) || v < 0); }) ? "Une valeur n’est pas un nombre positif." : "Complète les sièges avant et le carburant.");
+      return;
+    }
+
+    var fuelKg = fuelL * DENS, tripKg = tripL * DENS;
+    var rows = [];
+    function add(label, m, a, cls){ var r = {label:label, m:m, a:a, mo:m*a, cls:cls||""}; rows.push(r); return r; }
+    function sub(label, parts){ var m = 0, mo = 0; parts.forEach(function(p){ m += p.m; mo += p.mo; }); var r = {label:label, m:m, a:m ? mo/m : 0, mo:mo, cls:"sub"}; rows.push(r); return r; }
+
+    var r1 = add("Masse à vide", bem, arm);
+    var r2 = add("Sièges avant", front, ARM.front);
+    var r3 = add("Sièges arrière", rear, ARM.rear);
+    var r4 = add("Bagages", bag, ARM.bag);
+    var zf = sub("Masse sans carburant", [r1,r2,r3,r4]);
+    var rf = add("Carburant utilisable (" + fmt(fuelL,1) + " L)", fuelKg, ARM.fuel);
+    var ramp = sub("Masse au parking", [zf, rf]);
+    var rt = add("Roulage", -taxi, ARM.fuel, "neg");
+    rt.mo = -Math.round(taxi * ARM.fuel); // comme sur la fiche de l'école : -1,5 kg × 2,63 = -4 kgm
+    var to = sub("Masse au décollage", [ramp, rt]);
+    var rtr = add("Carburant consommé (" + fmt(tripL,1) + " L)", -tripKg, ARM.fuel, "neg");
+    var ld = sub("Masse à l’atterrissage", [to, rtr]);
+
+    var issues = [];
+    var iTo = envIssue(to.m, to.a, MTOM), iLd = envIssue(ld.m, ld.a, MLM), iZf = envIssue(zf.m, zf.a, MTOM);
+    if (iTo) issues.push("Décollage : " + iTo);
+    if (iLd) issues.push("Atterrissage : " + iLd);
+    if (iZf) issues.push("Sans carburant : " + iZf);
+    if (bag > BAGMAX) issues.push("Bagages : " + fmt(bag,1) + " kg > 30 kg");
+    if (fuelBad) issues.push("Carburant : " + fmt(fuelL,1) + " L > 106 L utilisables");
+    var fuelLeftKg = fuelKg - taxi - tripKg;
+    if (fuelLeftKg < 0) issues.push("Carburant consommé supérieur au carburant embarqué");
+
+    var st = $("status");
+    if (issues.length){
+      st.className = "status bad";
+      st.innerHTML = "Hors limites<ul>" + issues.map(function(s){ return "<li>" + s + "</li>"; }).join("") + "</ul>";
+    } else {
+      st.className = "status ok";
+      st.textContent = $("confirm").checked ? "Dans les limites de la fiche." : "Dans les limites de la fiche. Données avion encore à contrôler.";
+    }
+
+    $("ph-to").className = "ph " + (iTo ? "bad" : "ok");
+    $("ph-ld").className = "ph " + (iLd ? "bad" : "ok");
+    $("to-m").innerHTML = fmt(to.m,1) + "<small>kg</small>";
+    $("to-c").textContent = "CG " + fmt(to.a,3) + " m";
+    $("ld-m").innerHTML = fmt(ld.m,1) + "<small>kg</small>";
+    $("ld-c").textContent = "CG " + fmt(ld.a,3) + " m";
+    $("f-zf").textContent = fmt(zf.m,1) + " kg";
+    $("f-ramp").textContent = fmt(ramp.m,1) + " kg";
+    $("f-fl").textContent = fmt(Math.max(fuelLeftKg,0)/DENS,1) + " L";
+    $("f-cat").textContent = to.m <= UTIL ? "Utility et Normal" : (to.m <= MTOM ? "Normal" : "Hors limites");
+
+    $("tbody").innerHTML = rows.map(function(r){
+      return '<tr class="' + r.cls + '"><td>' + r.label + '</td><td' + (r.cls==="neg"?' class="neg"':'') + '>' + fmt(r.m,2) + '</td><td>' + fmt(r.a,3) + '</td><td' + (r.cls==="neg"?' class="neg"':'') + '>' + fmt(r.mo,2) + '</td></tr>';
+    }).join("");
+
+    draw([{p:zf, k:"zf"}, {p:to, k:"to"}, {p:ld, k:"ld"}]);
+    window.__mb = {to: to.m, ld: ld.m};
+    document.dispatchEvent(new Event("mbupdate"));
+  }
+
+  function reset(msg){
+    var st = $("status"); st.className = "status"; st.textContent = msg;
+    ["to-m","ld-m","f-zf","f-ramp","f-fl","f-cat"].forEach(function(i){ $(i).textContent = "—"; });
+    $("to-c").textContent = "CG —"; $("ld-c").textContent = "CG —";
+    $("ph-to").className = "ph"; $("ph-ld").className = "ph";
+    $("tbody").innerHTML = '<tr><td colspan="4">En attente des données du vol.</td></tr>';
+    draw([]);
+    window.__mb = null;
+    document.dispatchEvent(new Event("mbupdate"));
+  }
+
+  // Charts
+  var W = 380, H = 320, L = 50, R = 12, T = 12, B = 48;
+  var FONT = 'font-family="Barlow Condensed, Arial Narrow, sans-serif"';
+  var ENV = [[2.40,780],[2.40,980],[2.46,1150],[2.59,1150],[2.59,780]];
+  var COL = {zf:"var(--muted)", to:"var(--sky)", ld:"var(--ok)"};
+  function txt(x, y, t, o){ o = o || {}; return '<text x="' + x + '" y="' + y + '" text-anchor="' + (o.a || "middle") + '" style="fill:' + (o.c || "var(--muted)") + '" font-size="' + (o.s || 11) + '" font-weight="' + (o.w || 500) + '" ' + FONT + (o.t ? ' transform="' + o.t + '"' : '') + '>' + t + '</text>'; }
+  function ln(x1, y1, x2, y2, c, w, d){ return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:' + c + ';stroke-width:' + w + (d ? ';stroke-dasharray:' + d : '') + '"/>'; }
+  function clampPt(x, y){ return [Math.min(Math.max(x, L - 8), W - R + 8), Math.min(Math.max(y, T - 8), H - B + 8)]; }
+  function points(pts, fx, fy){
+    var byK = {}, g = ""; pts.forEach(function(o){ byK[o.k] = o.p; });
+    if (byK.to && byK.ld){ var a = clampPt(fx(byK.to), fy(byK.to)), b = clampPt(fx(byK.ld), fy(byK.ld)); g += ln(a[0], a[1], b[0], b[1], "var(--ink)", 1.3, "3 3"); }
+    ["zf","ld","to"].forEach(function(k){
+      var p = byK[k]; if (!p) return;
+      var c = clampPt(fx(p), fy(p)), bad = !inEnv(p.m, p.a);
+      g += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (k === "zf" ? 4.5 : 5.5) + '" style="fill:' + COL[k] + ';stroke:' + (bad ? "var(--bad)" : "var(--panel)") + ';stroke-width:' + (bad ? 2.5 : 1.5) + '"/>';
+    });
+    return g;
+  }
+
+  // 1) Centrogramme, comme sur la fiche : masse [kg] / position du CG [m]
+  var X0 = 2.40, X1 = 2.60, Y0 = 750, Y1 = 1160;
+  function sx(x){ return L + (x - X0) / (X1 - X0) * (W - L - R); }
+  function sy(y){ return T + (Y1 - y) / (Y1 - Y0) * (H - T - B); }
+  function drawCG(pts){
+    var s = "", x, y;
+    s += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" style="fill:var(--panel);stroke:var(--line);stroke-width:1"/>';
+    for (x = 2.425; x < 2.6; x += 0.025) s += ln(sx(x), T, sx(x), H - B, "var(--line)", .6);
+    for (y = 775; y < 1160; y += 25) s += ln(L, sy(y), W - R, sy(y), "var(--line)", .6);
+    for (x = 2.40; x <= 2.6001; x += 0.05) s += txt(sx(x), H - B + 16, fmt(x, 2), {s:12, w:600, c:"var(--ink)"});
+    for (y = 750; y <= 1150; y += 50) s += txt(L - 6, sy(y) + 4, y, {a:"end", s:12, w:600, c:"var(--ink)"});
+    s += txt((L + W - R) / 2, H - 10, "Position du centre de gravité [m]", {s:12.5, w:600, c:"var(--ink)"});
+    s += txt(14, (T + H - B) / 2, "Masse [kg]", {s:12.5, w:600, c:"var(--ink)", t:"rotate(-90 14 " + ((T + H - B) / 2) + ")"});
+    s += '<polygon points="' + ENV.map(function(p){ return sx(p[0]) + "," + sy(p[1]); }).join(" ") + '" style="fill:var(--envfill);stroke:var(--ink);stroke-width:2;stroke-linejoin:round"/>';
+    s += ln(sx(2.40), sy(980), sx(2.59), sy(980), "var(--ink)", 1.5);
+    s += txt(sx(2.525), sy(1150) + 14, "1150 kg / 2535 lb", {s:11.5, c:"var(--ink)"});
+    s += txt(sx(2.52), sy(1065) + 4, "Normal", {s:14, w:600, c:"var(--ink)"});
+    s += txt(sx(2.495), sy(980) + 14, "980 kg / 2161 lb", {s:11.5, c:"var(--ink)"});
+    s += txt(sx(2.495), sy(880) + 4, "Utility & Normal", {s:14, w:600, c:"var(--ink)"});
+    s += txt(sx(2.495), sy(780) - 6, "780 kg / 1720 lb", {s:11.5, c:"var(--ink)"});
+    s += points(pts, function(p){ return sx(p.a); }, function(p){ return sy(p.m); });
+    $("chart").innerHTML = s;
+  }
+
+  // 2) Graphique des moments, comme en haut de la fiche : masse [kg] / moment [kgm]
+  var M0 = 1800, M1 = 3000, N0 = 760, N1 = 1170;
+  function mx(m){ return L + (m - M0) / (M1 - M0) * (W - L - R); }
+  function my(y){ return T + (N1 - y) / (N1 - N0) * (H - T - B); }
+  function drawMoment(pts){
+    var s = "", x, y;
+    s += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" style="fill:var(--panel);stroke:var(--line);stroke-width:1"/>';
+    for (x = 1900; x < 3000; x += 100) s += ln(mx(x), T, mx(x), H - B, "var(--line)", .6);
+    for (y = 800; y <= 1150; y += 50) s += ln(L, my(y), W - R, my(y), "var(--line)", .6);
+    for (x = 2000; x <= 3000; x += 200) s += txt(mx(x), H - B + 16, x, {s:12, w:600, c:"var(--ink)"});
+    [800, 900, 1000, 1100, 1150].forEach(function(v){ s += txt(L - 6, my(v) + 4, v, {a:"end", s:12, w:600, c:"var(--ink)"}); });
+    s += txt((L + W - R) / 2, H - 10, "Moment [kgm]", {s:12.5, w:600, c:"var(--ink)"});
+    s += txt(14, (T + H - B) / 2, "Masse [kg]", {s:12.5, w:600, c:"var(--ink)", t:"rotate(-90 14 " + ((T + H - B) / 2) + ")"});
+    [2.40, 2.46, 2.50, 2.55, 2.59].forEach(function(cg){
+      var ya = 780, yb = 1150;
+      s += ln(mx(cg * ya), my(ya), mx(cg * yb), my(yb), "var(--muted)", .8, "2 3");
+    });
+    [[2.40, 880, -8], [2.59, 880, 14]].forEach(function(e){
+      var x1 = mx(e[0] * 780), y1 = my(780), x2 = mx(e[0] * 1150), y2 = my(1150);
+      var ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, cx = mx(e[0] * e[1]), cy = my(e[1]) + e[2];
+      s += txt(cx, cy, "CG " + fmt(e[0], 2) + " m", {s:11, w:600, c:"var(--ink)", t:"rotate(" + ang.toFixed(1) + " " + cx + " " + cy + ")"});
+    });
+    s += '<polygon points="' + ENV.map(function(p){ return mx(p[0] * p[1]) + "," + my(p[1]); }).join(" ") + '" style="fill:var(--envfill);stroke:var(--ink);stroke-width:2;stroke-linejoin:round"/>';
+    s += ln(mx(2.40 * 980), my(980), mx(2.59 * 980), my(980), "var(--ink)", 1.2, "4 3");
+    [[1872,780],[2020,780],[2352,980,1],[2830,1150],[2978,1150]].forEach(function(c){
+      s += c[2] ? txt(mx(c[0]) - 5, my(c[1]) + 4, c[0], {a:"end", s:10.5, w:600, c:"var(--ink)"}) : txt(mx(c[0]), my(c[1]) + 14, c[0], {s:10.5, w:600, c:"var(--ink)"});
+    });
+    s += points(pts, function(p){ return mx(p.mo); }, function(p){ return my(p.m); });
+    $("chart2").innerHTML = s;
+  }
+
+  function draw(pts){ drawCG(pts); drawMoment(pts); }
+
+  ids.forEach(function(i){ $(i).addEventListener("input", update); });
+  $("confirm").addEventListener("change", update);
+  $("full").addEventListener("click", function(){ $("fuel").value = "106"; update(); });
+  $("clear").addEventListener("click", function(){
+    ["front","rear","bag","fuel","trip"].forEach(function(i){ $(i).value = ""; });
+    update();
+  });
+
+  load();
+})();
+</script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var KEY = "da40-tools-v1", TABKEY = "da40-tab-v1", R = Math.PI / 180;
+  function num(id){ var v = $(id).value.trim().replace(",", "."); if (v === "") return null; var n = parseFloat(v); return isFinite(n) ? n : null; }
+  function fmt(n, d){ return n.toLocaleString("fr-FR", {minimumFractionDigits:d, maximumFractionDigits:d}); }
+  function set(id, t, cls){ var e = $(id); e.textContent = t; e.className = cls || ""; }
+  function hm(min){ var h = Math.floor(min / 60), m = Math.round(min - h * 60); if (m === 60){ h++; m = 0; } return h + " h " + (m < 10 ? "0" : "") + m; }
+
+  /* Onglets */
+  var NAMES = ["mb","performance","wind","crp"];
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tabs button"));
+  function showTab(name){
+    if (NAMES.indexOf(name) < 0) name = "mb";
+    tabs.forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"); });
+    NAMES.forEach(function(n){ $("panel-" + n).hidden = (n !== name); });
+    try { localStorage.setItem(TABKEY, name); } catch(e){}
+    try { history.replaceState(null, "", "#" + name); } catch(e){}
+  }
+  tabs.forEach(function(b){ b.addEventListener("click", function(){ showTab(b.dataset.tab); }); });
+
+  /* Masses issues de l'onglet masse et centrage */
+  function masses(){
+    var m = window.__mb;
+    set("pm-to", m ? fmt(m.to, 1) + " kg" : "—");
+    set("pm-ld", m ? fmt(m.ld, 1) + " kg" : "—");
+  }
+  document.addEventListener("mbupdate", function(){ masses(); if (typeof dist === "function") dist(); });
+
+  /* METAR / TAF */
+  function parseWx(k){
+    var m = $(k + "-wx").value.toUpperCase();
+    var w = m.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/);
+    if (w){ $(k + "-wdir").value = w[1] === "VRB" ? "" : String(parseInt(w[1], 10)); $(k + "-wspd").value = String(parseInt(w[2], 10)); $(k + "-gust").value = w[3] ? String(parseInt(w[3], 10)) : ""; }
+    var t = m.match(/\b(M?\d{2})\/(M?\d{2})?\b/);
+    if (t) $(k + "-temp").value = String(parseInt(t[1].replace("M", "-"), 10));
+    var q = m.match(/\bQ(\d{4})\b/);
+    if (q) $(k + "-qnh").value = String(parseInt(q[1], 10));
+    var ad = m.match(/^\s*(?:METAR\s+|TAF\s+)?([A-Z]{4})\b/);
+    if (ad && !$(k + "-ad").value.trim()) $(k + "-ad").value = ad[1];
+  }
+
+  /* Performance */
+  function card(k){
+    var rwy = num(k + "-rwy"), wd = num(k + "-wdir"), ws = num(k + "-wspd"), g = num(k + "-gust");
+    if (rwy !== null && wd !== null && ws !== null){
+      var a = (wd - rwy) * R, xw = Math.abs(ws * Math.sin(a)), hw = ws * Math.cos(a);
+      var xg = g !== null ? Math.abs(g * Math.sin(a)) : null, worst = xg !== null ? Math.max(xw, xg) : xw;
+      set(k + "-xw", fmt(xw, 1) + " kt" + (xg !== null ? " (raf. " + fmt(xg, 1) + ")" : ""), worst > 20 ? "bad" : "ok");
+      set(k + "-hw", (hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(hw), 1) + " kt", hw < 0 ? "bad" : "");
+    } else { set(k + "-xw", "—"); set(k + "-hw", "—"); }
+    var el = num(k + "-elev"), q = num(k + "-qnh"), t = num(k + "-temp"), pa = null;
+    if (el !== null && q !== null){ pa = el + 30 * (1013 - q); set(k + "-pa", fmt(Math.round(pa), 0) + " ft"); } else set(k + "-pa", "—");
+    if (pa !== null && t !== null){ var tisa = Math.round(15 - 2 * pa / 1000); set(k + "-da", fmt(Math.round(pa + 120 * (t - tisa)), 0) + " ft"); } else set(k + "-da", "—");
+  }
+var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[140.0,508.0],[180.0,494.0],[200.0,486.0],[220.0,479.0],[240.0,471.0],[260.0,464.0],[280.0,456.0],[300.0,449.0],[320.0,441.0],[340.0,433.0],[360.0,425.0],[380.0,417.0],[400.0,409.0],[420.0,402.0],[440.0,393.0],[460.0,384.0],[480.0,375.0],[526.2,354.2],[580.0,287.0],[600.0,262.0],[624.0,232.0]],[[40.0,625.0],[60.0,619.0],[80.0,613.0],[100.0,607.0],[140.0,595.0],[180.0,584.0],[200.0,578.0],[220.0,572.0],[240.0,566.0],[260.0,560.0],[280.0,554.0],[300.0,547.0],[320.0,541.0],[340.0,535.0],[360.0,528.0],[380.0,522.0],[400.0,515.0],[420.0,509.0],[440.0,503.0],[460.0,496.0],[480.0,489.0],[516.5,476.8],[580.0,407.0],[600.0,385.0],[640.0,333.0],[660.0,304.0],[680.0,274.0],[700.0,243.0],[707.1,232.0]],[[40.0,686.0],[60.0,681.0],[80.0,676.0],[100.0,671.0],[140.0,662.0],[180.0,652.0],[200.0,647.0],[220.0,642.0],[240.0,636.0],[260.0,632.0],[280.0,627.0],[300.0,622.0],[320.0,617.0],[340.0,612.0],[360.0,607.0],[380.0,602.0],[400.0,596.0],[420.0,590.0],[440.0,585.0],[460.0,579.0],[480.0,573.0],[525.3,560.2],[580.0,500.0],[600.0,478.0],[640.0,431.0],[660.0,405.0],[680.0,379.0],[700.0,351.0],[720.0,322.0],[740.0,292.0],[760.0,263.0],[780.0,234.0],[781.4,232.0]],[[40.0,734.0],[60.0,730.0],[80.0,726.0],[100.0,722.0],[140.0,714.0],[180.0,706.0],[200.0,702.0],[220.0,698.0],[240.0,694.0],[260.0,689.0],[280.0,685.0],[300.0,680.0],[320.0,676.0],[340.0,671.0],[360.0,667.0],[380.0,663.0],[400.0,658.0],[420.0,654.0],[440.0,649.0],[460.0,644.0],[480.0,640.0],[526.5,629.1],[580.0,573.0],[600.0,552.0],[640.0,509.0],[660.0,487.0],[680.0,463.0],[700.0,438.0],[720.0,412.0],[740.0,385.0],[760.0,359.0],[780.0,335.0],[800.0,313.0],[820.0,289.0],[840.0,264.0],[860.0,238.0],[864.6,232.0]],[[40.0,773.0],[60.0,769.0],[80.0,766.0],[100.0,762.0],[140.0,756.0],[180.0,748.0],[200.0,745.0],[220.0,742.0],[240.0,738.0],[260.0,735.0],[280.0,732.0],[300.0,728.0],[320.0,724.0],[340.0,719.0],[360.0,715.0],[380.0,711.0],[400.0,708.0],[420.0,705.0],[440.0,701.0],[460.0,697.0],[480.0,693.0],[524.0,684.2],[580.0,631.0],[600.0,612.0],[640.0,573.0],[660.0,552.0],[680.0,530.0],[700.0,507.0],[720.0,484.0],[740.0,461.0],[760.0,439.0],[780.0,419.0],[800.0,400.0],[820.0,381.0],[840.0,360.0],[860.0,339.0]],[[40.0,801.0],[60.0,798.0],[80.0,795.0],[100.0,792.0],[140.0,786.0],[180.0,779.0],[200.0,776.0],[220.0,773.0],[240.0,770.0],[260.0,767.0],[280.0,765.0],[300.0,761.0],[320.0,758.0],[340.0,755.0],[360.0,751.0],[380.0,747.0],[400.0,744.0],[420.0,741.0],[440.0,737.0],[460.0,734.0],[480.0,731.0],[531.4,722.4],[580.0,703.0],[600.0,695.0],[640.0,670.0],[660.0,652.0],[680.0,634.0],[700.0,616.0],[720.0,598.0],[740.0,578.0],[760.0,558.0],[780.0,544.0],[800.0,531.0],[820.0,518.0],[840.0,504.0],[860.0,489.0]],[[40.0,825.0],[60.0,821.0],[80.0,819.0],[140.0,819.0],[180.0,806.0],[200.0,803.0],[220.0,800.0],[240.0,798.0],[260.0,795.0],[280.0,793.0],[300.0,790.0],[320.0,787.0],[340.0,784.0],[360.0,781.0],[380.0,777.0],[400.0,774.0],[420.0,772.0],[440.0,769.0],[460.0,767.0],[522.2,759.2],[580.0,739.0],[600.0,732.0],[640.0,719.0],[660.0,711.0],[680.0,702.0],[700.0,692.0],[720.0,680.0],[740.0,664.0],[760.0,648.0],[780.0,637.0],[800.0,627.0],[820.0,617.0],[840.0,606.0],[860.0,596.0]],[[40.0,847.0],[60.0,844.0],[80.0,842.0],[140.0,835.0],[180.0,830.0],[200.0,828.0],[220.0,825.0],[240.0,822.0],[260.0,820.0],[280.0,817.0],[300.0,814.0],[320.0,812.0],[340.0,809.0],[360.0,807.0],[380.0,803.0],[400.0,801.0],[420.0,799.0],[440.0,796.0],[460.0,794.0],[480.0,792.0],[502.5,789.4],[580.0,770.0],[600.0,765.0],[640.0,753.0],[660.0,747.0],[680.0,741.0],[700.0,734.0],[720.0,728.0],[740.0,720.0],[760.0,713.0],[780.0,706.0],[800.0,699.0],[820.0,692.0],[840.0,684.0],[860.0,675.0]]],"p2":[[[936,232],[962,330],[1027,560],[1090,707],[1152,811]],[[902,261],[962,487],[1027,654],[1090,767.5],[1152,851]],[[902,438],[962,597.5],[1027,725],[1090,815.5],[1152,882.5]],[[902,557],[962,679],[1027,778.5],[1090,851],[1152,908.6]],[[902,647],[962,742],[1027,822],[1090,882.5],[1152,930.7]],[[902,689],[962,773],[1027,843],[1090,898.5],[1152,941]],[[902,736.5],[962,806],[1027,868.5],[1090,916.5],[1152,953.6]],[[902,776],[962,836],[1027,889],[1090,931],[1152,965.3]],[[902,803],[962,857.5],[1027,905],[1090,942],[1152,974]],[[902,827.5],[962,876],[1027,918],[1090,952],[1152,982]],[[902,849],[962,891],[1027,930],[1090,962],[1152,987.5]]],"s":[432.5,527.5,600,657.5,704,733.5,764,796.5,825.5,866,894.5,917,952.5],"e":[550,632,692,741,779,804,830,858,881,915,939,957,985],"t":[253,369,457,528,583,620,657,700,735,787,824,855,900]},"ld":{"p1":[[[40,469],[812,230]],[[40,516],[860,292]],[[40,559],[860,354]],[[40,606],[860,409]],[[40,649],[860,463]],[[40,688],[860,518]]],"p2":[[[906.0,254.0],[920.5,268.5],[935.5,284.5],[948.5,298.0],[962.5,312.5],[975.5,325.5],[987.5,338.0],[1001.5,352.5],[1017.5,367.5],[1032.5,382.5],[1046.0,395.5],[1058.0,406.5],[1071.0,418.5],[1083.0,429.5],[1095.0,441.5],[1107.0,452.5],[1119.0,463.5],[1131.0,474.5],[1143.0,485.5],[1148.0,490.5]],[[906.0,354.0],[918.0,364.5],[930.0,375.5],[942.0,385.5],[954.0,396.5],[966.0,406.5],[978.0,417.5],[990.0,427.5],[1002.0,438.0],[1014.0,448.5],[1026.0,460.0],[1038.0,468.5],[1050.0,478.5],[1062.0,487.5],[1074.0,497.5],[1086.0,507.0],[1098.0,516.5],[1110.0,526.5],[1122.0,536.0],[1134.0,545.5],[1146.0,555.5],[1148.0,556.5]],[[906.0,427.0],[919.0,438.5],[931.0,448.5],[943.0,457.5],[955.0,467.5],[967.0,477.5],[979.0,487.0],[991.0,496.5],[1003.0,506.5],[1015.0,516.5],[1027.0,525.5],[1039.0,534.5],[1051.0,543.0],[1063.0,551.5],[1075.0,560.0],[1087.0,568.5],[1099.0,577.5],[1111.0,585.5],[1123.0,594.5],[1135.0,603.0],[1147.0,611.5],[1148.0,612.5]],[[906.0,505.0],[918.0,514.5],[930.0,523.5],[942.0,532.5],[954.0,541.5],[966.0,550.5],[978.0,559.5],[990.0,568.5],[1002.0,577.0],[1014.0,586.0],[1026.0,594.0],[1038.0,602.5],[1050.0,610.0],[1062.0,617.5],[1074.0,625.5],[1086.0,632.0],[1098.0,639.5],[1110.0,647.0],[1122.0,654.5],[1134.0,662.0],[1146.0,669.5],[1148.0,670.5]],[[906.0,582.0],[918.0,590.0],[930.0,597.5],[942.0,605.0],[954.0,612.5],[966.0,619.5],[978.0,627.5],[990.0,634.5],[1002.0,642.0],[1014.0,649.5],[1026.0,648.5],[1038.5,664.5],[1056.0,674.0],[1068.0,680.5],[1080.0,687.5],[1092.0,694.5],[1104.0,701.0],[1116.0,707.5],[1128.0,714.5],[1140.0,721.5],[1148.0,725.5]],[[906.0,660.0],[918.0,667.0],[930.0,674.0],[942.0,680.5],[954.0,687.5],[966.0,694.5],[978.0,701.0],[990.0,707.5],[1002.0,714.5],[1014.0,721.5],[1026.0,727.5],[1038.0,734.0],[1050.0,740.0],[1062.0,745.5],[1074.0,751.5],[1086.0,757.5],[1098.0,763.5],[1110.0,770.0],[1122.0,775.0],[1134.0,781.0],[1146.0,787.0],[1148.0,788.0]]],"p3":[[[1194.0,256.0],[1203.5,269.0],[1212.5,281.0],[1221.5,293.0],[1230.0,305.0],[1239.0,317.0],[1247.5,329.0],[1256.5,341.0],[1265.5,353.0],[1274.5,365.0],[1283.5,377.0],[1292.0,389.0],[1301.0,401.0],[1309.5,413.0],[1318.5,425.0],[1327.5,437.0],[1337.0,449.0],[1347.0,461.0],[1357.5,473.0],[1367.5,485.0],[1377.5,497.0],[1387.5,509.0],[1397.5,521.0],[1407.5,533.0],[1417.5,545.0],[1427.5,557.0],[1437.5,569.0],[1447.5,581.0],[1457.5,593.0],[1467.5,605.0],[1471.0,609.0]],[[1194.0,360.0],[1204.0,373.0],[1213.5,385.0],[1223.5,397.0],[1232.5,409.0],[1242.5,421.0],[1252.0,433.0],[1261.5,445.0],[1271.5,457.0],[1280.5,469.0],[1290.5,481.0],[1300.0,493.0],[1309.5,505.0],[1319.5,517.0],[1328.5,529.0],[1339.5,541.0],[1351.5,554.0],[1365.5,569.5],[1379.5,583.5],[1393.0,599.0],[1406.5,614.5],[1420.5,628.5],[1434.5,643.5],[1447.5,657.5],[1461.5,673.5],[1470.5,682.5]],[[1194.0,446.0],[1204.5,459.0],[1214.5,471.0],[1224.5,483.0],[1234.5,495.0],[1245.0,507.0],[1255.0,519.0],[1265.0,531.0],[1275.0,543.0],[1285.5,555.0],[1295.5,567.0],[1305.5,579.0],[1315.5,591.0],[1325.5,603.0],[1335.5,615.0],[1348.5,628.5],[1362.5,641.5],[1374.5,653.5],[1386.5,666.5],[1398.5,678.5],[1410.5,690.5],[1422.5,701.5],[1434.5,713.5],[1446.5,726.5],[1458.5,738.5],[1470.5,750.5],[1471.5,751.5]],[[1194.0,543.0],[1205.5,556.0],[1216.5,568.0],[1227.5,581.0],[1239.5,594.5],[1252.5,607.5],[1263.5,619.5],[1274.0,632.0],[1285.5,645.5],[1297.5,657.5],[1308.5,670.0],[1320.5,683.0],[1331.5,695.0],[1347.0,709.5],[1359.0,720.5],[1371.0,732.0],[1383.0,743.5],[1395.0,754.5],[1407.0,765.5],[1420.5,778.0],[1433.5,789.5],[1445.5,801.5],[1458.0,812.5],[1470.0,823.5],[1472.0,825.5]],[[1194.0,624.0],[1206.5,638.0],[1219.5,652.0],[1232.5,664.5],[1246.5,680.5],[1259.5,694.0],[1274.5,709.5],[1287.5,724.0],[1301.5,739.5],[1315.5,756.0],[1314.5,762.0],[1321.0,770.0],[1335.0,774.5],[1347.0,783.5],[1359.0,793.5],[1371.0,803.5],[1383.0,813.5],[1395.0,823.5],[1407.0,833.5],[1419.0,843.5],[1431.0,853.5],[1443.0,863.5],[1455.0,873.5],[1467.0,883.5],[1472.0,887.5]],[[1194.0,717.0],[1209.0,732.5],[1221.0,743.5],[1233.0,754.5],[1245.0,766.5],[1257.0,777.5],[1269.5,790.0],[1282.0,801.5],[1294.0,812.5],[1306.0,824.5],[1318.0,835.5],[1330.0,847.5],[1342.0,856.5],[1354.0,865.0],[1366.0,873.5],[1378.0,882.5],[1390.0,891.5],[1402.0,900.0],[1414.0,908.5],[1426.0,917.5],[1438.0,926.5],[1450.0,935.0],[1462.0,943.5],[1472.0,951.0]],[[1194.0,795.0],[1206.0,805.5],[1218.0,816.0],[1230.0,826.5],[1242.0,836.5],[1254.0,847.5],[1266.0,857.5],[1278.0,868.5],[1290.0,878.5],[1302.0,889.0],[1314.0,899.5],[1326.0,909.5],[1338.0,919.0],[1350.0,926.5],[1362.0,934.5],[1374.0,942.0],[1386.0,950.0],[1398.0,957.5],[1410.0,965.5],[1422.0,973.0],[1434.0,981.0],[1446.0,988.5],[1458.0,996.5],[1470.0,1006.5],[1472.0,1007.0]]]}};
+  function pl(p, x){
+    var n = p.length, i = 1;
+    if (x <= p[0][0]) i = 1; else if (x >= p[n - 1][0]) i = n - 1; else { while (p[i][0] < x) i++; }
+    var a = p[i - 1], b = p[i];
+    return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]);
+  }
+  function fam(vals, keys, k){
+    var n = keys.length, i = 0;
+    if (k >= keys[n - 1]) i = n - 2; else if (k > keys[0]){ while (i < n - 2 && keys[i + 1] <= k) i++; }
+    return vals[i] + (k - keys[i]) / (keys[i + 1] - keys[i]) * (vals[i + 1] - vals[i]);
+  }
+  function tx(t){ return 36 + 9.741 * (t + 35); }
+  function toDist(pa, t, m, wind){
+    var x = tx(t), PAK = [0, 2000, 4000, 6000, 7000, 8000, 9000, 10000];
+    var ys = AFM.to.p1.map(function(c){ return pl(c, x); }).reverse();
+    var y1 = fam(ys, PAK, pa);
+    var xm = 902 + (1150 - m) * 0.6275;
+    var st = AFM.to.p2.map(function(c){ return pl(c, 902); }), vl = AFM.to.p2.map(function(c){ return pl(c, xm); });
+    var y2 = fam(vl, st, y1), S = AFM.to.s, E = AFM.to.e, T = AFM.to.t, en = [];
+    for (var j = 0; j < S.length; j++) en.push(wind >= 0 ? S[j] + (E[j] - S[j]) * 14.4 * wind / 282 : S[j] + (T[j] - S[j]) * 14.4 * -wind / 142);
+    var y3 = fam(en, S, y2);
+    return 1800 - (y3 - 251) / 0.459375;
+  }
+  function ldDist(pa, t, m, wind){
+    var x = tx(t), PAK = [0, 2000, 4000, 6000, 8000, 10000];
+    var ys = AFM.ld.p1.map(function(c){ return pl(c, x); }).reverse();
+    var y1 = fam(ys, PAK, pa);
+    var xm = 902 + (1150 - m) * 250 / 300;
+    var st = AFM.ld.p2.map(function(c){ return pl(c, 902); }), vl = AFM.ld.p2.map(function(c){ return pl(c, xm); });
+    var y2 = fam(vl, st, y1), xw = 1188 + 14.4 * Math.max(wind, 0);
+    var s3 = AFM.ld.p3.map(function(c){ return pl(c, 1188); }), v3 = AFM.ld.p3.map(function(c){ return pl(c, xw); });
+    var y3 = fam(v3, s3, y2);
+    return 1100 - (y3 - 306) / 0.78;
+  }
+  function cond(k){
+    var el = num(k + "-elev"), q = num(k + "-qnh"), t = num(k + "-temp");
+    if (el === null || q === null || t === null) return null;
+    var rwy = num(k + "-rwy"), wd = num(k + "-wdir"), ws = num(k + "-wspd"), w = 0, known = false;
+    if (rwy !== null && wd !== null && ws !== null){ w = ws * Math.cos((wd - rwy) * R); known = true; }
+    return {pa: el + 30 * (1013 - q), t: t, w: w, known: known};
+  }
+  function up10(v){ return Math.ceil(v / 10) * 10; }
+  function calc(k, kind){
+    var c = cond(k), mb = window.__mb;
+    if (!mb) return {txt: "Remplis l’onglet Masse & centrage"};
+    if (!c) return {txt: "Élévation, QNH et température requis"};
+    var m = kind === "to" ? mb.to : mb.ld, lo = kind === "to" ? 750 : 850;
+    if (c.t < -35 || c.t > 50 || c.pa < -1000 || c.pa > 10000 || m < lo || m > 1150) return {txt: "Hors des graphiques de l’AFM"};
+    var w = c.w, note = c.known ? "" : " (sans vent)";
+    if (kind === "to"){
+      if (w < -9.7) return {txt: "Vent arrière au-delà des 5 m/s du graphique"};
+      return {val: up10(toDist(c.pa, c.t, m, w)), txt: "≈ " + fmt(up10(toDist(c.pa, c.t, m, w)), 0) + " m" + note};
+    }
+    if (w < 0) return {val: up10(ldDist(c.pa, c.t, m, 0)), txt: "≈ " + fmt(up10(ldDist(c.pa, c.t, m, 0)), 0) + " m sans vent, vent arrière non prévu par l’AFM : prévois de la marge", warn: true};
+    return {val: up10(ldDist(c.pa, c.t, m, w)), txt: "≈ " + fmt(up10(ldDist(c.pa, c.t, m, w)), 0) + " m" + note};
+  }
+  function chk(id, ok, extra){ set(id, (ok ? "OK" : "NON") + (extra || ""), ok ? "ok" : "bad"); }
+  function dist(){
+    var c1 = calc("d", "to"), todr = num("d-todr"), toda = num("d-toda");
+    set("d-tcalc", c1.txt, c1.warn ? "bad" : "");
+    if (todr === null && c1.val) todr = c1.val;
+    if (todr !== null){ var t = todr * 1.25; set("d-t125", fmt(Math.round(t), 0) + " m"); if (toda !== null) chk("d-tchk", t <= toda, " (" + fmt(toda, 0) + " m)"); else set("d-tchk", "—"); } else { set("d-t125", "—"); set("d-tchk", "—"); }
+    var c2 = calc("a", "ld"), c3 = calc("x", "ld");
+    set("a-lcalc", c2.txt, c2.warn ? "bad" : ""); set("x-lcalc", c3.txt, c3.warn ? "bad" : "");
+    var ldr = num("a-ldr"); if (ldr === null && c2.val) ldr = c2.val;
+    var lda = num("a-lda");
+    if (ldr !== null && lda !== null) chk("a-lchk", ldr <= lda, " (" + fmt(lda, 0) + " m)"); else set("a-lchk", "—");
+    var lx = num("x-ldr"); if (lx === null) lx = c3.val || ldr; var ax = num("x-lda");
+    if (lx !== null && ax !== null) chk("x-lchk", lx <= ax, " (" + fmt(ax, 0) + " m)"); else set("x-lchk", "—");
+  }
+
+  /* Triangle des vitesses */
+  var WI = ["w-wca","w-th","w-mh","w-gs","w-comp","w-time","w-fuel"];
+  function drawWind(v){
+    var svg = $("w-svg");
+    if (!v){ svg.innerHTML = ""; return; }
+    var O = [0, 0], A = [v.tas * Math.sin(v.th * R), v.tas * Math.cos(v.th * R)], G = [v.gs * Math.sin(v.tc * R), v.gs * Math.cos(v.tc * R)];
+    var xs = [O[0], A[0], G[0]], ys = [O[1], A[1], G[1]];
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    var sc = Math.min(240 / Math.max(x1 - x0, 1), 160 / Math.max(y1 - y0, 1));
+    var ox = 150 - (x0 + x1) / 2 * sc, oy = 110 + (y0 + y1) / 2 * sc;
+    function P(p){ return [ox + p[0] * sc, oy - p[1] * sc]; }
+    var pO = P(O), pA = P(A), pG = P(G);
+    function mk(id, col){ return '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:' + col + '"/></marker>'; }
+    function seg(a, b, col, m, dash){ return '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" style="stroke:' + col + ';stroke-width:2.2' + (dash ? ';stroke-dasharray:5 4' : '') + '" marker-end="url(#' + m + ')"/>'; }
+    function lab(a, b, t, dx, dy){ return '<text x="' + ((a[0] + b[0]) / 2 + dx).toFixed(1) + '" y="' + ((a[1] + b[1]) / 2 + dy).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="600" style="fill:var(--ink)" font-family="Barlow Condensed, Arial Narrow, sans-serif">' + t + '</text>'; }
+    svg.innerHTML = '<defs>' + mk("m1", "var(--sky)") + mk("m2", "var(--warn)") + mk("m3", "var(--ok)") + '</defs>'
+      + seg(pO, pG, "var(--ok)", "m3", false) + seg(pO, pA, "var(--sky)", "m1", false) + seg(pA, pG, "var(--warn)", "m2", false)
+      + lab(pO, pA, "TAS " + fmt(v.tas, 0), -14, -6) + lab(pA, pG, "Vent " + fmt(v.ws, 0), 16, 0) + lab(pO, pG, "GS " + fmt(v.gs, 0), 0, 16)
+      + '<text x="14" y="18" font-size="11" style="fill:var(--muted)" font-family="Barlow, sans-serif">Nord en haut</text>';
+  }
+  function wind(){
+    var tc = num("w-tc"), tas = num("w-tas"), wd = num("w-wd"), ws = num("w-ws"), mv = num("w-var"), d = num("w-dist"), ff = num("w-ff");
+    WI.forEach(function(i){ set(i, "—"); }); set("w-msg", ""); $("w-msg").className = "hint bad"; drawWind(null);
+    if (tc === null || tas === null || wd === null || ws === null) return;
+    if (tas <= 0){ set("w-msg", "La vitesse vraie doit être supérieure à 0.", "hint bad"); return; }
+    var a = (wd - tc) * R, s = ws / tas * Math.sin(a);
+    if (Math.abs(s) > 1){ set("w-msg", "Le vent est trop fort pour tenir cette route avec cette vitesse vraie.", "hint bad"); return; }
+    var wca = Math.asin(s) / R, th = ((tc + wca) % 360 + 360) % 360, gs = tas * Math.cos(wca * R) - ws * Math.cos(a);
+    if (gs <= 0){ set("w-msg", "La vitesse sol est nulle ou négative : pas de progression possible.", "hint bad"); return; }
+    var head = ws * Math.cos(a), cross = ws * Math.sin(a);
+    set("w-wca", (wca >= 0 ? "+" : "−") + fmt(Math.abs(wca), 1) + "° " + (wca >= 0 ? "(à droite)" : "(à gauche)"));
+    set("w-th", fmt(th, 0) + "°");
+    if (mv !== null) set("w-mh", fmt((((th - mv) % 360) + 360) % 360, 0) + "°");
+    set("w-gs", fmt(gs, 0) + " kt");
+    set("w-comp", (head >= 0 ? "face " : "arrière ") + fmt(Math.abs(head), 0) + " kt · travers " + fmt(Math.abs(cross), 0) + " kt de " + (cross >= 0 ? "droite" : "gauche"));
+    if (d !== null){ var min = d / gs * 60; set("w-time", fmt(Math.round(min), 0) + " min (" + hm(min) + ")"); if (ff !== null) set("w-fuel", fmt(min / 60 * ff, 1) + " L (" + fmt(min / 60 * ff * 0.84, 1) + " kg)"); }
+    drawWind({tc: tc, th: th, tas: tas, ws: ws, gs: gs});
+  }
+
+  /* CRP-5 */
+  function crp(){
+    var d = num("c-d"), v = num("c-v"), t = num("c-t");
+    var empty = [d, v, t].filter(function(x){ return x === null; }).length, msg = "";
+    if (empty === 1){
+      if (t === null){ if (v > 0){ var m = d / v * 60; msg = "Temps : " + fmt(m, 0) + " min (" + hm(m) + ")"; } }
+      else if (d === null) msg = "Distance : " + fmt(v * t / 60, 1) + " NM";
+      else if (t > 0) msg = "Vitesse sol : " + fmt(d * 60 / t, 0) + " kt";
+    }
+    set("c-res", msg);
+    var ff = num("c-ff"), ft = num("c-ft"), fl = num("c-fl");
+    set("c-f1", ff !== null && ft !== null ? "Carburant pour " + fmt(ft, 0) + " min : " + fmt(ff * ft / 60, 1) + " L (" + fmt(ff * ft / 60 * 0.84, 1) + " kg)" : "");
+    set("c-f2", ff !== null && ff > 0 && fl !== null ? "Autonomie avec " + fmt(fl, 0) + " L : " + hm(fl / ff * 60) : "");
+    var ias = num("c-ias"), pa = num("c-pa"), oat = num("c-oat");
+    if (ias !== null && pa !== null && oat !== null){
+      var pr = Math.pow(1 - 6.8755856e-6 * pa, 5.2558797), sigma = pr / ((oat + 273.15) / 288.15);
+      set("c-tas", "TAS ≈ " + fmt(ias / Math.sqrt(sigma), 0) + " kt");
+    } else set("c-tas", "");
+  }
+  var CONV = [
+    ["NM", "km", function(x){ return x * 1.852; }, function(y){ return y / 1.852; }],
+    ["ft", "m", function(x){ return x * 0.3048; }, function(y){ return y / 0.3048; }],
+    ["kt", "km/h", function(x){ return x * 1.852; }, function(y){ return y / 1.852; }],
+    ["L", "kg", function(x){ return x * 0.84; }, function(y){ return y / 0.84; }],
+    ["kg", "lb", function(x){ return x * 2.20462; }, function(y){ return y / 2.20462; }],
+    ["°C", "°F", function(x){ return x * 9 / 5 + 32; }, function(y){ return (y - 32) * 5 / 9; }],
+    ["hPa", "inHg", function(x){ return x * 0.02953; }, function(y){ return y / 0.02953; }]
+  ];
+  $("conv").innerHTML = CONV.map(function(c, i){
+    return '<div class="conv"><div class="in"><input id="cv' + i + 'a" data-cv="' + i + 'a" inputmode="decimal" autocomplete="off" aria-label="' + c[0] + '"><span>' + c[0] + '</span></div><b>=</b><div class="in"><input id="cv' + i + 'b" data-cv="' + i + 'b" inputmode="decimal" autocomplete="off" aria-label="' + c[1] + '"><span>' + c[1] + '</span></div></div>';
+  }).join("") + '<p class="hint">Litres de diesel en kilogrammes à 0,84 kg/L.</p>';
+  function conv(el){
+    var i = parseInt(el.dataset.cv, 10), side = el.dataset.cv.slice(-1), c = CONV[i], other = $("cv" + i + (side === "a" ? "b" : "a"));
+    var v = el.value.trim().replace(",", ".");
+    if (v === "" || !isFinite(parseFloat(v))){ other.value = ""; return; }
+    var r = (side === "a" ? c[2] : c[3])(parseFloat(v));
+    other.value = String(Math.round(r * 100) / 100).replace(".", ",");
+  }
+
+  function all(){ ["d", "a", "x"].forEach(card); dist(); wind(); crp(); masses(); }
+  var scope = "#panel-performance input, #panel-performance textarea, #panel-wind input, #panel-crp input";
+  function save(){
+    try { var o = {}; Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ o[e.id] = e.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
+  }
+  document.addEventListener("input", function(e){
+    var t = e.target;
+    if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp")) return;
+    if (/-wx$/.test(t.id)) parseWx(t.id.split("-")[0]);
+    if (t.dataset && t.dataset.cv) conv(t);
+    all(); save();
+  });
+  try {
+    var o = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (o) Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ if (typeof o[e.id] === "string") e.value = o[e.id]; });
+  } catch(e){}
+  all();
+  var h = (location.hash || "").slice(1), saved = null;
+  try { saved = localStorage.getItem(TABKEY); } catch(e){}
+  showTab(NAMES.indexOf(h) >= 0 ? h : (saved || "mb"));
+})();
+</script>
+</body>
+</html>

@@ -63,13 +63,22 @@ Points de l'AFM qui dépendent de la configuration et que le site ne peut pas co
 
 Limites de masse et de centrage vérifiées : masse maximale 1 150 kg (normal) et 980 kg (utility), 30 kg de bagages, CG avant 2,40 m jusqu'à 980 kg puis 2,46 m à 1 150 kg, CG arrière 2,59 m, bras 2,30 / 3,25 / 3,65 / 2,63 m, carburant 0,84 kg/L : conformes à l'AFM.
 
-## 4. Pourquoi une valeur affiche N/D
+## 4. N/D, provisoire, vérifié
 
-| Raison | Exemple | Que faire |
+Trois situations, jamais mélangées :
+
+| Situation | Affichage | Exemple |
 |---|---|---|
-| Donnée automatique à confirmer | élévation ou axe de piste issus d'OurAirports, METAR de plus de 2 h | contrôler dans l'AIP puis « J'ai contrôlé ces valeurs », ou saisir la valeur |
-| Donnée manquante | pas de piste choisie, pas de vent, QNH ou température absent | choisir la piste ou saisir |
-| Hors des graphiques AFM | altitude pression négative, vent arrière à l'atterrissage, masse hors plage | saisir la valeur lue dans l'AFM |
-| Jamais déduite | TODA, LDA | saisir celles de l'AIP (ou `declared.json` une fois vérifiées) |
+| **Calcul impossible** | N/D, avec la raison | piste non choisie, pas de METAR, TODA absente, conditions hors des graphiques AFM |
+| **Calcul disponible mais provisoire** | la valeur, marquée PROVISOIRE ; la marge n'est jamais « SUFFISANT » | élévation ou orientation venant d'OurAirports, METAR de plus de 2 h, masse à vide non contrôlée, AFM de l'avion non confirmée |
+| **Calcul vérifié** | la valeur, « SUFFISANT » ou « INSUFFISANT » | élévation, orientation, TODA et LDA officielles (AIP) ou saisies / contrôlées par toi, METAR récent, masse et AFM confirmées |
 
-Le tableau « PERFORMANCE DATA » applique ces règles : une valeur absente ou à vérifier y est écrite N/D, avec la raison dessous.
+Une marge négative reste affichée comme négative, même provisoire.
+
+**Données officielles** : `declared.json` (élévation AD 2.2, orientations vraies AD 2.12, distances déclarées AD 2.13). Une donnée n'est utilisée que si elle porte sa source exacte, sa date d'effet et sa date de vérification ; elle est valable 84 jours (3 cycles AIRAC) après la vérification, puis marquée EXPIRÉE.
+
+**Valeurs mémorisées sur l'appareil** : ce que tu saisis ou confirmes (élévation, orientation, TODA, LDA) est gardé avec l'aérodrome, la piste, la date et le cycle AIRAC. Une valeur mémorisée n'est plus utilisée si elle a plus de 84 jours, ou si la source d'origine (OurAirports) a changé depuis ta confirmation. Un changement de piste retire les valeurs de l'ancienne piste. Les METAR ne sont jamais mémorisés : leur âge est contrôlé en permanence.
+
+Priorité des sources : officielle valide, mémorisée valide, officielle expirée, OurAirports (provisoire), mémorisée expirée.
+
+Les règles sont testées par `node tests/aip-check.js`.

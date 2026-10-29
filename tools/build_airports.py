@@ -46,7 +46,7 @@ def main():
             continue
         length_ft = num(r["length_ft"])
         a[4].append([
-            r["le_ident"], num(r["le_heading_degT"], 0), r["he_ident"], num(r["he_heading_degT"], 0),
+            r["le_ident"], num(r["le_heading_degT"], 1), r["he_ident"], num(r["he_heading_degT"], 1),
             None if length_ft is None else round(length_ft * 0.3048), r["surface"],
         ])
     for a in airports.values():

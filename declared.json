@@ -1,1 +1,201 @@
-{"_lisez_moi":"Distances déclarées VÉRIFIÉES, à remplir à la main depuis l’AIP. Format : \"EBCI\": {\"06\": {\"toda\": 0, \"lda\": 0, \"src\": \"AIP Belgique AD 2 EBCI, AIRAC AAAA-MM\"}}. Les clés commençant par _ sont ignorées. Ne rien inscrire qui n’ait été relevé dans l’AIP."}
+{
+ "_lisez_moi": [
+  "Base locale de données aéronautiques OFFICIELLES et VÉRIFIÉES, lue par la page Performance.",
+  "Une donnée n'est utilisée que si son bloc porte « src » (source exacte), « effective » (date d'effet de l'édition AIP, AAAA-MM-JJ) et « verified » (date à laquelle quelqu'un l'a relue dans l'AIP, AAAA-MM-JJ). Sinon elle est ignorée.",
+  "Elle reste valable 84 jours après « verified » (3 cycles AIRAC), puis la page l'affiche EXPIRÉE.",
+  "Ne jamais y mettre : une longueur physique de piste, une distance recopiée de mémoire, une valeur d'une édition périmée. Ne pas confondre TORA, TODA, ASDA et LDA.",
+  "Élévation d'aérodrome (AD 2.2) : \"elev\": {\"ft\": 0, \"src\": \"...\", \"effective\": \"AAAA-MM-JJ\", \"verified\": \"AAAA-MM-JJ\"}.",
+  "Piste, une entrée par sens, désignation exacte (AD 2.12 et AD 2.13) : \"06\": {\"trueBearing\": 0.0, \"tora\": 0, \"toda\": 0, \"asda\": 0, \"lda\": 0, \"intersections\": [{\"name\": \"A2\", \"tora\": 0, \"toda\": 0, \"asda\": 0}], \"src\": \"...\", \"effective\": \"AAAA-MM-JJ\", \"verified\": \"AAAA-MM-JJ\"}.",
+  "Sans donnée officielle enregistrée, la page affiche le lien « source » et laisse la saisie manuelle ; la valeur saisie est mémorisée sur l'appareil.",
+  "Contrôle : node tests/aip-check.js"
+ ],
+ "schema": 2,
+ "airports": {
+  "EBCI": {
+   "name": "Charleroi / Brussels South",
+   "source": {
+    "label": "AIP Belgique (eAIP skeyes), EB AD 2 EBCI",
+    "url": "https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Main/html/eAIP/EB-AD-2.EBCI-en-GB.html"
+   },
+   "elev": {
+    "ft": 606,
+    "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBCI AD 2.2, élévation 606 FT / 22°C",
+    "effective": "2026-10-29",
+    "verified": "2026-10-29"
+   },
+   "runways": {
+    "06": {
+     "trueBearing": 65.47,
+     "tora": 2905,
+     "toda": 3165,
+     "asda": 2905,
+     "lda": 2600,
+     "intersections": [
+      {
+       "name": "N2",
+       "tora": 2800
+      },
+      {
+       "name": "N3",
+       "tora": 2160
+      },
+      {
+       "name": "S2",
+       "tora": 2345
+      },
+      {
+       "name": "S3",
+       "tora": 1670
+      }
+     ],
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBCI AD 2.12 (orientation vraie 065.47°) et AD 2.13 (distances déclarées)",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    },
+    "24": {
+     "trueBearing": 245.47,
+     "tora": 3055,
+     "toda": 3260,
+     "asda": 3055,
+     "lda": 2405,
+     "intersections": [
+      {
+       "name": "N4",
+       "tora": 1820
+      },
+      {
+       "name": "N5",
+       "tora": 2405
+      },
+      {
+       "name": "N6",
+       "tora": 2837
+      },
+      {
+       "name": "S3",
+       "tora": 1257
+      },
+      {
+       "name": "S4",
+       "tora": 1820
+      }
+     ],
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBCI AD 2.12 (orientation vraie 245.47°) et AD 2.13 (distances déclarées)",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    }
+   },
+   "intersectionsRemark": "AD 2.13 : départ depuis une intersection autorisé par l'ATC si l'A-SMGCS est disponible ; sans A-SMGCS, seulement avec une RVR de 550 m ou plus. Seule la TORA d'intersection est publiée : la TODA d'intersection n'est pas publiée."
+  },
+  "EBLG": {
+   "name": "Liège",
+   "source": {
+    "label": "AIP Belgique (eAIP skeyes), EB AD 2 EBLG",
+    "url": "https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Main/html/eAIP/EB-AD-2.EBLG-en-GB.html"
+   },
+   "elev": {
+    "ft": 651,
+    "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBLG AD 2.2, élévation 651 FT / 22°C",
+    "effective": "2026-10-29",
+    "verified": "2026-10-29"
+   },
+   "runways": {
+    "04R": {
+     "trueBearing": 45.16,
+     "tora": 3690,
+     "toda": 3690,
+     "asda": 3690,
+     "lda": 3453,
+     "intersections": [
+      {
+       "name": "C0",
+       "tora": 3303
+      },
+      {
+       "name": "C1",
+       "tora": 2573
+      },
+      {
+       "name": "C2",
+       "tora": 2553
+      },
+      {
+       "name": "S2",
+       "tora": 2478
+      },
+      {
+       "name": "S3",
+       "tora": 1598
+      }
+     ],
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBLG AD 2.12 (orientation vraie 045.16°) et AD 2.13 ; seuil décalé de 237 m, note 1",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    },
+    "22L": {
+     "trueBearing": 225.16,
+     "tora": 3690,
+     "toda": 3690,
+     "asda": 3690,
+     "lda": 3287,
+     "intersections": [
+      {
+       "name": "C4",
+       "tora": 2550
+      },
+      {
+       "name": "C3",
+       "tora": 1800
+      },
+      {
+       "name": "S5",
+       "tora": 3287
+      },
+      {
+       "name": "S4",
+       "tora": 2550
+      },
+      {
+       "name": "S3",
+       "tora": 1800
+      }
+     ],
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBLG AD 2.12 (orientation vraie 225.16°) et AD 2.13 ; seuil décalé de 403 m, note 1",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    },
+    "04L": {
+     "trueBearing": 45.16,
+     "tora": 2340,
+     "toda": 2340,
+     "asda": 2340,
+     "lda": 2340,
+     "intersections": [
+      {
+       "name": "C2",
+       "tora": 1640
+      },
+      {
+       "name": "N2",
+       "tora": 1640
+      }
+     ],
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBLG AD 2.12 (orientation vraie 045.16°) et AD 2.13 (distances déclarées)",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    },
+    "22R": {
+     "trueBearing": 225.16,
+     "tora": 2340,
+     "toda": 2340,
+     "asda": 2340,
+     "lda": 2340,
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBLG AD 2.12 (orientation vraie 225.16°) et AD 2.13 (distances déclarées)",
+     "effective": "2026-10-29",
+     "verified": "2026-10-29"
+    }
+   },
+   "intersectionsRemark": "AD 2.13 : seule la TORA d'intersection est publiée ; la TODA d'intersection n'est pas publiée."
+  }
+ }
+}

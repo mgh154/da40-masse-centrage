@@ -259,6 +259,34 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 .pdt-why h3{margin:12px 0 4px;font-size:1rem;color:var(--ink)}
 .pdt-why ul{margin:0;padding-left:18px;display:grid;gap:4px;color:var(--muted)}
 .pdt-why b{color:var(--ink)}
+
+/* ===== Données provisoires, vérifiées et causes à corriger ===== */
+.bdg.mem{color:var(--ok)} .bdg.exp{color:var(--bad)}
+.pill.prov{color:var(--warn)}
+.margin.prov{border-color:var(--warn);color:var(--warn)}
+.sumchip.prov{border-left-color:var(--warn)} .sumchip.prov .m{color:var(--warn)}
+.sumchip.idle .m,.sumchip.na .m{color:var(--muted)}
+.rv.prv,.kv b.prv,.pdtab b.prv{color:var(--warn)}
+.kv b.prv::after{content:" · provisoire";font:600 .7rem var(--body);text-transform:uppercase;letter-spacing:.03em}
+.provbox{margin-top:12px;border:1.5px solid var(--warn);border-radius:8px;padding:8px 10px;font-size:.88rem}
+.provbox>b{display:block;color:var(--warn);font-size:.8rem;letter-spacing:.04em}
+.provnote{display:block;color:var(--muted);font-size:.8rem;margin:2px 0 4px}
+.rneed{margin:12px 0 0;font-weight:500;color:var(--ink);font-size:.9rem}
+.rneed>b{color:var(--warn);font-weight:700}
+.witems{display:grid;gap:6px;margin-top:6px}
+.whyitem{font:500 .88rem var(--body);text-align:left;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:6px;padding:9px 10px;min-height:44px;cursor:pointer;width:100%}
+.whyitem.miss{border-left-color:var(--bad)} .whyitem.oob{border-left-color:var(--bad)} .whyitem.prov{border-left-color:var(--warn)}
+.whyitem small{color:var(--muted);font-size:.75rem}
+.whyitem:disabled{cursor:default}
+.wgroup{margin:8px 0}
+.wgroup h4{margin:0 0 4px;font:700 .95rem var(--body)}
+.wgroup ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.okc{color:var(--ok);font-weight:600}
+.flash{outline:3px solid var(--sky);outline-offset:3px;border-radius:6px;transition:outline-color .3s}
+.rwys button.noh{border-style:dashed}
+.rwys.ints{margin-top:6px}
+.rwys.ints:empty{display:none}
+.pdt-why h3{margin:14px 0 6px}
 </style>
 </head>
 <body>
@@ -379,13 +407,13 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 <p class="pdt-sub">to be completed for departure, arrival and alternate airports</p>
 <div id="pdt" class="pdt-wrap"></div>
 <div id="pdtwhy" class="pdt-why"></div>
-<p class="note pdt-note">Même tableau que sur la fiche New CAG : il se remplit seul avec les données ci-dessus, pour être recopié sur la fiche papier. N/D = absent ou non vérifié (passe la souris ou touche la case pour voir pourquoi), — = aérodrome non choisi.</p>
+<p class="note pdt-note">Même tableau que sur la fiche New CAG : il se remplit seul avec les données ci-dessus, pour être recopié sur la fiche papier. N/D = calcul impossible (donnée absente ou hors des graphiques AFM) ; PROVISOIRE = valeur calculée avec une donnée à vérifier, jamais une validation ; — = aérodrome non choisi.</p>
 </section>
 <section class="afmsec" aria-labelledby="h-afm">
 <h2 id="h-afm">Lecture des graphiques AFM</h2>
 <div id="afmcharts"></div>
 </section>
-<details class="legendbadges"><summary>Que signifient AUTO, SAISI, À VÉRIFIER, CONFIRMÉ, AIP ?</summary><div class="lgrid"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span><span><span class="bdg conf">CONFIRMÉ</span> valeur automatique contrôlée par toi (bouton « J’ai contrôlé ces valeurs »)</span></div></details>
+<details class="legendbadges"><summary>Que signifient AUTO, AIP, SAISI, MÉMORISÉ, À VÉRIFIER, EXPIRÉ ?</summary><div class="lgrid"><span><span class="bdg auto">AUTO</span> observation météo récupérée automatiquement (AviationWeather.gov), dont l’âge est contrôlé en permanence</span><span><span class="bdg chk">À VÉRIFIER</span> provisoire : source non officielle (élévation et orientation d’OurAirports) ou METAR de plus de 2 h. Le calcul est affiché, marqué PROVISOIRE, jamais comme validé</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> valeur officielle enregistrée dans declared.json, avec sa source et ses dates, encore valable</span><span><span class="bdg mem">MÉMORISÉ</span> valeur saisie ou contrôlée par toi, gardée sur cet appareil avec sa piste, sa date et son cycle AIRAC, valable 84 jours</span><span><span class="bdg exp">EXPIRÉ</span> valeur mémorisée ou officielle dont la validité est dépassée : à vérifier à nouveau</span></div></details>
 <p class="note"><b>Ce que l’outil ne fait jamais :</b> inventer une valeur manquante ou lire les graphiques de l’AFM hors des courbes numérisées. Dans ces cas il l’écrit et laisse la case vide pour que tu saisisses la valeur relevée toi-même. La TODA et la LDA ne sont jamais déduites de la longueur de piste : elles viennent de l’AIP, saisies par toi ou lues dans <code>declared.json</code> lorsqu’elles y sont vérifiées.</p>
 <p class="note">Travers = vent × sin(angle) · Face = vent × cos(angle) · Altitude pression = élévation + 30 × (1013 − QNH) · Altitude densité = Pa + 120 × (T − T ISA), avec T ISA = 15 − 2 × Pa/1000 arrondie au degré, comme sur la fiche. Vent de travers maximum 20 kt. Le vent d’un METAR est en degrés vrais : l’axe de piste de la base est lui aussi en degrés vrais (un QFU magnétique saisi à la place ajoute l’écart de la variation, 2 à 3° environ en Belgique). TODR et LDR calculés d’après les graphiques « Take-off distance over 50 ft obstacle » (p. 5-12) et « Landing distance over 50 ft obstacle, flaps LDG » (p. 5-20) de l’AFM DA 40 D, rév. 7, piste sèche, en dur et plane, avec la masse de l’onglet Masse &amp; centrage. Lecture numérisée à environ ± 5 % près, arrondie vers le haut. Limites du calcul : altitude pression de 0 à 10 000 ft, température de −35 à +50 °C, masse jusqu’à 1 150 kg, vent arrière jusqu’à 5 m/s au décollage, aucun vent arrière à l’atterrissage. Vérifie toujours avec l’AFM de l’avion.</p>
 </div>
@@ -691,30 +719,92 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 
   /* ===== Performance ===== */
   var AP_URL = "airports.json", DECL_URL = "declared.json", WX_URL = "https://raw.githubusercontent.com/mgh154/da40-masse-centrage/data/metars.json";
-  var PKEY = "da40-prov-v1", FACTOR = 1.25;
+  var PKEY = "da40-prov-v1", MEMKEY = "da40-aip-v1", FACTOR = 1.25;
   var CARDS = [
     {k:"d", title:"Départ", kind:"to", rtitle:"DÉCOLLAGE", av:"toda", avLabel:"TODA disponible", sum:"Décollage"},
     {k:"a", title:"Arrivée", kind:"ld", rtitle:"ATTERRISSAGE", av:"lda", avLabel:"LDA disponible", sum:"Atterrissage"},
     {k:"x", title:"Dégagement", kind:"ld", rtitle:"ATTERRISSAGE DE DÉGAGEMENT", av:"lda", avLabel:"LDA disponible", sum:"Dégagement"}
   ];
   var FIELDS = ["elev","qnh","temp","rwy","wdir","wspd","gust","toda","lda","todr","ldr"];
+  var WXF = ["wdir", "wspd", "gust", "qnh", "temp"];
   var BADGE = {
-    auto:["AUTO", "Donnée récupérée automatiquement auprès d’une source météo officielle"],
-    chk:["À VÉRIFIER", "Donnée automatique d’une source non officielle (ou ancienne) : à contrôler dans l’AIP ou sur la fiche"],
+    auto:["AUTO", "Observation météo récupérée automatiquement (AviationWeather.gov). Sa fraîcheur est contrôlée en permanence."],
+    chk:["À VÉRIFIER", "Provisoire : source non officielle ou ancienne. À vérifier dans l’AIP avant de t’y fier."],
     man:["SAISI", "Valeur saisie ou modifiée par toi"],
-    ver:["AIP", "Valeur issue d’un fichier de distances déclarées vérifiées"],
-    conf:["CONFIRMÉ", "Valeur automatique que tu as contrôlée (AIP, fiche de pesée)"]
+    ver:["AIP", "Valeur du fichier de données aéronautiques vérifiées (declared.json), encore dans sa durée de validité"],
+    mem:["MÉMORISÉ", "Valeur que tu as saisie ou contrôlée, mémorisée sur cet appareil et encore valable"],
+    exp:["EXPIRÉ", "Valeur mémorisée ou officielle dont la validité est dépassée : à vérifier à nouveau"]
   };
-  var prov = {}, cur = {}, ap = null, apP = null, declD = null, declP = null, wxP = null;
+  var prov = {}, cur = {}, wxi = {}, ints = {}, mem = {}, ap = null, apP = null, declD = null, declP = null, wxP = null;
+
+  /* AIP:début — dates AIRAC, validité des données et priorité des sources (fonctions pures, testées par tests/aip-check.js) */
+  var AIP_VALID_DAYS = 84;   /* une donnée AIP vérifiée reste utilisable 3 cycles AIRAC, puis elle est à refaire */
+  var WX_STALE_MIN = 120;    /* un METAR de plus de 2 h est ancien */
+  var AFM_REF = "6.01.05-E rév. 7", AFM_VALID_DAYS = 365;
+  var AIRAC_REF = Date.UTC(2025, 0, 23);   /* AIRAC 2501 */
+  function airacOf(ms){
+    var C = 28 * 864e5, n = Math.floor((ms - AIRAC_REF) / C), eff = AIRAC_REF + n * C, y = new Date(eff).getUTCFullYear();
+    var first = AIRAC_REF + Math.ceil((Date.UTC(y, 0, 1) - AIRAC_REF) / C) * C;
+    return {eff: eff, label: String(y).slice(2) + ("0" + (Math.floor((eff - first) / C) + 1)).slice(-2)};
+  }
+  function ymd(ms){ var d = new Date(ms); return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2); }
+  function memValid(e, now){
+    var t = Date.parse(e && e.date);
+    return isFinite(t) && now - t <= AIP_VALID_DAYS * 864e5 ? "ok" : "exp";
+  }
+  function afmValid(st, now){
+    if (!st) return false;
+    var d = typeof st === "string" ? st : st.d, ref = typeof st === "string" ? AFM_REF : st.ref, t = Date.parse(d);
+    return ref === AFM_REF && isFinite(t) && now - t <= AFM_VALID_DAYS * 864e5;
+  }
+  /* Une donnée officielle n'est utilisable que si elle porte sa source, sa date d'effet et sa date de vérification */
+  function declOk(b){ return !!(b && b.src && b.effective && b.verified); }
+  function declElevOf(D, icao){
+    var a = D && D.airports && D.airports[icao], e = a && a.elev;
+    return declOk(e) && typeof e.ft === "number" ? {ft: e.ft, verified: e.verified, b: e} : null;
+  }
+  function declRwyOf(D, icao, id){
+    var a = D && D.airports && D.airports[icao], r = a && a.runways && a.runways[id];
+    return declOk(r) ? r : null;
+  }
+  /* Valeur à utiliser pour un champ : officielle valide, puis mémorisée valide, puis officielle expirée, puis OurAirports (provisoire), puis mémorisée expirée */
+  function pickValue(s, now){
+    var d = s.decl && s.decl.v !== null && s.decl.v !== undefined ? s.decl : null, m = s.mem && s.mem.v !== null && s.mem.v !== undefined ? s.mem : null;
+    var o = s.ours !== null && s.ours !== undefined ? s.ours : null, mState = null;
+    if (d && memValid({date: d.verified}, now) === "ok") return {v: d.v, src: "ver"};
+    if (m){
+      var ref = d ? d.v : o;
+      mState = m.srcv !== null && m.srcv !== undefined && ref !== null && ref !== m.srcv ? "stale" : memValid(m, now);
+    }
+    if (mState === "ok") return {v: m.v, src: "mem"};
+    if (d) return {v: d.v, src: "exp", note: "officiel"};
+    if (o !== null) return {v: o, src: "chk", note: mState === "stale" ? "stale" : (mState === "exp" ? "memexp" : "")};
+    if (m && mState === "exp") return {v: m.v, src: "exp", note: "mem"};
+    return {v: null, src: null, note: mState === "stale" ? "stale" : ""};
+  }
+  /* AIP:fin */
 
   function norm(s){ return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); }
   function pid(k, f){ return k + "-" + f; }
+  function wxAgeMin(k){ return wxi[k] && wxi[k].obs ? Math.max(0, Math.round((Date.now() / 1000 - wxi[k].obs) / 60)) : null; }
+  function wxStale(k){ var a = wxAgeMin(k); return a !== null && a > WX_STALE_MIN; }
+  function ageTxt(min){ return min < 90 ? min + " min" : hm(min); }
+  function memEntry(k, f){
+    var icao = cur[k], rid = $(pid(k, "rwyid")) ? $(pid(k, "rwyid")).value : "";
+    return icao ? memGet(icao, rid, f) : null;
+  }
+  function memTxt(e){ return e ? (e.by === "confirmé" ? "confirmé" : "saisi") + " le " + e.date.split("-").reverse().join("/") + " (AIRAC " + e.airac + ")" : ""; }
   function badge(id){
     var b = $(id + "-b"), p = prov[id];
     if (!b || !$(id)) return;
     if (!p || $(id).value === ""){ b.textContent = ""; b.className = "bdg"; b.removeAttribute("title"); return; }
-    b.textContent = BADGE[p][0]; b.className = "bdg " + p; b.title = BADGE[p][1];
+    var k = id.charAt(0), f = id.slice(2), t = BADGE[p] ? BADGE[p][1] : "";
+    if (p === "auto" && WXF.indexOf(f) >= 0 && wxStale(k)){ p = "chk"; t = "METAR ancien (il y a " + ageTxt(wxAgeMin(k)) + ") : provisoire, recharger le METAR."; }
+    if (p === "mem" || p === "exp"){ var e = memEntry(k, f); if (e) t += " — " + memTxt(e); }
+    if (!BADGE[p]) p = "chk";
+    b.textContent = BADGE[p][0]; b.className = "bdg " + p; b.title = t;
   }
+  function refreshBadges(){ CARDS.forEach(function(c){ FIELDS.forEach(function(f){ badge(pid(c.k, f)); }); }); }
   function setF(k, f, v, src){
     var id = pid(k, f), e = $(id);
     if (!e) return;
@@ -724,9 +814,34 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   }
   function clearCard(k){
     FIELDS.concat(["wx", "rwyid"]).forEach(function(f){ var e = $(pid(k, f)); if (!e) return; e.value = ""; delete prov[pid(k, f)]; badge(pid(k, f)); });
-    $(k + "-rwys").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
+    delete wxi[k]; delete ints[k];
+    $(k + "-rwys").innerHTML = ""; $(k + "-ints").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
   }
-  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur})); } catch(e){} }
+  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur, wxi: wxi, ints: ints})); } catch(e){} }
+
+  /* Valeurs AIP mémorisées sur cet appareil : provenance, piste, date et cycle AIRAC, source au moment de la saisie */
+  function memLoad(){ try { mem = JSON.parse(localStorage.getItem(MEMKEY) || "{}") || {}; } catch(e){ mem = {}; } }
+  function memSave(){ try { localStorage.setItem(MEMKEY, JSON.stringify(mem)); } catch(e){} }
+  function memGet(icao, rid, f){
+    var a = mem[icao];
+    if (!a) return null;
+    return f === "elev" ? (a.elev || null) : (a.rwy && a.rwy[rid] && a.rwy[rid][f]) || null;
+  }
+  function memPut(icao, rid, f, v, by, srcv){
+    var now = Date.now(), e = {v: v, date: ymd(now), airac: airacOf(now).label, by: by, srcv: srcv === undefined ? null : srcv};
+    mem[icao] = mem[icao] || {};
+    if (f === "elev") mem[icao].elev = e;
+    else { mem[icao].rwy = mem[icao].rwy || {}; (mem[icao].rwy[rid] = mem[icao].rwy[rid] || {})[f] = e; }
+    memSave();
+  }
+  function memDel(icao, rid, f){
+    var a = mem[icao];
+    if (!a) return;
+    if (f === "elev") delete a.elev; else if (a.rwy && a.rwy[rid]) delete a.rwy[rid][f];
+    memSave();
+  }
+  function memAny(icao){ var a = mem[icao]; return !!(a && (a.elev || (a.rwy && Object.keys(a.rwy).some(function(r){ return Object.keys(a.rwy[r]).length; })))); }
+  memLoad();
 
   /* Données : aérodromes (OurAirports), distances déclarées vérifiées (optionnel), METAR */
   function getJson(url, opt){ return fetch(url, opt).then(function(r){ if (!r.ok) throw 0; return r.json(); }); }
@@ -768,6 +883,50 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     });
   }
 
+  function declAp(icao){ var d = declD && declD.airports && declD.airports[icao]; return d || null; }
+  function endsOf(icao){
+    var a = ap && icao && ap.a[icao], out = [], seen = {};
+    function add(id, h, len, surf){ if (!id || seen[id]) return; seen[id] = 1; out.push({id: id, h: h, len: len, surf: surf}); }
+    if (a) a[3].forEach(function(r){ add(r[0], r[1], r[4], r[5]); add(r[2], r[3], r[4], r[5]); });
+    var d = declAp(icao);
+    if (d && d.runways) Object.keys(d.runways).forEach(function(id){ add(id, null, null, ""); });
+    return out;
+  }
+  function rwyEnds(k){ return endsOf(cur[k]); }
+  /* Sources d'un champ pour un aérodrome et une piste : officielle (declared.json), mémorisée, OurAirports */
+  function srcFor(icao, rid, f, intName){
+    var o = {decl: null, mem: f === "toda" && intName ? null : memGet(icao, rid, f), ours: null}, a = ap && ap.a[icao];
+    if (f === "elev"){
+      var de = declElevOf(declD, icao);
+      if (de) o.decl = {v: de.ft, verified: de.verified};
+      o.ours = a && a[2] !== null ? a[2] : null;
+      return o;
+    }
+    var dr = declRwyOf(declD, icao, rid);
+    if (dr){
+      var val = f === "rwy" ? dr.trueBearing : dr[f];
+      if (f === "toda" && intName){ var it = (dr.intersections || []).filter(function(x){ return x.name === intName; })[0]; val = it && typeof it.toda === "number" ? it.toda : null; }
+      if (typeof val === "number") o.decl = {v: val, verified: dr.verified};
+    }
+    if (f === "rwy"){ var e = endsOf(icao).filter(function(x){ return x.id === rid; })[0]; o.ours = e && e.h !== null ? e.h : null; }
+    return o;
+  }
+  function resolveField(k, f){ return pickValue(srcFor(cur[k], $(pid(k, "rwyid")).value, f, ints[k]), Date.now()); }
+  /* Applique la meilleure source disponible ; une valeur saisie par l'utilisateur n'est jamais écrasée sauf demande explicite */
+  function autoField(k, f, force){
+    if (!force && prov[pid(k, f)] === "man") return null;
+    var r = resolveField(k, f);
+    setF(k, f, r.v, r.src);
+    return r;
+  }
+  /* Mémorise une valeur saisie (piste et date) pour les prochaines préparations ; l'effacer l'oublie */
+  function memTyped(k, f, raw){
+    var icao = cur[k], rid = $(pid(k, "rwyid")).value;
+    if (!icao || ["elev", "rwy", "toda", "lda"].indexOf(f) < 0 || (f !== "elev" && !rid) || (f === "toda" && ints[k])) return;
+    var v = num(pid(k, f));
+    if (raw === "" || v === null) memDel(icao, rid, f); else memPut(icao, rid, f, v, "saisi", null);
+  }
+
   function selectAd(k, icao){
     var same = cur[k] === icao;
     cur[k] = icao; $(pid(k, "ad")).value = icao; hideSug(k);
@@ -775,56 +934,92 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     $(k + "-adinfo").textContent = "Chargement des données de " + icao + " ...";
     Promise.all([loadAp(), loadDecl()]).then(function(){
       if (cur[k] !== icao) return;
-      var a = ap && ap.a[icao];
       adInfo(k);
-      if (a && a[2] !== null && prov[pid(k, "elev")] !== "man") setF(k, "elev", a[2], "chk");
+      autoField(k, "elev");
       drawRwys(k);
       return applyWx(k, icao);
     }).then(function(){ renderAll(); save(); });
   }
   function adInfo(k){
-    var a = ap && cur[k] && ap.a[cur[k]];
-    $(k + "-adinfo").textContent = a ? a[0] + (a[1] ? " · " + a[1] : "") + ". Aérodrome et pistes : OurAirports (base collaborative, non officielle)." : (cur[k] ? cur[k] + " absent de la base d’aérodromes : saisis les valeurs." : "");
+    var p = $(k + "-adinfo"), icao = cur[k], a = ap && icao && ap.a[icao], d = declAp(icao);
+    p.textContent = "";
+    if (!icao) return;
+    p.appendChild(document.createTextNode(a ? a[0] + (a[1] ? " · " + a[1] : "") + ". Pistes : OurAirports (base collaborative, non officielle). " : icao + " absent de la base d’aérodromes : saisis les valeurs. "));
+    var link = d && d.source && d.source.url, hasVals = !!(d && (declElevOf(declD, icao) || (d.runways && Object.keys(d.runways).some(function(r){ return declRwyOf(declD, icao, r); }))));
+    if (link){
+      var A = document.createElement("a"); A.href = link; A.target = "_blank"; A.rel = "noopener"; A.textContent = "AIP : " + (d.source.label || icao);
+      p.appendChild(A);
+      p.appendChild(document.createTextNode(hasVals ? " (données officielles enregistrées)." : " : élévation (AD 2.2), orientation vraie des pistes (AD 2.12), TODA et LDA (AD 2.13). Pas encore enregistrées dans ce site : saisis-les une fois, elles seront mémorisées pour les prochaines préparations."));
+    } else p.appendChild(document.createTextNode("Élévation, orientation vraie et distances déclarées : AIP de l’État (AD 2.2, 2.12, 2.13) ; saisis-les, elles seront mémorisées."));
+    var f = $(k + "-forget"); if (f) f.hidden = !memAny(icao);
   }
 
-  function rwyEnds(k){
-    var a = ap && cur[k] && ap.a[cur[k]], out = [];
-    if (a) a[3].forEach(function(r){ out.push({id: r[0], h: r[1], len: r[4], surf: r[5]}); out.push({id: r[2], h: r[3], len: r[4], surf: r[5]}); });
-    return out.filter(function(e){ return e.id; });
+  function chipLabel(icao, e){
+    var r = pickValue(srcFor(icao, e.id, "rwy"), Date.now());
+    return "Piste " + e.id + " · " + (r.v === null ? "orientation ?" : ("00" + Math.round(r.v)).slice(-3) + "°");
   }
   function drawRwys(k){
-    var box = $(k + "-rwys"), sel = $(pid(k, "rwyid")).value, ends = rwyEnds(k), missing = 0;
+    var box = $(k + "-rwys"), sel = $(pid(k, "rwyid")).value, ends = rwyEnds(k), icao = cur[k];
     box.innerHTML = "";
     ends.forEach(function(e){
-      if (e.h === null){ missing++; return; }
       var b = document.createElement("button"); b.type = "button"; b.dataset.k = k; b.dataset.rwy = e.id;
       b.setAttribute("aria-pressed", sel === e.id ? "true" : "false");
-      b.textContent = "Piste " + e.id + " · " + ("00" + Math.round(e.h)).slice(-3) + "°";
+      b.textContent = chipLabel(icao, e);
+      if (pickValue(srcFor(icao, e.id, "rwy"), Date.now()).v === null) b.className = "noh";
       box.appendChild(b);
     });
-    if (!box.children.length && cur[k] && ap && ap.a[cur[k]]) $(k + "-rwyinfo").textContent = missing ? "Orientation des pistes absente de la source : saisis l’axe de piste." : "Aucune piste dans la source : saisis l’axe de piste.";
-    else rwyInfo(k);
+    drawInts(k);
+    rwyInfo(k);
+  }
+  function drawInts(k){
+    var box = $(k + "-ints"), c = CARDS.filter(function(x){ return x.k === k; })[0], rid = $(pid(k, "rwyid")).value, dr = declRwyOf(declD, cur[k], rid), list = dr && dr.intersections || [];
+    box.innerHTML = "";
+    if (c.kind !== "to" || !list.length) return;
+    [{name: "", toda: null}].concat(list).forEach(function(it){
+      var b = document.createElement("button"); b.type = "button"; b.dataset.k = k; b.dataset.int = it.name;
+      b.setAttribute("aria-pressed", (ints[k] || "") === it.name ? "true" : "false");
+      b.textContent = it.name ? "Départ " + it.name + (typeof it.toda === "number" ? " · TODA " + fmt(it.toda, 0) + " m" : (typeof it.tora === "number" ? " · TORA " + fmt(it.tora, 0) + " m, TODA non publiée" : "")) : "Piste entière";
+      box.appendChild(b);
+    });
+  }
+  function selectInt(k, name){
+    ints[k] = name || null;
+    autoField(k, "toda", true);
+    drawInts(k); rwyInfo(k);
   }
   function rwyInfo(k){
-    var id = $(pid(k, "rwyid")).value, e = rwyEnds(k).filter(function(x){ return x.id === id; })[0], d = declD && declD[cur[k]] && declD[cur[k]][id], t;
-    if (!e){ $(k + "-rwyinfo").textContent = ""; return; }
-    t = "Piste " + id + " · axe " + ("00" + Math.round(e.h)).slice(-3) + "° vrai (OurAirports)";
-    if (e.len !== null) t += " · longueur physique " + fmt(e.len, 0) + " m" + (e.surf ? " (" + e.surf + ")" : "") + ". Ce n’est ni la TODA ni la LDA : saisis celles de l’AIP.";
-    if (d && prov[pid(k, "toda")] === "ver") t += " Distances déclarées : " + (d.src || "source non précisée") + ".";
-    $(k + "-rwyinfo").textContent = t;
+    var p = $(k + "-rwyinfo"), icao = cur[k], id = $(pid(k, "rwyid")).value, ends = rwyEnds(k);
+    if (!icao){ p.textContent = ""; return; }
+    if (!id){ p.textContent = ends.length ? "Choisis la piste utilisée : elle n’est jamais déduite du METAR." : "Aucune piste connue pour " + icao + " : saisis l’orientation vraie (AIP AD 2.12), la TODA et la LDA (AD 2.13)."; return; }
+    var e = ends.filter(function(x){ return x.id === id; })[0], s = prov[pid(k, "rwy")], hv = $(pid(k, "rwy")).value, dr = declRwyOf(declD, icao, id), t = ["Piste " + id + " :"], m = memGet(icao, id, "rwy");
+    if (hv === "") t.push("orientation vraie absente d’OurAirports et non enregistrée : saisis-la depuis l’AIP (AD 2.12). Elle ne se déduit pas du numéro de piste.");
+    else {
+      var deg = "axe " + ("00" + Math.round(+hv)).slice(-3) + "° vrai";
+      if (s === "ver") t.push(deg + " : AIP, " + dr.src + " (en vigueur " + dr.effective + ", vérifié " + dr.verified + ").");
+      else if (s === "mem") t.push(deg + " : " + memTxt(m) + ".");
+      else if (s === "exp") t.push(deg + " : valeur expirée (" + (m ? memTxt(m) : "officielle") + "), à vérifier à nouveau.");
+      else if (s === "man") t.push(deg + " : saisi par toi.");
+      else t.push(deg + " : OurAirports, provisoire, à vérifier dans l’AIP (AD 2.12).");
+    }
+    if (e && e.len !== null) t.push("Longueur physique " + fmt(e.len, 0) + " m (OurAirports) : ni TODA ni LDA.");
+    var ap2 = declAp(icao);
+    if (dr && dr.intersections && dr.intersections.length && CARDS.filter(function(x){ return x.k === k; })[0].kind === "to"){
+      if (ints[k]) t.push("Départ " + ints[k] + " : la TODA d’intersection n’est pas publiée, saisis celle que tu retiens ; ne reprends pas celle de la piste entière.");
+      if (ap2 && ap2.intersectionsRemark) t.push(ap2.intersectionsRemark);
+    }
+    p.textContent = t.join(" ");
   }
   function selectRwy(k, id){
-    var e = rwyEnds(k).filter(function(x){ return x.id === id; })[0], d = declD && declD[cur[k]] && declD[cur[k]][id];
+    var e = rwyEnds(k).filter(function(x){ return x.id === id; })[0], prev = $(pid(k, "rwyid")).value, c = CARDS.filter(function(x){ return x.k === k; })[0];
     if (!e) return;
-    $(pid(k, "rwyid")).value = id;
-    setF(k, "rwy", e.h, "chk");
-    ["toda", "lda"].forEach(function(f){ if (prov[pid(k, f)] === "ver") setF(k, f, "", null); });
-    if (d){
-      if (typeof d.toda === "number" && prov[pid(k, "toda")] !== "man") setF(k, "toda", d.toda, "ver");
-      if (typeof d.lda === "number" && prov[pid(k, "lda")] !== "man") setF(k, "lda", d.lda, "ver");
+    if (prev !== "" && prev !== id){
+      ["rwy", "toda", "lda"].forEach(function(f){ setF(k, f, "", null); });
+      ints[k] = null;
     }
-    rwyInfo(k);
-    Array.prototype.forEach.call($(k + "-rwys").children, function(b){ b.setAttribute("aria-pressed", b.dataset.rwy === id ? "true" : "false"); });
+    $(pid(k, "rwyid")).value = id;
+    autoField(k, "rwy");
+    autoField(k, c.av);
+    drawRwys(k);
   }
 
   /* METAR */
@@ -851,7 +1046,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       if (!o){ st.className = "hint"; st.textContent = icao + " : pas de METAR récent dans la liste suivie (airports.txt). Colle le METAR à la main."; return; }
       var t = new Date(o.obs * 1000), age = Math.max(0, Math.round((Date.now() - t.getTime()) / 60000)), old = age > 120;
       $(pid(k, "wx")).value = o.raw;
-      parseWx(k, old ? "chk" : "auto");
+      wxi[k] = {obs: o.obs};
+      parseWx(k, "auto");
       var day = t.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC"});
       var hh = ("0" + t.getUTCHours()).slice(-2) + ":" + ("0" + t.getUTCMinutes()).slice(-2);
       st.className = "hint" + (old ? " bad" : "");
@@ -1007,7 +1203,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   /* Applicabilité des graphiques et graphique de lecture dans chaque carte de résultat */
   var AFM_KEY = "da40-afm-v1", afmOpen = {};
   function afmConf(){ try { return JSON.parse(localStorage.getItem(AFM_KEY) || "{}") || {}; } catch(e){ return {}; } }
-  function afmApp(){ var ac = window.__ac || ""; return {ac: ac, ok: !!(ac && afmConf()[ac])}; }
+  function afmApp(){ var ac = window.__ac || ""; return {ac: ac, ok: !!(ac && afmValid(afmConf()[ac], Date.now()))}; }
   function afmChip(){
     var a = afmApp(), s = $("afmsum");
     if (!s) return;
@@ -1048,7 +1244,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<div class="f full srch"><label for="' + k + '-ad">Aérodrome (code OACI ou nom)</label>'
       + '<div class="in"><input id="' + k + '-ad" class="txt" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + k + '-sug" autocomplete="off" spellcheck="false" placeholder="Ex. EBCI ou Charleroi"></div>'
       + '<ul class="sug" id="' + k + '-sug" role="listbox" hidden></ul><p class="hint" id="' + k + '-adinfo"></p></div>'
-      + '<div class="f full"><label id="' + k + '-rl">Piste</label><div class="rwys" id="' + k + '-rwys" role="group" aria-labelledby="' + k + '-rl"></div><p class="hint" id="' + k + '-rwyinfo"></p><div class="row-btn"><button type="button" class="mini cfm" data-confirm="' + k + '" hidden>J’ai contrôlé ces valeurs (AIP)</button></div><input type="hidden" id="' + k + '-rwyid"></div>'
+      + '<div class="f full"><label id="' + k + '-rl">Piste</label><div class="rwys" id="' + k + '-rwys" role="group" aria-labelledby="' + k + '-rl"></div><div class="rwys ints" id="' + k + '-ints" role="group" aria-label="Départ depuis la piste entière ou une intersection"></div><p class="hint" id="' + k + '-rwyinfo"></p><div class="row-btn"><button type="button" class="mini cfm" data-confirm="' + k + '" hidden>J’ai contrôlé ces valeurs dans l’AIP : les mémoriser</button><button type="button" class="mini cfm" id="' + k + '-forget" data-forget="' + k + '" hidden>Oublier les valeurs mémorisées</button></div><input type="hidden" id="' + k + '-rwyid"></div>'
       + '<div class="fields">' + fld(k, "elev", "Élévation", "ft") + fld(k, "rwy", "Axe de piste (° vrai)", "°") + fld(k, "wdir", "Vent, direction", "°") + fld(k, "wspd", "Vent, force", "kt")
       + fld(k, "gust", "Rafales", "kt") + fld(k, "qnh", "QNH", "hPa") + fld(k, "temp", "Température extérieure", "°C") + '</div>'
       + '<div class="f full wxbox"><label for="' + k + '-wx">METAR / TAF</label><textarea id="' + k + '-wx" rows="2" autocomplete="off" spellcheck="false" placeholder="Rempli automatiquement, ou colle un METAR"></textarea>'
@@ -1063,7 +1259,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function row(label, sub, val, cls){
     return '<div class="rr"><div class="rl">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</div><div class="rv ' + (cls || "") + '">' + val + '</div></div>';
   }
-  function srcWord(id){ var p = prov[id]; return p === "ver" ? "valeur AIP" : (p === "man" ? "valeur saisie" : (p === "chk" ? "à vérifier" : (p === "conf" ? "confirmée" : ""))); }
+  function srcWord(id){ var p = prov[id]; return p === "ver" ? "valeur AIP" : (p === "man" ? "valeur saisie" : (p === "chk" ? "à vérifier" : (p === "mem" ? "mémorisée" : (p === "exp" ? "expirée" : "")))); }
 
   /* Calcul d'une carte : partagé par la carte de résultats et le tableau */
   function calcCard(c){
@@ -1087,27 +1283,142 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     return {k: k, v: v, wc: wc, pa: pa, da: da, m: m, man: man, av: av, miss: miss, err: err, val: val, how: how, req: req, margin: req !== null && av !== null ? av - req : null};
   }
 
-  function render(c){
-    var k = c.k, to = c.kind === "to", r = calcCard(c), v = r.v, wc = r.wc, pa = r.pa, miss = r.miss, err = r.err, val = r.val, how = r.how, av = r.av, req = r.req, margin = r.margin;
-    setT(k + "-pa", pa === null ? "—" : fmt(Math.round(pa), 0) + " ft");
-    setT(k + "-da", r.da === null ? "—" : fmt(Math.round(r.da), 0) + " ft");
+  /* ===== États des données : manquant, provisoire, vérifié ===== */
+  function fstate(k, f){
+    var id = pid(k, f), el = $(id);
+    if (!el || el.value.trim() === "") return "empty";
+    var p = prov[id];
+    if (p === "chk" || p === "exp") return p;
+    if (p === "auto" && WXF.indexOf(f) >= 0 && wxStale(k)) return "wx";
+    return "ok";
+  }
+  function isUsed(c){
+    var k = c.k, m4 = ($(pid(k, "ad")).value.toUpperCase().match(/^\s*([A-Z]{4})(?![A-Z0-9])/) || [])[1];
+    return !!(cur[k] || m4 || FIELDS.some(function(f){ return $(pid(k, f)) && $(pid(k, f)).value !== ""; }));
+  }
+  /* Un jeton = une donnée dont dépendent les résultats : s = ok | miss | prov */
+  function cardStatus(c){
+    var k = c.k, r = calcCard(c), v = r.v, to = c.kind === "to", icao = cur[k] || ($(pid(k, "ad")).value.toUpperCase().match(/^\s*([A-Z]{4})(?![A-Z0-9])/) || [])[1] || "", rid = $(pid(k, "rwyid")).value;
+    var st = {c: c, k: k, r: r, used: isUsed(c), icao: icao, rid: rid, tok: {}, stale: wxStale(k), age: wxAgeMin(k), wxEmpty: $(pid(k, "wx")).value.trim() === ""};
+    function put(t, s, text, target, short, group){ st.tok[t] = {s: s, text: text, target: target, short: short || text, group: group || t}; }
+    var s;
+    /* élévation */
+    s = fstate(k, "elev");
+    if (s === "empty") put("elev", "miss", "Renseigner l’élévation de l’aérodrome (AIP AD 2.2)", pid(k, "elev"), "élévation manquante");
+    else if (s === "ok") put("elev", "ok");
+    else put("elev", "prov", s === "exp" ? "Élévation expirée : à vérifier à nouveau" : "Vérifier l’élévation (OurAirports, provisoire)", pid(k, "elev"), "élévation à vérifier");
+    /* piste : l'axe n'est nécessaire que si le vent n'est pas nul */
+    s = fstate(k, "rwy");
+    if (v.ws === 0 || s === "ok") put("rwy", "ok");
+    else if (s === "empty") put("rwy", "miss", rid ? "Renseigner l’orientation vraie de la piste " + rid + " (AIP AD 2.12)" : "Choisir une piste", rid ? pid(k, "rwy") : k + "-rwys", rid ? "orientation de piste manquante" : "piste non choisie");
+    else put("rwy", "prov", s === "exp" ? "Axe de piste expiré : à vérifier à nouveau" : "Vérifier l’orientation vraie de la piste (OurAirports, provisoire)", pid(k, "rwy"), "orientation de piste à vérifier");
+    /* météo : vent, QNH, température */
+    var wxMiss = "Aucun METAR : recharge-le ou saisis le vent, le QNH et la température", wxOld = "METAR ancien" + (st.age !== null ? " (il y a " + ageTxt(st.age) + ")" : "") + " : recharger le METAR";
+    function wxTok(t, f, text, short, target){
+      s = fstate(k, f);
+      if (s === "empty") st.wxEmpty ? put(t, "miss", wxMiss, k + "-wx", short, "wx") : put(t, "miss", text, target || pid(k, f), short);
+      else if (s === "wx") put(t, "prov", wxOld, "refresh:" + k, "METAR ancien", "wxold");
+      else put(t, "ok");
+    }
+    wxTok("qnh", "qnh", "QNH manquant dans le METAR : saisis-le", "QNH manquant");
+    wxTok("temp", "temp", "Température manquante dans le METAR : saisis-la", "température manquante");
+    if (fstate(k, "wspd") === "empty") wxTok("wind", "wspd", "Vent manquant dans le METAR : saisis-le", "vent manquant");
+    else if (v.ws > 0 && fstate(k, "wdir") === "empty") put("wind", "miss", "Direction du vent manquante (vent variable) : saisis-la", pid(k, "wdir"), "direction du vent manquante");
+    else if (fstate(k, "wspd") === "wx" || fstate(k, "wdir") === "wx") put("wind", "prov", wxOld, "refresh:" + k, "METAR ancien", "wxold");
+    else put("wind", "ok");
+    /* masse et AFM : seulement si la distance est calculée */
+    if (r.man !== null){ put("mass", "ok"); put("afm", "ok"); }
+    else {
+      if (!window.__mb) put("mass", "miss", "Compléter l’onglet Masse & centrage", "tab:mb", "masse manquante");
+      else if (!$("confirm").checked) put("mass", "prov", "Contrôler la masse à vide et son bras (onglet Masse & centrage)", "tab:mb#confirm", "masse à vide non contrôlée");
+      else put("mass", "ok");
+      var a = afmApp();
+      put("afm", a.ok ? "ok" : "prov", "Confirmer que l’AFM de " + (a.ac || "l’avion") + " correspond aux graphiques DA 40 D", "afm", "AFM non confirmée");
+    }
+    /* distance disponible */
+    s = fstate(k, c.av);
+    if (s === "empty") put("av", "miss", "Renseigner la " + (to ? "TODA" : "LDA") + " (AIP AD 2.13)", pid(k, c.av), (to ? "TODA" : "LDA") + " à saisir");
+    else if (s === "ok") put("av", "ok");
+    else put("av", "prov", (to ? "TODA" : "LDA") + " expirée : à vérifier à nouveau", pid(k, c.av), (to ? "TODA" : "LDA") + " expirée");
+    return st;
+  }
+  var DEP_CALC = ["elev", "qnh", "temp", "rwy", "wind", "mass", "afm"];
+  /* Une valeur : null (calcul impossible) ou {v, state: ok|prov}. Le calcul est affiché même provisoire. */
+  function metricOf(st, value, deps){
+    var T = st.tok, miss = deps.filter(function(t){ return T[t] && T[t].s === "miss"; }), prv = deps.filter(function(t){ return T[t] && T[t].s === "prov"; });
+    if (value === null || value === undefined || !isFinite(value)){
+      var oob = !miss.length && st.r.err;
+      return {v: null, cat: oob ? "oob" : "miss", why: oob ? st.r.err : (miss.length ? miss.map(function(t){ return T[t].short; }).filter(function(x, i, a){ return a.indexOf(x) === i; }).join(", ") : "donnée absente")};
+    }
+    return {v: value, state: prv.length ? "prov" : "ok", prov: prv.map(function(t){ return T[t].short; }).filter(function(x, i, a){ return a.indexOf(x) === i; })};
+  }
+  function metrics(st){
+    var r = st.r, wc = r.wc, v = r.v, to = st.c.kind === "to", M = {};
+    var worst = wc && wc.known ? Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx)) : 0, cd = r.man !== null ? [] : DEP_CALC;
+    M.xw = metricOf(st, wc && wc.known ? Math.round(Math.abs(wc.cr)) : null, v.ws === 0 ? [] : ["rwy", "wind"]);
+    if (M.xw.v !== null && worst > 20) M.xw.bad = true;
+    M.pa = metricOf(st, r.pa === null ? null : Math.round(r.pa), ["elev", "qnh"]);
+    M.da = metricOf(st, r.da === null ? null : Math.round(r.da), ["elev", "qnh", "temp"]);
+    if (to){ M.todr = metricOf(st, r.val, cd); M.todr125 = metricOf(st, r.req, cd); M.toda = metricOf(st, r.av, ["av"]); }
+    else { M.ldr = metricOf(st, r.val, cd); M.lda = metricOf(st, r.av, ["av"]); }
+    M.margin = metricOf(st, r.margin, cd.concat(["av"]));
+    return M;
+  }
+  var AFF = {rwy: ["xw", "calc"], elev: ["pa", "da", "calc"], wind: ["xw", "calc"], qnh: ["pa", "da", "calc"], temp: ["da", "calc"], mass: ["calc"], afm: ["calc"], av: ["margin"]};
+  var AFFTXT = {xw: "vent traversier", pa: "altitude pression", da: "altitude densité", margin: "marge"};
+  function issuesOf(st, skipGlobal){
+    var out = [], seen = {}, to = st.c.kind === "to", calcTxt = to ? "TODR" : "LDR";
+    ["rwy", "elev", "wind", "qnh", "temp", "mass", "afm", "av"].forEach(function(t){
+      var x = st.tok[t];
+      if (!x || x.s === "ok" || (skipGlobal && (t === "mass" || t === "afm"))) return;
+      if (t === "rwy" && st.r.v.ws === 0) return;
+      var aff = [];
+      AFF[t].forEach(function(a){ aff.push(a === "calc" ? calcTxt : AFFTXT[a]); });
+      var g = t + ":" + x.group;
+      if (x.group !== t && seen[x.group]){ aff.forEach(function(a){ if (seen[x.group].aff.indexOf(a) < 0) seen[x.group].aff.push(a); }); return; }
+      var it = {kind: x.s, text: x.text, target: x.target, aff: aff, tok: t};
+      seen[x.group] = it; out.push(it);
+    });
+    if (st.r.err && st.r.man === null) out.push({kind: "oob", text: st.r.err + " Saisis la valeur de l’AFM si tu l’as relevée.", target: pid(st.k, st.c.kind === "to" ? "todr" : "ldr"), aff: [calcTxt], tok: "err"});
+    return out;
+  }
+  function goBtn(it){
+    return '<button type="button" class="whyitem ' + it.kind + '" data-go="' + esc(it.target || "") + '"' + (it.target ? "" : " disabled") + '>' + esc(it.text) + (it.aff && it.aff.length ? ' <small>→ ' + esc(it.aff.join(", ")) + '</small>' : "") + '</button>';
+  }
+
+  /* ===== Cartes de résultats ===== */
+  function render(c, st){
+    var k = c.k, to = c.kind === "to", r = st.r;
+    if (!st.used){
+      ["pa", "da", "hw", "xw"].forEach(function(x){ setT(k + "-" + x, "—"); });
+      $(k + "-res").innerHTML = '<p class="hint">Choisis un aérodrome pour afficher le calcul.</p>';
+      delete lastCalc[k];
+      var cf0 = document.querySelector('[data-confirm="' + k + '"]'); if (cf0) cf0.hidden = true;
+      return {margin: null, state: "idle", cls: "idle"};
+    }
+    var v = r.v, wc = r.wc, M = metrics(st), pa = r.pa, val = r.val, how = r.how, av = r.av, req = r.req, margin = r.margin;
+    setT(k + "-pa", pa === null ? "—" : fmt(Math.round(pa), 0) + " ft", M.pa.state === "prov" ? "prv" : "");
+    setT(k + "-da", r.da === null ? "—" : fmt(Math.round(r.da), 0) + " ft", M.da.state === "prov" ? "prv" : "");
     if (wc && wc.known){
-      setT(k + "-hw", (wc.hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(wc.hw), 1) + " kt", wc.hw < 0 ? "bad" : "");
+      setT(k + "-hw", (wc.hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(wc.hw), 1) + " kt", (wc.hw < 0 ? "bad " : "") + (M.xw.state === "prov" ? "prv" : ""));
       var worst = Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx));
-      setT(k + "-xw", fmt(Math.abs(wc.cr), 1) + " kt" + (wc.cr > 0.05 ? " de droite" : (wc.cr < -0.05 ? " de gauche" : "")) + (wc.gx !== null && v.gust !== null ? " · raf. " + fmt(Math.abs(wc.gx), 1) : ""), worst > 20 ? "bad" : "ok");
+      setT(k + "-xw", fmt(Math.abs(wc.cr), 1) + " kt" + (wc.cr > 0.05 ? " de droite" : (wc.cr < -0.05 ? " de gauche" : "")) + (wc.gx !== null && v.gust !== null ? " · raf. " + fmt(Math.abs(wc.gx), 1) : ""), (worst > 20 ? "bad " : "ok ") + (M.xw.state === "prov" ? "prv" : ""));
     } else { setT(k + "-hw", wc ? "axe de piste ?" : "—"); setT(k + "-xw", wc ? "axe de piste ?" : "—"); }
-    var cls = margin === null ? "na" : (margin >= 0 ? "ok" : "bad");
-    var h = '<div class="rescard"><div class="rhead"><div class="rtitle">' + c.rtitle + '</div><div class="pill ' + cls + '">' + (margin === null ? "INCOMPLET" : (margin >= 0 ? "✓ SUFFISANT" : "✗ INSUFFISANT")) + '</div></div>';
-    h += row((to ? "TODR" : "LDR") + " AFM", how, val === null ? "—" : fmt(val, 0) + " m");
-    if (to) h += row("TODR × 1,25", "coefficient de la fiche", req === null ? "—" : fmt(req, 0) + " m");
+    var state = margin === null ? "na" : M.margin.state, cls = margin === null ? "na" : (state === "prov" ? (margin >= 0 ? "prov" : "bad") : (margin >= 0 ? "ok" : "bad"));
+    var pill = margin === null ? "INCOMPLET" : (state === "prov" ? (margin >= 0 ? "PROVISOIRE · À VÉRIFIER" : "✗ MARGE NÉGATIVE (provisoire)") : (margin >= 0 ? "✓ SUFFISANT" : "✗ INSUFFISANT"));
+    var h = '<div class="rescard"><div class="rhead"><div class="rtitle">' + c.rtitle + '</div><div class="pill ' + cls + '">' + pill + '</div></div>';
+    h += row((to ? "TODR" : "LDR") + " AFM", how, val === null ? "—" : fmt(val, 0) + " m", M[to ? "todr" : "ldr"].state === "prov" ? "prv" : "");
+    if (to) h += row("TODR × 1,25", "coefficient de la fiche", req === null ? "—" : fmt(req, 0) + " m", M.todr125.state === "prov" ? "prv" : "");
     h += row(c.avLabel, srcWord(pid(k, c.av)), av === null ? "à saisir" : fmt(av, 0) + " m", av === null ? "dim" : "");
+    var iss = issuesOf(st, false);
     if (margin !== null){
-      h += '<div class="margin ' + cls + '"><span>Marge' + (to ? " (avec × 1,25)" : "") + '</span><b>' + sgn(margin) + '</b></div>';
+      h += '<div class="margin ' + cls + '"><span>Marge' + (to ? " (avec × 1,25)" : "") + (state === "prov" ? " · provisoire" : "") + '</span><b>' + sgn(margin) + '</b></div>';
       if (to) h += '<p class="rnote">Marge sur le TODR AFM seul : ' + sgn(av - val) + '.</p>';
+      var pi = iss.filter(function(i){ return i.kind === "prov"; });
+      if (state === "prov" && pi.length) h += '<div class="provbox"><b>PROVISOIRE – À VÉRIFIER</b><span class="provnote">Ce résultat n’est pas une validation de sécurité tant que ces points restent ouverts :</span><div class="witems">' + pi.map(goBtn).join("") + '</div></div>';
     } else {
-      var why = err ? err : (miss.length ? "Il manque " + miss.join(", ") + "." : "");
-      if (val !== null && av === null) why = "Saisis la " + (to ? "TODA" : "LDA") + " de la piste (AIP) pour obtenir la marge.";
-      h += '<p class="rneed">' + (why || "En attente des données.") + (err ? " Saisis la valeur AFM à la main si tu l’as relevée." : "") + '</p>';
+      var mi = iss.filter(function(i){ return i.kind !== "prov"; });
+      h += '<div class="rneed"><b>Calcul impossible pour l’instant :</b><div class="witems">' + (mi.length ? mi.map(goBtn).join("") : '<span class="hint">En attente des données.</span>') + '</div></div>';
     }
     h += '<p class="rnote">' + (to
       ? "TODR × 1,25 : coefficient utilisé dans la fiche de préparation de l’école, appliqué au TODR de l’AFM comme marge de sécurité. Il ne vient pas de l’AFM. Il ne s’applique ici qu’au décollage, piste sèche, en dur et plane."
@@ -1116,20 +1427,23 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     h = h.replace(/<\/div>$/, afmExtra(c, r) + "</div>");
     $(k + "-res").innerHTML = h;
     var cf = document.querySelector('[data-confirm="' + k + '"]');
-    if (cf) cf.hidden = !FIELDS.some(function(f){ return prov[pid(k, f)] === "chk" && $(pid(k, f)); });
-    return {margin: margin, cls: cls};
+    if (cf) cf.hidden = !(["elev", "rwy", c.av].some(function(f){ var s = fstate(k, f); return s === "chk" || s === "exp"; }));
+    return {margin: margin, state: state, cls: cls};
   }
   function renderAll(){
-    var res = CARDS.map(render), s = "";
+    var sts = CARDS.map(cardStatus), res = CARDS.map(function(c, i){ return render(c, sts[i]); }), s = "";
     CARDS.forEach(function(c, i){
-      var r = res[i];
-      s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + (r.margin === null ? "incomplet" : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")) + '</div></button>';
+      var r = res[i], t = r.state === "idle" ? "non choisi" : (r.margin === null ? "incomplet" : (r.state === "prov" ? (r.margin >= 0 ? "provisoire · à vérifier" : "marge négative (provisoire)") : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")));
+      s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + t + '</div></button>';
     });
     $("sum").innerHTML = s;
     masses();
     afmChip();
     afmCharts();
-    refreshTable();
+    refreshTable(sts);
+    CARDS.forEach(function(c){
+      var f = $(c.k + "-forget"); if (f) f.hidden = !(cur[c.k] && memAny(cur[c.k]));
+    });
   }
   function dist(){ renderAll(); }
 
@@ -1138,43 +1452,19 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
 
   /* ===== Tableau PERFORMANCE DATA ===== */
-  var FLABEL = {elev: "élévation", rwy: "axe de piste", qnh: "QNH", temp: "température", wdir: "vent", wspd: "vent", gust: "rafales"};
-
-  /* Valeur du tableau : null (N/D) si elle manque ou si une donnée dont elle dépend est « à vérifier » */
-  function gate(k, v, deps, why){
-    if (v === null || v === undefined || !isFinite(v)) return {v: null, why: why || "donnée absente"};
-    var bad = [];
-    deps.forEach(function(f){ if (prov[pid(k, f)] === "chk" && bad.indexOf(FLABEL[f] || f) < 0) bad.push(FLABEL[f] || f); });
-    if (bad.length) return {v: null, why: (bad.length > 1 ? bad.slice(0, -1).join(", ") + " et " + bad[bad.length - 1] : bad[0]) + " à vérifier"};
-    return {v: v};
-  }
-  function tableCard(c){
-    var k = c.k, r = calcCard(c), v = r.v, wc = r.wc, to = c.kind === "to", m4 = ($(pid(k, "ad")).value.toUpperCase().match(/^\s*([A-Z]{4})(?![A-Z0-9])/) || [])[1];
-    var icao = cur[k] || m4 || "", rid = $(pid(k, "rwyid")).value;
-    var used = !!icao || FIELDS.some(function(f){ return $(pid(k, f)) && $(pid(k, f)).value !== ""; });
-    var out = {k: k, used: used, name: c.title, icao: icao, rwy: rid ? "RWY " + rid : (v.rwy !== null ? "QFU " + Math.round(v.rwy) + "°" : "")};
-    var raw = $(pid(k, "wx")).value.trim().replace(/\s+/g, " "), wxBad = ["wdir", "wspd", "temp", "qnh"].some(function(f){ return prov[pid(k, f)] === "chk"; });
-    out.wx = !raw ? "N/D" : (wxBad ? "N/D (METAR ancien ou non vérifié)" : raw);
-    out.wxBad = !raw || wxBad;
-    var worst = wc && wc.known ? Math.max(Math.abs(wc.cr), wc.gx === null ? 0 : Math.abs(wc.gx)) : 0;
-    out.xw = gate(k, wc && wc.known ? Math.round(Math.abs(wc.cr)) : null, v.ws === 0 ? ["wspd"] : ["rwy", "wdir", "wspd"], wc ? "axe de piste manquant" : "vent manquant");
-    if (out.xw.v !== null && worst > 20) out.xw.bad = true;
-    out.pa = gate(k, r.pa === null ? null : Math.round(r.pa), ["elev", "qnh"], "élévation ou QNH manquant");
-    out.da = gate(k, r.da === null ? null : Math.round(r.da), ["elev", "qnh", "temp"], "élévation, QNH ou température manquant");
-    var calcDeps = r.man !== null ? [] : ["elev", "qnh", "temp", "rwy", "wdir", "wspd"], why = r.err || (r.miss.length ? "manque " + r.miss.join(", ") : "");
-    if (to){
-      out.todr = gate(k, r.val, calcDeps, why);
-      out.todr125 = gate(k, r.req, calcDeps, why);
-      out.toda = gate(k, r.av, [], "à saisir (AIP)");
-    } else {
-      out.ldr = gate(k, r.val, calcDeps, why);
-      out.lda = gate(k, r.av, [], "à saisir (AIP)");
-    }
+  var FNAMES = {xw: "vent traversier", pa: "altitude pression", da: "altitude densité", todr: "TODR", todr125: "TODR × 1,25", toda: "TODA", ldr: "LDR", lda: "LDA"};
+  function tableCard(st){
+    var c = st.c, v = st.r.v, out = metrics(st), raw = $(pid(st.k, "wx")).value.trim().replace(/\s+/g, " ");
+    out.k = c.k; out.used = st.used; out.name = c.title; out.icao = st.icao;
+    out.rwy = st.rid ? "RWY " + st.rid : (v.rwy !== null ? "QFU " + Math.round(v.rwy) + "°" : "");
+    out.wx = raw; out.wxStale = st.stale; out.wxAge = st.age;
     return out;
   }
-  var FNAMES = {xw: "vent traversier", pa: "altitude pression", da: "altitude densité", todr: "TODR", todr125: "TODR × 1,25", toda: "TODA", ldr: "LDR", lda: "LDA"};
-  function refreshTable(){
-    if ($("pdt")) renderPdt({apts: CARDS.map(tableCard)});
+  function refreshTable(sts){
+    if (!$("pdt")) return;
+    sts = sts || CARDS.map(cardStatus);
+    renderPdt({apts: sts.map(tableCard)});
+    renderWhy(sts);
   }
 
   /* Affichage du tableau */
@@ -1183,14 +1473,20 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (!a.used) return '<span class="none" title="Aérodrome non choisi">—</span>';
     var c = a[key];
     if (!c || c.v === null || c.v === undefined){
-      var why = c && c.why ? c.why : "donnée absente", cat = /vérifier/.test(why) ? "à confirmer" : (/graphique|AFM|domaine|Masse|Vent|Altitude|Température/.test(why) ? "hors AFM" : "manque");
-      return '<span class="nd" title="' + esc(why) + '" tabindex="0">N/D</span><small class="why ' + (cat === "à confirmer" ? "chk" : "") + '">' + cat + '</small>';
+      var why = c && c.why ? c.why : "donnée absente";
+      return '<span class="nd" title="' + esc(why) + '" tabindex="0">N/D</span><small class="why">' + (c && c.cat === "oob" ? "hors AFM" : "manque") + '</small>';
     }
-    return '<b class="' + (c.bad ? "bad" : "") + '">' + esc(fmt(Math.round(c.v), 0)) + '</b>' + (unit ? ' <small>' + unit + '</small>' : "");
+    var prv = c.state === "prov";
+    return '<b class="' + (c.bad ? "bad " : "") + (prv ? "prv" : "") + '"' + (prv ? ' title="' + esc("Provisoire : " + c.prov.join(", ")) + '"' : "") + '>' + esc(fmt(Math.round(c.v), 0)) + '</b>' + (unit ? ' <small>' + unit + '</small>' : "") + (prv ? '<small class="why chk">PROVISOIRE</small>' : "");
   }
   function pcOne(a, key, unit){ return '<div class="one">' + pcell(a, key, unit) + '</div>'; }
   function pcMulti(apts, key, unit){
     return apts.map(function(a){ return '<div class="ml"><span class="tag">' + esc(a.tag) + '</span>' + pcell(a, key, unit) + '</div>'; }).join("");
+  }
+  function wxCell(a){
+    if (!a.used || !a.icao) return '<span class="none">—</span>';
+    if (!a.wx) return '<span class="nd" title="Aucun METAR : recharge-le ou colle-le">N/D</span><small class="why">METAR manquant</small>';
+    return '<span class="wx">' + esc(a.wx) + '</span>' + (a.wxAge !== null ? '<small class="why' + (a.wxStale ? " chk" : "") + '">' + (a.wxStale ? "ANCIEN · " : "") + 'observé il y a ' + esc(ageTxt(a.wxAge)) + '</small>' : '<small class="why">METAR saisi à la main</small>');
   }
   function renderPdt(data){
     var box = $("pdt");
@@ -1199,7 +1495,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     apts.forEach(function(a, i){
       var role = ["Départ", "Arrivée", "Dégagement"][i];
       h += '<tr><td class="c-ap"><span class="lbl">Airport:</span><span class="role">' + role + '</span>' + (a.used && a.icao ? '<b>' + esc(a.icao) + (a.rwy ? ' <small>' + esc(a.rwy) + '</small>' : "") + '</b>' : '<span class="none">—</span>') + '</td>'
-        + '<td class="c-wx"><span class="lbl">Weather:</span>' + (a.used && a.icao ? '<span class="wx' + (a.wxBad ? " bad" : "") + '">' + esc(a.wx) + '</span>' : '<span class="none">—</span>') + '</td></tr>';
+        + '<td class="c-wx"><span class="lbl">Weather:</span>' + wxCell(a) + '</td></tr>';
     });
     h += '</tbody></table><table class="pdtab pdt-v"><tbody>'
       + '<tr><td><span class="lbl">X-wind components (max 20 kt):</span>' + pcMulti(apts, "xw", "kt") + '</td>'
@@ -1213,17 +1509,74 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<td><span class="lbl">Alternate LDA:</span>' + pcOne(X, "lda", "m") + '</td></tr>'
       + '</tbody></table>';
     box.innerHTML = h;
-    var items = [];
-    data.apts.forEach(function(a){
-      if (!a.used) return;
-      Object.keys(FNAMES).forEach(function(f){ if (a[f] && a[f].v === null) items.push([a.name + " · " + FNAMES[f], a[f].why || "donnée absente"]); });
-    });
-    $("pdtwhy").innerHTML = items.length ? '<h3>Pourquoi N/D ?</h3><ul>' + items.map(function(i){ return '<li><b>' + esc(i[0]) + '</b> : ' + esc(i[1]) + (/vérifier/.test(i[1]) ? ' → touche « J’ai contrôlé ces valeurs » sur la carte, après contrôle dans l’AIP.' : '') + '</li>'; }).join("") + '</ul>' : "";
   }
 
+  /* « À compléter ou à vérifier » : une ligne par cause et par aérodrome, cliquable vers le champ concerné.
+     Rien n'est affiché pour un aérodrome non choisi. */
+  function renderWhy(sts){
+    var box = $("pdtwhy"), h = "", glob = {}, used = sts.filter(function(s){ return s.used; });
+    if (!box) return;
+    used.forEach(function(st){
+      var its = issuesOf(st, true);
+      ["mass", "afm"].forEach(function(t){ var x = st.tok[t]; if (x && x.s !== "ok" && !glob[t]) glob[t] = {kind: x.s, text: x.text, target: x.target, aff: ["toutes les distances calculées"], tok: t}; });
+      if (!its.length) return;
+      its.sort(function(a, b){ return (a.kind === "prov" ? 1 : 0) - (b.kind === "prov" ? 1 : 0); });
+      h += '<div class="wgroup"><h4>' + esc(st.c.title) + (st.icao ? " " + esc(st.icao) : "") + '</h4><ul>' + its.map(function(i){ return '<li>' + goBtn(i) + '</li>'; }).join("") + '</ul></div>';
+    });
+    var gl = Object.keys(glob).map(function(t){ return glob[t]; });
+    if (gl.length) h += '<div class="wgroup"><h4>Avion et masse</h4><ul>' + gl.map(function(i){ return '<li>' + goBtn(i) + '</li>'; }).join("") + '</ul></div>';
+    box.innerHTML = !used.length ? "" : (h ? '<h3>À compléter ou à vérifier</h3>' + h + '<p class="rnote">« Manque » : le calcul est impossible. « Provisoire » : le calcul est affiché mais repose sur une donnée non vérifiée.</p>' : '<h3>À compléter ou à vérifier</h3><p class="okc">Rien à compléter : toutes les valeurs affichées reposent sur des données vérifiées ou saisies.</p>');
+  }
+  function flash(el){ if (!el) return; el.classList.add("flash"); setTimeout(function(){ el.classList.remove("flash"); }, 1800); }
+  function goField(t){
+    var el;
+    if (!t) return;
+    if (t === "afm"){ el = $("afmapp"); el.open = true; el.scrollIntoView({block: "start", behavior: "smooth"}); flash(el); return; }
+    if (t.indexOf("tab:mb") === 0){
+      showTab("mb");
+      el = $(t.indexOf("#confirm") > 0 ? "confirm" : "front");
+      setTimeout(function(){ el.scrollIntoView({block: "center", behavior: "smooth"}); try { el.focus({preventScroll: true}); } catch(e){} flash(el.closest(".f") || el.closest("label") || el); }, 80);
+      return;
+    }
+    el = t.indexOf("refresh:") === 0 ? document.querySelector('[data-refresh="' + t.slice(8) + '"]') : $(t);
+    if (!el) return;
+    var det = el.closest("details"); if (det) det.open = true;
+    el.scrollIntoView({block: "center", behavior: "smooth"});
+    var f = el.matches("input,textarea,button,select") ? el : el.querySelector("button,input,textarea");
+    try { if (f) f.focus({preventScroll: true}); } catch(e){}
+    flash(el.closest(".f") || el);
+  }
+
+  /* Confirmation volontaire d'une donnée automatique : elle est mémorisée avec sa piste, sa date et la valeur de la source au moment du contrôle */
   function confirmCard(k){
-    FIELDS.forEach(function(f){ var id = pid(k, f); if ($(id) && prov[id] === "chk"){ prov[id] = "conf"; badge(id); } });
+    var c = CARDS.filter(function(x){ return x.k === k; })[0], icao = cur[k], rid = $(pid(k, "rwyid")).value;
+    if (!icao) return;
+    ["elev", "rwy", c.av].forEach(function(f){
+      var id = pid(k, f), s = prov[id];
+      if (!$(id) || (s !== "chk" && s !== "exp") || (f !== "elev" && !rid)) return;
+      var so = srcFor(icao, rid, f, ints[k]), val = num(id);
+      memPut(icao, rid, f, val, "confirmé", so.decl ? so.decl.v : (so.ours !== null ? so.ours : null));
+      setF(k, f, val, "mem");
+    });
     renderAll(); save();
+  }
+  function forgetCard(k){
+    var icao = cur[k];
+    if (!icao || !window.confirm("Oublier les valeurs mémorisées pour " + icao + " (élévation, orientation, TODA, LDA) ?")) return;
+    delete mem[icao]; memSave();
+    ["elev", "rwy", "toda", "lda"].forEach(function(f){ var p = prov[pid(k, f)]; if (p === "mem" || p === "exp") autoField(k, f, true); });
+    drawRwys(k); adInfo(k); renderAll(); save();
+  }
+  /* Réévalue au chargement : les confirmations expirées ou dont la source a changé ne sont pas conservées telles quelles */
+  function reevaluate(k){
+    var icao = cur[k];
+    if (!icao) return;
+    ["elev", "rwy", "toda", "lda"].forEach(function(f){
+      var id = pid(k, f), p = prov[id];
+      if (f !== "elev" && !$(pid(k, "rwyid")).value) return;
+      if (p === "man"){ var e = memEntry(k, f); if (e && memValid(e, Date.now()) === "exp" && String(e.v) === $(id).value) prov[id] = "exp"; badge(id); }
+      else if (p === "mem" || p === "exp" || p === "ver" || p === "chk") autoField(k, f, true);
+    });
   }
   function addSign(id){
     var e = $(id); if (!e || e.parentNode.className.indexOf("signed") >= 0) return;
@@ -1329,8 +1682,8 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (m){
       var k = m[1], f = m[2];
       if (f === "ad") onAd(k, t);
-      else if (f === "wx"){ parseWx(k, "man"); $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Source : METAR saisi à la main."; }
-      else if (FIELDS.indexOf(f) >= 0){ if (t.value === "") delete prov[t.id]; else prov[t.id] = "man"; badge(t.id); }
+      else if (f === "wx"){ delete wxi[k]; parseWx(k, "man"); $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Source : METAR saisi à la main (sans date d’observation)."; }
+      else if (FIELDS.indexOf(f) >= 0){ if (t.value === "") delete prov[t.id]; else prov[t.id] = "man"; badge(t.id); memTyped(k, f, t.value); if (f === "rwy" && cur[k]) drawRwys(k); }
     }
     if (t.dataset && t.dataset.cv) conv(t);
     all(); save();
@@ -1340,8 +1693,14 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (!t.closest) return;
     var li = t.closest(".sug li[data-icao]");
     if (li){ selectAd(li.parentNode.id.split("-")[0], li.dataset.icao); return; }
+    var ib = t.closest(".ints button");
+    if (ib){ selectInt(ib.dataset.k, ib.dataset.int); renderAll(); save(); return; }
     var b = t.closest(".rwys button");
     if (b){ selectRwy(b.dataset.k, b.dataset.rwy); renderAll(); save(); return; }
+    var go = t.closest("[data-go]");
+    if (go){ goField(go.dataset.go); return; }
+    var fg = t.closest("[data-forget]");
+    if (fg){ forgetCard(fg.dataset.forget); return; }
     var rf = t.closest("[data-refresh]");
     if (rf){
       var k = rf.dataset.refresh, c = cur[k];
@@ -1366,20 +1725,22 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   } catch(e){}
   try {
     var pv = JSON.parse(localStorage.getItem(PKEY) || "null");
-    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; }
+    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; }
+    Object.keys(prov).forEach(function(id){ if (prov[id] === "conf") prov[id] = "chk"; });
   } catch(e){}
   CARDS.forEach(function(c){
     FIELDS.forEach(function(f){ var id = pid(c.k, f); if (!$(id)) return; if (!prov[id] && $(id).value !== "") prov[id] = "man"; if (prov[id] && $(id).value === "") delete prov[id]; badge(id); });
     if (!cur[c.k]) return;
     if ($(pid(c.k, "wx")).value) $(c.k + "-wxs").textContent = "METAR conservé de la dernière visite : « Recharger le METAR » l’actualise.";
-    Promise.all([loadAp(), loadDecl()]).then(function(){ adInfo(c.k); drawRwys(c.k); renderAll(); });
+    Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); renderAll(); save(); });
   });
+  setInterval(function(){ refreshBadges(); renderAll(); }, 60000);
   try { localStorage.removeItem("da40-tpl-v1"); if (window.indexedDB) indexedDB.deleteDatabase("da40-newcag"); } catch(e){}
   ["d-elev", "a-elev", "x-elev", "d-temp", "a-temp", "x-temp", "w-var", "c-oat"].forEach(addSign);
   $("afmok").addEventListener("change", function(){
     var ac = window.__ac, c = afmConf();
     if (!ac) return;
-    if ($("afmok").checked) c[ac] = new Date().toISOString().slice(0, 10); else delete c[ac];
+    if ($("afmok").checked) c[ac] = {d: ymd(Date.now()), ref: AFM_REF}; else delete c[ac];
     try { localStorage.setItem(AFM_KEY, JSON.stringify(c)); } catch(e){}
     renderAll();
   });

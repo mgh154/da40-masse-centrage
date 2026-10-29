@@ -43,7 +43,7 @@ Non traité (l'AFM donne des majorations, le site ne les applique pas) : herbe (
 
 ## 3. Correspondance avec les avions
 
-Les documents fournis ne donnent **ni le modèle, ni le moteur, ni les suppléments, ni le numéro de série** des huit avions de la fiche New CAG. Rien n'est donc déduit : l'applicabilité est à confirmer par l'utilisateur, avion par avion (case dans « Conditions d'application des graphiques AFM »), et la fiche PDF indique si elle est confirmée.
+Les documents fournis ne donnent **ni le modèle, ni le moteur, ni les suppléments, ni le numéro de série** des huit avions de la fiche New CAG. Rien n'est donc déduit : l'applicabilité est à confirmer par l'utilisateur, avion par avion (case dans « Conditions d'application des graphiques AFM »).
 
 | Avion | Masse à vide (fiche) | Bras (fiche) | Modèle, moteur, équipements |
 |---|---|---|---|
@@ -72,4 +72,4 @@ Limites de masse et de centrage vérifiées : masse maximale 1 150 kg (normal) e
 | Hors des graphiques AFM | altitude pression négative, vent arrière à l'atterrissage, masse hors plage | saisir la valeur lue dans l'AFM |
 | Jamais déduite | TODA, LDA | saisir celles de l'AIP (ou `declared.json` une fois vérifiées) |
 
-Le tableau « PERFORMANCE DATA » et la fiche PDF utilisent exactement les mêmes valeurs et les mêmes règles.
+Le tableau « PERFORMANCE DATA » applique ces règles : une valeur absente ou à vérifier y est écrite N/D, avec la raison dessous.

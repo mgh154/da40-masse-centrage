@@ -11,6 +11,10 @@ Page unique : ouvrir `index.html` dans un navigateur.
 - **TODA / LDA** : jamais déduites. Elles se saisissent à la main depuis l'AIP, ou se déclarent dans `declared.json` une fois vérifiées (étiquette « AIP »).
 - **Distances AFM** : lecture numérisée des graphiques de l'AFM DA 40 D rév. 7 (± 5 %), sans extrapolation hors des courbes : hors domaine, l'outil le dit et ne calcule rien.
 
+## Vérification contre l'AFM
+
+`node tests/afm-check.js` recalcule les exemples chiffrés de l'AFM DA 40 D (décollage p. 5-12, atterrissage p. 5-20 et p. 5-18, chargement p. 6-9, vent p. 5-8). Résultats, conditions d'application, avions à contrôler et raisons des N/D : [VERIFICATION_AFM.md](VERIFICATION_AFM.md).
+
 ## Fiche New CAG remplie
 
 Le bouton « Télécharger la fiche New CAG remplie » écrit les données de la page par-dessus le PDF d'origine (`fiche.js`, bibliothèque pdf-lib) : tableau Mass and Balance, points sur les deux graphiques, tableau Performance Data. Une valeur absente, ou « à vérifier », reste en N/D (case à cocher pour les imprimer quand même, marquées `*`).

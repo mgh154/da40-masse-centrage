@@ -267,6 +267,26 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   .pdtab b{font-size:1.1rem}
   .pdtab .lbl{font-size:.7rem}
 }
+
+/* ===== Graphique de lecture AFM, applicabilité, raisons des N/D ===== */
+.afmsec{margin-top:16px;padding:14px 12px}
+.afmsec h2{font:700 1.1rem var(--body);margin:0 0 6px}
+.afmchart{margin-top:8px;border-top:1px dashed var(--line);padding-top:4px}
+.afmchart summary,.afmapp summary{cursor:pointer;font-weight:600;color:var(--sky);min-height:44px;display:flex;align-items:center}
+.afmwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.afmsvg{display:block;min-width:820px;width:100%;height:auto}
+.afmapp{margin:0 0 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:2px 14px}
+.afmapp summary.warnc{color:var(--warn)} .afmapp summary.okc{color:var(--ok)}
+.afmapp-b{font-size:.9rem;padding-bottom:12px}
+.afmapp-b p{margin:8px 0}
+.afmapp-b ul{margin:6px 0 10px;padding-left:20px;display:grid;gap:6px}
+.afmline.warnc{color:var(--warn)} .afmline.okc{color:var(--ok)}
+.pdtab small.why{display:block;font:600 .66rem var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.pdtab small.why.chk{color:var(--warn)}
+.pdt-why{font-size:.85rem}
+.pdt-why h3{margin:12px 0 4px;font-size:1rem;color:var(--ink)}
+.pdt-why ul{margin:0;padding-left:18px;display:grid;gap:4px;color:var(--muted)}
+.pdt-why b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -366,13 +386,32 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 <h2 class="ptitle">Données de performance</h2>
 <p class="lead">Choisis l’aérodrome par son code OACI : le METAR, l’élévation et les pistes se chargent. Chaque valeur porte une étiquette qui dit d’où elle vient, et tu peux tout modifier.</p>
 <div class="massbar">Masse au décollage <b id="pm-to">—</b> · Masse à l’atterrissage <b id="pm-ld">—</b> <span class="hint">(issues de l’onglet Masse &amp; centrage)</span></div>
+<details class="afmapp" id="afmapp"><summary id="afmsum">Conditions d’application des graphiques AFM</summary>
+<div class="afmapp-b">
+<p>Les distances viennent des graphiques de l’<b>AFM DA 40 D</b>, Doc. 6.01.05-E, révision 7 (27 sept. 2013, certaines pages en rév. 6) : <b>p. 5-12</b> pour le décollage (puissance MAX, volets T/O) et <b>p. 5-20</b> pour l’atterrissage (moteur au ralenti, volets LDG). Ce sont des distances au passage des 50 ft, sur piste revêtue (asphalte), sèche et plane.</p>
+<p><b>Ce n’est pas l’AFM à jour de ton avion.</b> Contrôle pour chaque avion :</p>
+<ul>
+<li><b>Modèle et moteur :</b> DA 40 D (moteur TAE 125). L’AFM liste aussi des variantes (moteur TAE 125-02-99, suppléments G1000). Vérifie le numéro de série, l’inventaire d’équipement (section 6.5), les suppléments et la révision de l’AFM de l’avion.</li>
+<li><b>Masse à l’atterrissage :</b> 1 150 kg au maximum si les jambes de train modifiées (MÖM 40-123) sont installées, 1 092 kg sinon. L’application et la fiche New CAG utilisent 1 150 kg.</li>
+<li><b>Réservoir :</b> l’application suppose le réservoir standard (106 L, limite arrière 2,59 m). Avec le réservoir longue portée (MÖM 40-130), la limite arrière est 2,55 m : non géré.</li>
+<li><b>Piste :</b> herbe, piste mouillée ou en pente : l’AFM donne des majorations non appliquées ici (herbe : +10, 15 ou 25 % du roulage au décollage et +5, 15 ou 25 % à l’atterrissage ; pente montante de 2 % : environ +10 % au décollage ; pente descendante de 2 % : environ +10 % à l’atterrissage).</li>
+<li><b>Volets :</b> atterrissage volets LDG seulement. Volets UP non calculés (AFM p. 5-22 à 5-25, distances plus longues).</li>
+<li><b>Piste disponible :</b> l’AFM demande une longueur au moins égale à la distance au passage des 50 ft.</li>
+</ul>
+<label class="check"><input type="checkbox" id="afmok" disabled><span>J’ai vérifié que l’AFM de <b id="afmac">l’avion choisi</b> correspond à ces graphiques (numéro de série, moteur, équipements, suppléments, révision).</span></label>
+</div></details>
 <div class="sumstrip" id="sum"></div>
 <div class="pc-grid" id="pcards"></div>
 <section class="pdt" aria-labelledby="h-pdt">
 <h2 id="h-pdt">PERFORMANCE DATA</h2>
 <p class="pdt-sub">to be completed for departure, arrival and alternate airports</p>
 <div id="pdt" class="pdt-wrap"></div>
+<div id="pdtwhy" class="pdt-why"></div>
 <p class="note pdt-note">Même tableau que sur la fiche New CAG : il se remplit seul avec les données ci-dessus, et ce sont ces mêmes valeurs que le bouton « Télécharger la fiche New CAG remplie » écrit dans le PDF. N/D = absent ou non vérifié (passe la souris ou touche la case pour voir pourquoi), * = valeur non vérifiée imprimée à ta demande, — = aérodrome non choisi.</p>
+</section>
+<section class="afmsec" aria-labelledby="h-afm">
+<h2 id="h-afm">Lecture des graphiques AFM</h2>
+<div id="afmcharts"></div>
 </section>
 <details class="legendbadges"><summary>Que signifient AUTO, SAISI, À VÉRIFIER, CONFIRMÉ, AIP ?</summary><div class="lgrid"><span><span class="bdg auto">AUTO</span> récupéré automatiquement (METAR AviationWeather.gov)</span><span><span class="bdg chk">À VÉRIFIER</span> source non officielle ou ancienne (élévation et axe de piste OurAirports, METAR de plus de 2 h)</span><span><span class="bdg man">SAISI</span> tapé ou modifié par toi</span><span><span class="bdg ver">AIP</span> distance déclarée vérifiée</span><span><span class="bdg conf">CONFIRMÉ</span> valeur automatique contrôlée par toi (bouton « J’ai contrôlé ces valeurs »)</span></div></details>
 <p class="note"><b>Ce que l’outil ne fait jamais :</b> inventer une valeur manquante ou lire les graphiques de l’AFM hors des courbes numérisées. Dans ces cas il l’écrit et laisse la case vide pour que tu saisisses la valeur relevée toi-même. La TODA et la LDA ne sont jamais déduites de la longueur de piste : elles viennent de l’AIP, saisies par toi ou lues dans <code>declared.json</code> lorsqu’elles y sont vérifiées.</p>
@@ -440,7 +479,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     regs.appendChild(b);
   });
   function selectAc(r, setData){
-    state.ac = r;
+    state.ac = r; window.__ac = r;
     Array.prototype.forEach.call(regs.children, function(b){ b.setAttribute("aria-pressed", b.dataset.reg === r ? "true" : "false"); });
     if (setData){ $("bem").value = fmt(AC[r].m,1); $("arm").value = fmt(AC[r].a,3); }
     update();
@@ -938,6 +977,115 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     return {val: Math.ceil(d / 10) * 10};
   }
 /* AFM:fin */
+  /* Lecture du graphique : mêmes étapes que toDist / ldDist, mais on garde les points de passage.
+     Aucune formule n'est modifiée : afmTrace(...).dist doit être égal à toDist / ldDist (vérifié par tests/afm-check.js). */
+  var GEO = {
+    to: {wx0: 1346, wTail: 142, wHead: 282, mass0: 902, kx: 0.6275, tmax: 864, yOf: function(d){ return 251 + (1800 - d) * 0.459375; }, dmin: 200, dmax: 1800, dstep: 200,
+         title: "Take-off distance over 50 ft obstacle (AFM p. 5-12)", unit: "TODR"},
+    ld: {wx0: 1188, wTail: 0, wHead: 284, mass0: 902, kx: 250 / 300, tmax: 860, yOf: function(d){ return 306 + (1100 - d) * 0.78; }, dmin: 200, dmax: 1100, dstep: 100,
+         title: "Landing distance over 50 ft obstacle, flaps LDG (AFM p. 5-20)", unit: "LDR"}
+  };
+  function afmTrace(kind, pa, t, m, wind){
+    var g = GEO[kind], x = tx(t), to = kind === "to", PAK = to ? [0, 2000, 4000, 6000, 7000, 8000, 9000, 10000] : [0, 2000, 4000, 6000, 8000, 10000], D = AFM[kind];
+    var ys = D.p1.map(function(c){ return plS(c, x); }).reverse();
+    var y1 = famS(ys, PAK, pa), xm = g.mass0 + (1150 - m) * g.kx;
+    var st = D.p2.map(function(c){ return plS(c, 902, 6); }), vl = D.p2.map(function(c){ return plS(c, xm, 6); });
+    var y2 = famS(vl, st, y1), y3, xw;
+    if (to){
+      var S = D.s, E = D.e, T = D.t, en = [];
+      for (var j = 0; j < S.length; j++) en.push(wind >= 0 ? S[j] + (E[j] - S[j]) * 14.4 * wind / 282 : S[j] + (T[j] - S[j]) * 14.4 * -wind / 142);
+      y3 = famS(en, S, y2); xw = g.wx0 + 14.4 * wind;
+    } else {
+      xw = 1188 + 14.4 * wind;
+      var s3 = D.p3.map(function(c){ return plS(c, 1188, 6); }), v3 = D.p3.map(function(c){ return plS(c, xw, 6); });
+      y3 = famS(v3, s3, y2);
+    }
+    var dist = to ? 1800 - (y3 - 251) / 0.459375 : 1100 - (y3 - 306) / 0.78;
+    return {kind: kind, x: x, y1: y1, xm: xm, y2: y2, xw: xw, y3: y3, dist: dist, pa: pa, t: t, m: m, wind: wind};
+  }
+  function afmSvg(tr){
+    var g = GEO[tr.kind], to = tr.kind === "to", D = AFM[tr.kind], yTop = g.yOf(g.dmax), yBot = g.yOf(g.dmin);
+    var wL = to ? g.wx0 - g.wTail : g.wx0, wR = g.wx0 + g.wHead, xs = wR + 40, vw = xs + 160, top = yTop - 70, bot = yBot + 80, s = "";
+    function L(x1, y1, x2, y2, st){ return '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" style="' + st + '"/>'; }
+    function Tx(x, y, t, a, sz, st){ return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + (a || "middle") + '" font-size="' + (sz || 26) + '" style="fill:var(--ink);' + (st || "") + '">' + t + '</text>'; }
+    var thin = "stroke:var(--muted);stroke-width:2;fill:none", frame = "stroke:var(--ink);stroke-width:3;fill:none";
+    function poly(c, st){ return '<polyline points="' + c.map(function(p){ return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '" style="' + st + '"/>'; }
+    var panels = [[36, tx(50)], [902, 1153], [wL, wR]];
+    panels.forEach(function(p){ s += '<rect x="' + p[0] + '" y="' + yTop.toFixed(1) + '" width="' + (p[1] - p[0]).toFixed(1) + '" height="' + (yBot - yTop).toFixed(1) + '" style="' + frame + ';fill:var(--panel)"/>'; });
+    /* échelle de distance */
+    for (var d = g.dmin; d <= g.dmax; d += g.dstep){ s += L(xs - 8, g.yOf(d), xs + 8, g.yOf(d), "stroke:var(--ink);stroke-width:3") + Tx(xs + 14, g.yOf(d) + 9, d, "start", 24); }
+    s += L(xs, yTop, xs, yBot, "stroke:var(--ink);stroke-width:3") + Tx(xs + 14, top + 28, g.unit + " [m]", "start", 26, "font-weight:700");
+    /* temp : repères tous les 10 °C et courbes d'altitude pression */
+    for (var t = -30; t <= 50; t += 10){ s += L(tx(t), yTop, tx(t), yBot, "stroke:var(--line);stroke-width:1.5") + Tx(tx(t), yBot + 32, t, "middle", 24); }
+    var PAL = to ? [10000, 9000, 8000, 7000, 6000, 4000, 2000, 0] : [10000, 8000, 6000, 4000, 2000, 0];
+    D.p1.forEach(function(c, i){ s += poly(c, thin); var p = c[c.length - 1]; s += Tx(p[0] + 8, p[1] - 8, PAL[i], "start", 20, "fill:var(--muted)"); });
+    s += Tx((36 + tx(50)) / 2, yBot + 68, "Température extérieure [°C] · courbes : altitude pression [ft]", "middle", 24);
+    /* masse */
+    [750, 850, 950, 1050, 1150].forEach(function(m){ var x = g.mass0 + (1150 - m) * g.kx; if (m >= (to ? 750 : 850)){ s += L(x, yTop, x, yBot, "stroke:var(--line);stroke-width:1.5") + Tx(x, yBot + 32, m, "middle", 24); } });
+    D.p2.forEach(function(c){ s += poly(c, thin); });
+    s += Tx(1027, yBot + 68, "Masse [kg]", "middle", 24);
+    /* vent */
+    for (var k = to ? -5 : 0; k <= 20; k += 5){ var x = g.wx0 + 14.4 * k; s += L(x, yTop, x, yBot, "stroke:var(--line);stroke-width:1.5") + Tx(x, yBot + 32, k, "middle", 24); }
+    if (to){ D.s.forEach(function(sv, j){ s += L(g.wx0, sv, g.wx0 + 282, D.e[j], thin.replace("fill:none", "")) + L(g.wx0, sv, g.wx0 - 142, D.t[j], thin.replace("fill:none", "") + ";stroke-dasharray:6 5"); }); }
+    else { D.p3.forEach(function(c){ s += poly(c, thin); }); }
+    s += Tx((wL + wR) / 2, yBot + 68, "Composante de vent [kt] (face : positif)", "middle", 24);
+    /* chemin de lecture */
+    var pts = [[tr.x, tr.y1], [902, tr.y1], [tr.xm, tr.y2], [g.wx0, tr.y2], [tr.xw, tr.y3], [xs, tr.y3]];
+    s += poly(pts, "stroke:var(--sky);stroke-width:5;fill:none;stroke-linejoin:round");
+    var labs = [
+      "OAT " + fmt(tr.t, 0) + " °C · PA " + fmt(Math.round(tr.pa), 0) + " ft",
+      "réf. 1 150 kg",
+      fmt(tr.m, 0) + " kg",
+      "vent nul",
+      "vent " + (tr.wind >= 0 ? "face " : "arrière ") + fmt(Math.abs(tr.wind), 1) + " kt",
+      g.unit + " " + fmt(Math.ceil(tr.dist / 10) * 10, 0) + " m"
+    ];
+    pts.forEach(function(p, i){
+      var DY = [-26, -26, 46, 46, -26, -26], AN = ["middle", "end", "middle", "end", "middle", "end"], DX = [0, -20, 0, -20, 0, -20];
+      s += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="13" style="fill:var(--sky);stroke:var(--panel);stroke-width:3"/>' + Tx(p[0], p[1] + 9, i + 1, "middle", 22, "fill:#fff;font-weight:700");
+      var ly = p[1] + DY[i], anchor = AN[i], lx = p[0] + DX[i];
+      s += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + anchor + '" font-size="24" style="fill:var(--ink);font-weight:700;paint-order:stroke;stroke:var(--panel);stroke-width:7px">' + labs[i] + '</text>';
+    });
+    s += Tx(20, top + 28, g.title, "start", 28, "font-weight:700");
+    return '<svg class="afmsvg" viewBox="0 ' + top.toFixed(0) + ' ' + vw + ' ' + (bot - top).toFixed(0) + '" role="img" aria-label="Lecture du graphique AFM : ' + g.title + '" xmlns="http://www.w3.org/2000/svg">' + s + '</svg>';
+  }
+  /* Applicabilité des graphiques et graphique de lecture dans chaque carte de résultat */
+  var AFM_KEY = "da40-afm-v1", afmOpen = {};
+  function afmConf(){ try { return JSON.parse(localStorage.getItem(AFM_KEY) || "{}") || {}; } catch(e){ return {}; } }
+  function afmApp(){ var ac = window.__ac || ""; return {ac: ac, ok: !!(ac && afmConf()[ac])}; }
+  function afmNote(){
+    var a = afmApp();
+    return "TODR / LDR : graphiques AFM DA 40 D (Doc. 6.01.05-E, rév. 7), p. 5-12 et 5-20" + (a.ac ? " ; correspondance avec " + a.ac + (a.ok ? " confirmée." : " non confirmée.") : ".");
+  }
+  function afmChip(){
+    var a = afmApp(), s = $("afmsum");
+    if (!s) return;
+    s.textContent = "Conditions d’application des graphiques AFM · DA 40 D rév. 7" + (a.ac ? " · " + a.ac + (a.ok ? " : confirmé" : " : à confirmer") : "");
+    s.className = a.ac && !a.ok ? "warnc" : (a.ok ? "okc" : "");
+    $("afmac").textContent = a.ac || "l’avion choisi";
+    $("afmok").checked = a.ok; $("afmok").disabled = !a.ac;
+  }
+  var lastCalc = {};
+  function afmCharts(){
+    var box = $("afmcharts"), h = "", n = 0;
+    if (!box) return;
+    CARDS.forEach(function(c){
+      var r = lastCalc[c.k];
+      if (!r || r.val === null || r.man !== null || !r.wc || !r.wc.known || r.pa === null || r.v.temp === null || r.m === null) return;
+      var tr = afmTrace(c.kind, r.pa, r.v.temp, r.m, r.wc.hw);
+      if (!isFinite(tr.y3) || !isFinite(tr.y1) || !isFinite(tr.y2)) return;
+      n++;
+      h += '<details class="afmchart" data-afm="' + c.k + '"' + (afmOpen[c.k] ? " open" : "") + '><summary>' + c.title + ' : ' + (c.kind === "to" ? "TODR" : "LDR") + ' ' + fmt(r.val, 0) + ' m, lecture sur le graphique AFM</summary><div class="afmwrap">' + afmSvg(tr) + '</div></details>';
+    });
+    box.innerHTML = n ? h + '<p class="rnote">Points de passage : ① température et altitude pression · ② ligne de référence de masse · ③ masse · ④ vent nul · ⑤ vent · ⑥ distance. Courbes numérisées de l’AFM (± 5 %) : ce n’est pas une reproduction de la page. Le graphique d’atterrissage est celui des volets LDG ; faire défiler pour voir tout le graphique sur téléphone.</p>' : '<p class="rnote">Les graphiques apparaissent dès que le TODR ou le LDR est calculé (masse, élévation, QNH, température, vent et axe de piste connus et vérifiés).</p>';
+  }
+  function afmExtra(c, r){
+    var a = afmApp(), to = c.kind === "to";
+    var h = '<p class="rnote afmline ' + (a.ok ? "okc" : "warnc") + '">Graphiques : AFM DA 40 D (Doc. 6.01.05-E, rév. 7), ' + (to ? "décollage, puissance MAX, volets T/O, p. 5-12" : "atterrissage, moteur au ralenti, volets LDG, p. 5-20") + ", distance au passage des 50 ft, piste revêtue sèche et plane. "
+      + (a.ac ? (a.ok ? a.ac + " : correspondance avec l’AFM de l’avion confirmée par toi." : a.ac + " : correspondance avec l’AFM de l’avion à confirmer (voir « Conditions d’application des graphiques AFM »).") : "") + '</p>';
+    return h;
+  }
+
   /* Cartes : construction et affichage */
   function fld(k, f, label, unit, full){
     var id = pid(k, f);
@@ -1013,6 +1161,8 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     h += '<p class="rnote">' + (to
       ? "TODR × 1,25 : coefficient utilisé dans la fiche de préparation de l’école, appliqué au TODR de l’AFM comme marge de sécurité. Il ne vient pas de l’AFM. Il ne s’applique ici qu’au décollage, piste sèche, en dur et plane."
       : "Aucun coefficient n’est appliqué : la LDR est la valeur brute de l’AFM, piste sèche, en dur et plane" + (c.k === "x" ? ", avec la masse à l’atterrissage prévue (marge de sécurité)." : ".")) + '</p></div>';
+    lastCalc[c.k] = r;
+    h = h.replace(/<\/div>$/, afmExtra(c, r) + "</div>");
     $(k + "-res").innerHTML = h;
     var cf = document.querySelector('[data-confirm="' + k + '"]');
     if (cf) cf.hidden = !FIELDS.some(function(f){ return prov[pid(k, f)] === "chk" && $(pid(k, f)); });
@@ -1026,6 +1176,8 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     });
     $("sum").innerHTML = s;
     masses();
+    afmChip();
+    afmCharts();
     ficheSummary();
   }
   function dist(){ renderAll(); }
@@ -1123,7 +1275,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var apts = CARDS.map(function(c){ return ficheCard(c, o); });
     var data = {
       mb: mb ? {rows: mb.rows} : null, ac: mb ? mb.ac : null, pts: mb ? mb.pts : null, issues: mb ? mb.issues : [], confirmed: mb ? mb.confirmed : false,
-      apts: apts, generated: p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear() + " à " + p2(d.getHours()) + ":" + p2(d.getMinutes()), anyStar: false
+      apts: apts, afmNote: afmNote(), generated: p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear() + " à " + p2(d.getHours()) + ":" + p2(d.getMinutes()), anyStar: false
     };
     apts.forEach(function(a){ Object.keys(FNAMES).forEach(function(f){ if (a.used && a[f] && a[f].star) data.anyStar = true; }); });
     return data;
@@ -1152,7 +1304,10 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function pcell(a, key, unit){
     if (!a.used) return '<span class="none" title="Aérodrome non choisi">—</span>';
     var c = a[key];
-    if (!c || c.v === null || c.v === undefined) return '<span class="nd" title="' + esc(c && c.why ? c.why : "donnée absente") + '" tabindex="0">N/D</span>';
+    if (!c || c.v === null || c.v === undefined){
+      var why = c && c.why ? c.why : "donnée absente", cat = /vérifier/.test(why) ? "à confirmer" : (/graphique|AFM|domaine|Masse|Vent|Altitude|Température/.test(why) ? "hors AFM" : "manque");
+      return '<span class="nd" title="' + esc(why) + '" tabindex="0">N/D</span><small class="why ' + (cat === "à confirmer" ? "chk" : "") + '">' + cat + '</small>';
+    }
     return '<b class="' + (c.bad ? "bad" : "") + '">' + esc(fmt(Math.round(c.v), 0)) + (c.star ? '<i title="valeur non vérifiée">*</i>' : "") + '</b>' + (unit ? ' <small>' + unit + '</small>' : "");
   }
   function pcOne(a, key, unit){ return '<div class="one">' + pcell(a, key, unit) + '</div>'; }
@@ -1180,6 +1335,12 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<td><span class="lbl">Alternate LDA:</span>' + pcOne(X, "lda", "m") + '</td></tr>'
       + '</tbody></table>';
     box.innerHTML = h;
+    var items = [];
+    data.apts.forEach(function(a){
+      if (!a.used) return;
+      Object.keys(FNAMES).forEach(function(f){ if (a[f] && a[f].v === null) items.push([a.name + " · " + FNAMES[f], a[f].why || "donnée absente"]); });
+    });
+    $("pdtwhy").innerHTML = items.length ? '<h3>Pourquoi N/D ?</h3><ul>' + items.map(function(i){ return '<li><b>' + esc(i[0]) + '</b> : ' + esc(i[1]) + (/vérifier/.test(i[1]) ? ' → touche « J’ai contrôlé ces valeurs » sur la carte, après contrôle dans l’AIP.' : '') + '</li>'; }).join("") + '</ul>' : "";
   }
 
   function say(t, bad){ var e = $("fres"); e.className = "fres" + (bad ? " bad" : ""); e.textContent = t; }
@@ -1321,7 +1482,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
 
   function all(){ renderAll(); wind(); crp(); }
-  var scope = "#panel-performance input, #panel-performance textarea, #panel-wind input, #panel-crp input";
+  var scope = "#panel-performance input:not(#afmok), #panel-performance textarea, #panel-wind input, #panel-crp input";
   function save(){
     try { var o = {}; Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ o[e.id] = e.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
     saveProv();
@@ -1335,7 +1496,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
   document.addEventListener("input", function(e){
     var t = e.target;
-    if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp")) return;
+    if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp") || t.id === "afmok") return;
     var m = t.closest("#panel-performance") && /^([dax])-(.+)$/.exec(t.id || "");
     if (m){
       var k = m[1], f = m[2];
@@ -1387,6 +1548,14 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   });
   ["d-elev", "a-elev", "x-elev", "d-temp", "a-temp", "x-temp", "w-var", "c-oat"].forEach(addSign);
   $("fbtn").addEventListener("click", makePdf);
+  $("afmok").addEventListener("change", function(){
+    var ac = window.__ac, c = afmConf();
+    if (!ac) return;
+    if ($("afmok").checked) c[ac] = new Date().toISOString().slice(0, 10); else delete c[ac];
+    try { localStorage.setItem(AFM_KEY, JSON.stringify(c)); } catch(e){}
+    renderAll();
+  });
+  document.addEventListener("toggle", function(e){ var d = e.target; if (d && d.dataset && d.dataset.afm) afmOpen[d.dataset.afm] = d.open; }, true);
   $("ffile").addEventListener("change", function(e){ importTpl(e.target.files[0]); e.target.value = ""; });
   $("fstar").addEventListener("change", ficheSummary);
   $("fsum").addEventListener("click", function(){ var l = $("flist"); l.hidden = !l.hidden; $("fsum").setAttribute("aria-expanded", l.hidden ? "false" : "true"); });

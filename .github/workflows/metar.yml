@@ -1,9 +1,17 @@
 name: Mise à jour des METAR
 
+# Déclenchements : toutes les 10 minutes (hors début d'heure, où GitHub retarde ou abandonne des exécutions),
+# à la main, et à chaque modification de la liste d'aérodromes ou de ce fichier.
+# Le site ne dépend pas uniquement de ce relais : il interroge aussi une source directe (voir index.html).
 on:
   schedule:
-    - cron: "7,37 * * * *"
+    - cron: "4,14,24,34,44,54 * * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/metar.yml
+      - airports.txt
 
 permissions:
   contents: write
@@ -15,6 +23,7 @@ concurrency:
 jobs:
   metar:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -22,8 +31,8 @@ jobs:
         run: |
           ids=$(grep -E '^[A-Z]{4}$' airports.txt | paste -sd, -)
           mkdir -p out
-          curl -fsS --retry 3 "https://aviationweather.gov/api/data/metar?ids=${ids}&format=json&hours=3" -o raw.json
-          jq -c '{updated: (now | todate), metars: (reduce (sort_by(.obsTime) | .[]) as $m ({}; .[$m.icaoId] = {raw: $m.rawOb, elev: $m.elev, obs: $m.obsTime}))}' raw.json > out/metars.json
+          curl -fsS --retry 3 --retry-delay 5 --max-time 30 -A "da40-masse-centrage (github.com/mgh154/da40-masse-centrage)" "https://aviationweather.gov/api/data/metar?ids=${ids}&format=json&hours=3" -o raw.json
+          jq -c --arg ev "${{ github.event_name }}" --arg run "${{ github.run_id }}" '{updated: (now | todate), trigger: $ev, run: $run, metars: (reduce (sort_by(.obsTime) | .[]) as $m ({}; .[$m.icaoId] = {raw: $m.rawOb, elev: $m.elev, obs: $m.obsTime}))}' raw.json > out/metars.json
           test "$(jq '.metars | length' out/metars.json)" -gt 0
 
       - name: Publier sur la branche data
@@ -33,5 +42,5 @@ jobs:
           git config user.name "metar-bot"
           git config user.email "metar-bot@users.noreply.github.com"
           git add metars.json
-          git commit -q -m "METAR $(date -u +%Y-%m-%dT%H:%MZ)"
+          git commit -q -m "METAR $(date -u +%Y-%m-%dT%H:%MZ) (${{ github.event_name }})"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data

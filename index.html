@@ -287,6 +287,10 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 .rwys.ints{margin-top:6px}
 .rwys.ints:empty{display:none}
 .pdt-why h3{margin:14px 0 6px}
+.wxs{display:grid;gap:2px}
+.wxs .wl{display:block}
+.wxs .wl.bad{color:var(--bad);font-weight:600}
+.wxs .wl.warn{color:var(--warn);font-weight:600}
 </style>
 </head>
 <body>
@@ -784,6 +788,43 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   }
   /* AIP:fin */
 
+  /* WX:début — choix de l'observation METAR (fonctions pures, testées par tests/wx-check.js) */
+  var WX_AUTO_MIN = 5;      /* contrôle automatique : au plus une fois toutes les 5 min par aérodrome */
+  var WX_COOL_S = 30;       /* même un contrôle demandé à la main attend 30 s après le précédent */
+  /* Réponse CSV de l'API IEM (station,valid,metar) : renvoie l'observation la plus récente {raw, obs en secondes UTC} ou null */
+  function parseIem(csv){
+    var best = null;
+    String(csv || "").split(/\r?\n/).forEach(function(line, i){
+      if (i === 0 && /^station,/i.test(line)) return;
+      var p = line.split(","), m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec((p[1] || "").trim()), raw = p.slice(2).join(",").trim();
+      if (!m || !raw) return;
+      var obs = Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) / 1000);
+      if (!best || obs > best.obs) best = {raw: raw, obs: obs};
+    });
+    return best;
+  }
+  /* Candidats {src, raw, obs} : on garde la plus récente observation ; à égalité, la source AviationWeather.gov (awc) */
+  function bestWx(cands){
+    var b = null;
+    cands.forEach(function(c){ if (c && c.raw && c.obs && (!b || c.obs > b.obs || (c.obs === b.obs && c.src === "awc"))) b = c; });
+    return b;
+  }
+  /* L'âge se calcule toujours depuis l'heure d'observation, jamais depuis l'heure de téléchargement */
+  function wxAgeAt(obs, nowMs){ return Math.max(0, Math.round((nowMs / 1000 - obs) / 60)); }
+  function wxCheckAllowed(w, now, force){
+    var d = w && w.tried ? now - w.tried : null;
+    if (d !== null && d < WX_COOL_S * 1000) return "cool";
+    if (!force && d !== null && d < WX_AUTO_MIN * 60000) return "recent";
+    return "ok";
+  }
+  /* Faut-il remplacer le METAR affiché par le candidat ? Seulement s'il est plus récent (ou s'il n'y en a pas) */
+  function wxShouldApply(w, best, hasText, force){
+    if (!best) return false;
+    if (w && w.manual) return !!force;
+    return !hasText || !w || !w.obs || best.obs > w.obs;
+  }
+  /* WX:fin */
+
   function norm(s){ return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); }
   function pid(k, f){ return k + "-" + f; }
   function wxAgeMin(k){ return wxi[k] && wxi[k].obs ? Math.max(0, Math.round((Date.now() / 1000 - wxi[k].obs) / 60)) : null; }
@@ -855,10 +896,6 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   function loadDecl(){
     if (!declP) declP = getJson(DECL_URL).then(function(d){ declD = d; return d; }).catch(function(){ declD = {}; return declD; });
     return declP;
-  }
-  function loadWx(){
-    if (!wxP) wxP = getJson(WX_URL, {cache: "no-store"}).catch(function(){ wxP = null; return null; });
-    return wxP;
   }
 
   /* Recherche d'aérodrome */
@@ -937,7 +974,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       adInfo(k);
       autoField(k, "elev");
       drawRwys(k);
-      return applyWx(k, icao);
+      return checkWx(k, true);
     }).then(function(){ renderAll(); save(); });
   }
   function adInfo(k){
@@ -1036,23 +1073,86 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     var q = m.match(/\bQ(\d{4})\b/);
     if (q) setF(k, "qnh", String(parseInt(q[1], 10)), src);
   }
-  function applyWx(k, icao){
-    var st = $(k + "-wxs");
-    st.className = "hint"; st.textContent = "Chargement depuis AviationWeather.gov ...";
-    return loadWx().then(function(d){
+  /* ===== METAR : relais GitHub + source directe, contrôle de fraîcheur ===== */
+  var IEM_URL = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py", wxFile = null, wxBusy = {};
+  function srcName(s){ return s === "iem" ? "Iowa Environmental Mesonet (IEM), accès direct" : (s === "awc" ? "AviationWeather.gov, via le relais GitHub" : "inconnue"); }
+  function hhmm(ms){ var d = new Date(ms); return ("0" + d.getUTCHours()).slice(-2) + ":" + ("0" + d.getUTCMinutes()).slice(-2); }
+  function fetchTO(u, ms){
+    var ctl = typeof AbortController === "function" ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, ms || 8000) : null;
+    return fetch(u, {cache: "no-store", signal: ctl ? ctl.signal : undefined}).then(function(r){ clearTimeout(t); if (!r.ok) throw new Error("HTTP " + r.status); return r; }, function(e){ clearTimeout(t); throw e; });
+  }
+  /* Relais : le fichier publié par GitHub Actions (peut être en retard : son heure de génération est affichée) */
+  function loadFile(force){
+    if (!force && wxFile && Date.now() - wxFile.t < 60000) return Promise.resolve(wxFile);
+    var prev = wxFile;
+    return fetchTO(WX_URL + "?t=" + Math.floor(Date.now() / 30000)).then(function(r){ return r.json(); }).then(
+      function(d){ wxFile = {t: Date.now(), d: d, err: false}; return wxFile; },
+      function(){ wxFile = {t: Date.now(), d: prev && prev.d || null, err: true}; return wxFile; });
+  }
+  /* Source directe : les 8 dernières heures d'observations de l'aérodrome demandé (un seul appel par aérodrome) */
+  function fetchIem(icao){
+    var now = new Date(), f = function(d){ return encodeURIComponent(d.toISOString().slice(0, 16) + "Z"); };
+    var u = IEM_URL + "?station=" + encodeURIComponent(icao) + "&data=metar&sts=" + f(new Date(+now - 8 * 36e5)) + "&ets=" + f(new Date(+now + 36e5))
+      + "&format=onlycomma&tz=Etc%2FUTC&missing=empty&trace=T&direct=no&report_type=3&report_type=4";
+    return fetchTO(u).then(function(r){ return r.text(); }).then(function(t){ return {ok: true, r: parseIem(t)}; }, function(){ return {ok: false}; });
+  }
+  /* Contrôle des sources pour une carte. force = ignorer le délai de 5 min (ouverture du site, bouton) ; la pause de 30 s reste. */
+  function checkWx(k, force){
+    var icao = cur[k], w = wxi[k], now = Date.now();
+    if (!icao) return Promise.resolve();
+    if (w && w.manual && !force){ renderWxStatus(k); return Promise.resolve(); }
+    var dec = wxCheckAllowed(w, now, force);
+    if (dec !== "ok"){ if (dec === "cool"){ w.cool = now; } renderWxStatus(k); return Promise.resolve(); }
+    if (wxBusy[k]) return wxBusy[k];
+    w = wxi[k] = wxi[k] || {};
+    w.tried = now; w.busy = true; w.cool = 0; renderWxStatus(k);
+    wxBusy[k] = Promise.all([loadFile(force), fetchIem(icao)]).then(function(a){
       if (cur[k] !== icao) return;
-      if (!d){ st.className = "hint bad"; st.textContent = "METAR indisponible (AviationWeather.gov non joignable) : colle le METAR à la main."; return; }
-      var o = d.metars && d.metars[icao];
-      if (!o){ st.className = "hint"; st.textContent = icao + " : pas de METAR récent dans la liste suivie (airports.txt). Colle le METAR à la main."; return; }
-      var t = new Date(o.obs * 1000), age = Math.max(0, Math.round((Date.now() - t.getTime()) / 60000)), old = age > 120;
-      $(pid(k, "wx")).value = o.raw;
-      wxi[k] = {obs: o.obs};
-      parseWx(k, "auto");
-      var day = t.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC"});
-      var hh = ("0" + t.getUTCHours()).slice(-2) + ":" + ("0" + t.getUTCMinutes()).slice(-2);
-      st.className = "hint" + (old ? " bad" : "");
-      st.textContent = "Source : AviationWeather.gov · METAR du " + day + " à " + hh + " UTC · il y a " + (age < 90 ? age + " min" : hm(age)) + (old ? " : METAR ancien, à vérifier." : ".");
+      var f = a[0], i = a[1], t = Date.now(), cands = [], fileOk = !!(f && f.d && !f.err), o = fileOk && f.d.metars && f.d.metars[icao];
+      var w2 = wxi[k] = wxi[k] || {};
+      if (o) cands.push({src: "awc", raw: o.raw, obs: o.obs});
+      if (i.ok && i.r) cands.push({src: "iem", raw: i.r.raw, obs: i.r.obs});
+      var ok = fileOk || i.ok, best = bestWx(cands), hasText = $(pid(k, "wx")).value.trim() !== "";
+      w2.busy = false; w2.fail = !ok; w2.relay = f && f.d ? f.d.updated : null; w2.relayFail = !fileOk; w2.directFail = !i.ok;
+      if (ok){ w2.chk = t; w2.none = cands.length === 0; }
+      if (wxShouldApply(w2, best, hasText, force)){
+        w2.manual = false; w2.obs = best.obs; w2.src = best.src;
+        $(pid(k, "wx")).value = best.raw;
+        parseWx(k, "auto");
+      }
+    }).catch(function(){ var w3 = wxi[k]; if (w3){ w3.busy = false; w3.fail = true; } }).then(function(){
+      delete wxBusy[k];
+      renderAll(); save();
     });
+    return wxBusy[k];
+  }
+  function checkAllWx(force){ CARDS.forEach(function(c){ if (cur[c.k]) checkWx(c.k, force); }); }
+  /* Affichage : heure UTC d'observation, âge réel, dernière récupération, alertes */
+  function renderWxStatus(k){
+    var el = $(k + "-wxs"), icao = cur[k], w = wxi[k] || {}, now = Date.now(), lines = [];
+    if (!el) return;
+    el.className = "hint wxs"; el.textContent = "";
+    if (!icao) return;
+    function L(t, c){ lines.push([t, c || ""]); }
+    var has = $(pid(k, "wx")).value.trim() !== "";
+    if (w.busy) L("Vérification des sources météo en cours ...");
+    if (has && w.obs){
+      var age = wxAgeAt(w.obs, now), t = new Date(w.obs * 1000), old = age > WX_STALE_MIN;
+      L("Observation METAR : " + t.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC"}) + " à " + hhmm(w.obs * 1000) + " UTC · âge réel " + ageTxt(age) + (old ? " · ANCIEN : à ne pas prendre pour une observation récente" : ""), old ? "bad" : "");
+      L("Source : " + srcName(w.src) + ".");
+    } else if (has) L("METAR saisi à la main, sans date d’observation : son âge est inconnu.", "warn");
+    else if (!w.busy) L("Aucun METAR chargé.", w.fail || w.none ? "bad" : "");
+    if (w.chk) L("Dernière récupération réussie : " + hhmm(w.chk) + " UTC (il y a " + ageTxt(Math.round((now - w.chk) / 60000)) + ").");
+    if (w.fail) L("Récupération impossible" + (w.tried ? " à " + hhmm(w.tried) + " UTC" : "") + " (réseau ou sources indisponibles) : " + (has ? "le METAR affiché est le dernier connu et peut être périmé." : "aucun METAR disponible."), "bad");
+    else if (w.none && !w.busy) L("Aucune observation METAR trouvée pour " + icao + " dans les sources interrogées.", "bad");
+    if (!w.fail && w.relayFail) L("Relais GitHub injoignable : source directe utilisée.", "warn");
+    else if (!w.fail && w.directFail) L("Source directe injoignable : seul le relais GitHub est disponible.", "warn");
+    if (w.relay){
+      var ra = Math.round((now - Date.parse(w.relay)) / 60000);
+      L("Relais GitHub : fichier généré à " + hhmm(Date.parse(w.relay)) + " UTC (il y a " + ageTxt(ra) + ")" + (ra > 90 ? " : en retard, la source directe prend le relais." : "."), ra > 90 ? "warn" : "");
+    }
+    if (w.cool && now - w.cool < 30000) L("Vérifié il y a quelques secondes : pause de 30 s entre deux vérifications pour ménager les sources.");
+    lines.forEach(function(l){ var s = document.createElement("span"); s.className = "wl " + l[1]; s.textContent = l[0]; el.appendChild(s); });
   }
 
   /* Calculs */
@@ -1437,6 +1537,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + t + '</div></button>';
     });
     $("sum").innerHTML = s;
+    CARDS.forEach(function(c){ renderWxStatus(c.k); });
     masses();
     afmChip();
     afmCharts();
@@ -1682,7 +1783,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (m){
       var k = m[1], f = m[2];
       if (f === "ad") onAd(k, t);
-      else if (f === "wx"){ delete wxi[k]; parseWx(k, "man"); $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Source : METAR saisi à la main (sans date d’observation)."; }
+      else if (f === "wx"){ wxi[k] = {manual: true}; parseWx(k, "man"); }
       else if (FIELDS.indexOf(f) >= 0){ if (t.value === "") delete prov[t.id]; else prov[t.id] = "man"; badge(t.id); memTyped(k, f, t.value); if (f === "rwy" && cur[k]) drawRwys(k); }
     }
     if (t.dataset && t.dataset.cv) conv(t);
@@ -1705,7 +1806,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (rf){
       var k = rf.dataset.refresh, c = cur[k];
       if (!c){ $(k + "-wxs").className = "hint"; $(k + "-wxs").textContent = "Choisis d’abord un aérodrome."; return; }
-      wxP = null; applyWx(k, c).then(function(){ renderAll(); save(); });
+      checkWx(k, true);
       return;
     }
     if (!t.closest(".srch")) CARDS.forEach(function(c){ hideSug(c.k); });
@@ -1727,14 +1828,18 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var pv = JSON.parse(localStorage.getItem(PKEY) || "null");
     if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; }
     Object.keys(prov).forEach(function(id){ if (prov[id] === "conf") prov[id] = "chk"; });
+    Object.keys(wxi).forEach(function(k){ if (wxi[k]) wxi[k].busy = false; });
   } catch(e){}
   CARDS.forEach(function(c){
     FIELDS.forEach(function(f){ var id = pid(c.k, f); if (!$(id)) return; if (!prov[id] && $(id).value !== "") prov[id] = "man"; if (prov[id] && $(id).value === "") delete prov[id]; badge(id); });
     if (!cur[c.k]) return;
-    if ($(pid(c.k, "wx")).value) $(c.k + "-wxs").textContent = "METAR conservé de la dernière visite : « Recharger le METAR » l’actualise.";
-    Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); renderAll(); save(); });
+    Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); renderAll(); save(); checkWx(c.k, true); });
   });
-  setInterval(function(){ refreshBadges(); renderAll(); }, 60000);
+  /* Le METAR est revérifié à l'ouverture, au retour sur l'onglet, au retour du réseau, puis toutes les 5 min tant que la page est visible */
+  setInterval(function(){ refreshBadges(); renderAll(); if (!document.hidden) checkAllWx(false); }, 60000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) checkAllWx(false); });
+  window.addEventListener("pageshow", function(e){ if (e.persisted) checkAllWx(false); });
+  window.addEventListener("online", function(){ checkAllWx(true); });
   try { localStorage.removeItem("da40-tpl-v1"); if (window.indexedDB) indexedDB.deleteDatabase("da40-newcag"); } catch(e){}
   ["d-elev", "a-elev", "x-elev", "d-temp", "a-temp", "x-temp", "w-var", "c-oat"].forEach(addSign);
   $("afmok").addEventListener("change", function(){

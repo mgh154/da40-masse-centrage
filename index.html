@@ -337,6 +337,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   <div class="fields">
     <div class="f"><label for="bem">Masse à vide</label><div class="in"><input id="bem" inputmode="decimal" autocomplete="off"><span>kg</span></div></div>
     <div class="f"><label for="arm">Bras masse à vide</label><div class="in"><input id="arm" inputmode="decimal" autocomplete="off"><span>m</span></div></div>
+    <div class="f"><label for="mom">Moment à vide</label><div class="in"><input id="mom" inputmode="decimal" autocomplete="off"><span>kgm</span></div></div>
     <div class="f full"><label for="taxi">Carburant consommé au roulage</label><div class="in"><input id="taxi" inputmode="decimal" autocomplete="off"><span>kg</span></div><p class="hint">La fiche prévoit 1,5 kg.</p></div>
   </div>
 
@@ -446,21 +447,23 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 <script>
 (function(){
   var AC = {
-    "F-GUPL":{m:799.0,a:2.397}, "F-GUVM":{m:815.0,a:2.390}, "F-GXNC":{m:799.5,a:2.410},
-    "F-HABM":{m:794.0,a:2.404}, "F-HABP":{m:798.5,a:2.400}, "F-HABQ":{m:784.5,a:2.450},
-    "F-HYOP":{m:845.8,a:2.452}, "F-HYOU":{m:830.0,a:2.453}
+    /* masse à vide, bras et moment tels que sur la fiche New CAG : le moment n'est pas recalculé (masse × bras arrondi donnerait un autre résultat) */
+    "F-GUPL":{m:799.0,a:2.397,mo:1916.98}, "F-GUVM":{m:815.0,a:2.390,mo:1950.31}, "F-GXNC":{m:799.5,a:2.410,mo:1927.60},
+    "F-HABM":{m:794.0,a:2.404,mo:1909.28}, "F-HABP":{m:798.5,a:2.400,mo:1912.95}, "F-HABQ":{m:784.5,a:2.450,mo:1921.26},
+    "F-HYOP":{m:845.8,a:2.452,mo:2073.49}, "F-HYOU":{m:830.0,a:2.453,mo:2035.70}
   };
   var ARM = {front:2.30, rear:3.25, bag:3.65, fuel:2.63};
   var DENS = 0.84, FUELMAX = 106, BAGMAX = 30, MTOM = 1150, MLM = 1150, MMIN = 780, AFT = 2.59, UTIL = 980;
   function fwd(m){ return m <= UTIL ? 2.40 : 2.40 + (m - UTIL) * 0.06 / 170; }
 
   var $ = function(id){ return document.getElementById(id); };
-  var ids = ["front","rear","bag","fuel","trip","bem","arm","taxi"];
+  var ids = ["front","rear","bag","fuel","trip","bem","arm","mom","taxi"];
   var state = {ac:"F-GUPL"};
   var KEY = "da40-mb-v1";
 
   function num(id){ var v = $(id).value.trim().replace(",", "."); if (v === "") return null; var n = parseFloat(v); return isFinite(n) ? n : NaN; }
   function fmt(n, d){ return n.toLocaleString("fr-FR",{minimumFractionDigits:d, maximumFractionDigits:d}); }
+  function fld(n, d){ return n.toFixed(d).replace(".", ","); } /* pour un champ de saisie : sans séparateur de milliers */
 
   // Aircraft buttons
   var regs = $("regs");
@@ -473,7 +476,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   function selectAc(r, setData){
     state.ac = r; window.__ac = r;
     Array.prototype.forEach.call(regs.children, function(b){ b.setAttribute("aria-pressed", b.dataset.reg === r ? "true" : "false"); });
-    if (setData){ $("bem").value = fmt(AC[r].m,1); $("arm").value = fmt(AC[r].a,3); }
+    if (setData){ $("bem").value = fmt(AC[r].m,1); $("arm").value = fmt(AC[r].a,3); $("mom").value = fld(AC[r].mo,2); }
     update();
   }
 
@@ -491,6 +494,11 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       ids.forEach(function(i){ if (typeof o[i] === "string") $(i).value = o[i]; });
       $("confirm").checked = !!o.confirm;
       selectAc(o.ac, !o.bem);
+      if (o.bem && typeof o.mom !== "string"){ /* sauvegarde d'une ancienne version : moment de la fiche si masse et bras sont ceux de l'avion, sinon masse × bras */
+        var A = AC[o.ac], same = o.bem === fmt(A.m,1) && o.arm === fmt(A.a,3), m0 = num("bem"), a0 = num("arm");
+        $("mom").value = same ? fld(A.mo,2) : (m0 !== null && a0 !== null && !isNaN(m0) && !isNaN(a0) ? fld(m0 * a0,2) : "");
+        update();
+      }
     } else {
       $("taxi").value = "1,5";
       selectAc("F-GUPL", true);
@@ -509,7 +517,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   function update(){
     save();
     var front = num("front"), rear = num("rear"), bag = num("bag"), fuelL = num("fuel"), tripL = num("trip");
-    var bem = num("bem"), arm = num("arm"), taxi = num("taxi");
+    var bem = num("bem"), arm = num("arm"), mom = num("mom"), taxi = num("taxi");
     rear = rear === null ? 0 : rear; bag = bag === null ? 0 : bag; tripL = tripL === null ? 0 : tripL; taxi = taxi === null ? 0 : taxi;
 
     var bh = $("bag-hint"); bh.className = "hint" + (bag > BAGMAX ? " bad" : ""); bh.textContent = bag > BAGMAX ? "Plus de 30 kg de bagages." : "30 kg maximum.";
@@ -518,8 +526,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     fh.className = "hint" + (fuelBad ? " bad" : "");
     fh.textContent = fuelBad ? "Plus que les 106 L utilisables." : (fuelL ? fmt(fuelL*DENS,2) + " kg au parking. 106 L utilisables au maximum, densité 0,84 kg/L." : "106 L utilisables au maximum, densité 0,84 kg/L.");
 
-    var vals = [front, rear, bag, fuelL, tripL, bem, arm, taxi];
-    if (front === null || fuelL === null || bem === null || arm === null || vals.some(function(v){ return v !== null && (isNaN(v) || v < 0); })){
+    var vals = [front, rear, bag, fuelL, tripL, bem, arm, mom, taxi];
+    if (front === null || fuelL === null || bem === null || arm === null || mom === null || vals.some(function(v){ return v !== null && (isNaN(v) || v < 0); })){
       reset(vals.some(function(v){ return v !== null && (isNaN(v) || v < 0); }) ? "Une valeur n’est pas un nombre positif." : "Complète les sièges avant et le carburant.");
       return;
     }
@@ -530,6 +538,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     function sub(label, parts){ var m = 0, mo = 0; parts.forEach(function(p){ m += p.m; mo += p.mo; }); var r = {label:label, m:m, a:m ? mo/m : 0, mo:mo, cls:"sub"}; rows.push(r); return r; }
 
     var r1 = add("Masse à vide", bem, arm);
+    r1.mo = mom; // moment de la fiche, jamais recalculé à partir du bras arrondi
     var r2 = add("Sièges avant", front, ARM.front);
     var r3 = add("Sièges arrière", rear, ARM.rear);
     var r4 = add("Bagages", bag, ARM.bag);
@@ -668,6 +677,11 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 
   function draw(pts){ drawCG(pts); drawMoment(pts); }
 
+  /* masse ou bras modifiés à la main : le moment est recalculé ; moment modifié à la main : il est gardé tel quel */
+  ["bem","arm"].forEach(function(i){ $(i).addEventListener("input", function(){
+    var m = num("bem"), a = num("arm");
+    $("mom").value = m !== null && a !== null && !isNaN(m) && !isNaN(a) ? fld(m * a, 2) : "";
+  }); });
   ids.forEach(function(i){ $(i).addEventListener("input", update); });
   $("confirm").addEventListener("change", update);
   $("full").addEventListener("click", function(){ $("fuel").value = "106"; update(); });

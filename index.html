@@ -329,7 +329,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   <div class="fields">
     <div class="f"><label for="fuel">Au parking</label><div class="in"><input id="fuel" inputmode="decimal" autocomplete="off" placeholder="0"><span>L</span></div>
       <div class="row-btn"><button type="button" class="mini" id="full">Plein 106 L</button></div></div>
-    <div class="f"><label for="trip">Consommé en vol</label><div class="in"><input id="trip" inputmode="decimal" autocomplete="off" placeholder="0"><span>L</span></div></div>
+    <div class="f"><label for="trip">Consommé en vol</label><div class="in"><input id="trip" inputmode="decimal" autocomplete="off" placeholder="0"><span>L</span></div>
+      <div class="row-btn"><button type="button" class="mini" id="trip5">5 US gal = 18,93 L</button></div></div>
     <div class="f full"><p class="hint" id="fuel-hint">106 L utilisables au maximum, densité 0,84 kg/L.</p></div>
   </div>
 
@@ -684,6 +685,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   }); });
   ids.forEach(function(i){ $(i).addEventListener("input", update); });
   $("confirm").addEventListener("change", update);
+  $("trip5").addEventListener("click", function(){ $("trip").value = "18,93"; update(); }); /* 5 US gal × 3,78541 L */
   $("full").addEventListener("click", function(){ $("fuel").value = "106"; update(); });
   $("clear").addEventListener("click", function(){
     ["front","rear","bag","fuel","trip"].forEach(function(i){ $(i).value = ""; });

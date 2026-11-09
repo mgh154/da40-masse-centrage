@@ -248,6 +248,14 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 .afmchart summary,.afmapp summary{cursor:pointer;font-weight:600;color:var(--sky);min-height:44px;display:flex;align-items:center}
 .afmwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
 .afmsvg{display:block;min-width:820px;width:100%;height:auto}
+.afmbar{display:flex;justify-content:flex-end;margin:4px 0}
+.afmref{margin:6px 0 2px}
+#afmz{position:fixed;inset:0;z-index:1000;background:var(--panel);color:var(--ink);display:flex;flex-direction:column;padding:8px}
+#afmz[hidden]{display:none}
+#afmz .zbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;padding-bottom:6px}
+#afmz .zbar button{min-height:44px;min-width:44px}
+#afmzb{flex:1;overflow:auto;border:1px solid var(--line);border-radius:6px;-webkit-overflow-scrolling:touch}
+body.afmzo{overflow:hidden}
 .afmapp{margin:0 0 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:2px 14px}
 .afmapp summary.warnc{color:var(--warn)} .afmapp summary.okc{color:var(--ok)}
 .afmapp-b{font-size:.9rem;padding-bottom:12px}
@@ -1449,14 +1457,125 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (!box) return;
     CARDS.forEach(function(c){
       var r = lastCalc[c.k];
-      if (!r || r.val === null || r.man !== null || !r.wc || !r.wc.known || r.pa === null || r.v.temp === null || r.m === null) return;
+      if (!r) return;
+      if (r.val === null || r.man !== null || !r.wc || !r.wc.known || r.pa === null || r.v.temp === null || r.m === null){ h += addCharts(c, r); return; }
       var tr = afmTrace(c.kind, r.pa, r.v.temp, r.m, r.wc.hw);
-      if (!isFinite(tr.y3) || !isFinite(tr.y1) || !isFinite(tr.y2)) return;
+      if (!isFinite(tr.y3) || !isFinite(tr.y1) || !isFinite(tr.y2)){ h += addCharts(c, r); return; }
       n++;
-      h += '<details class="afmchart" data-afm="' + c.k + '"' + (afmOpen[c.k] ? " open" : "") + '><summary>' + c.title + ' : ' + (c.kind === "to" ? "TODR" : "LDR") + ' ' + fmt(r.val, 0) + ' m, lecture sur le graphique AFM</summary><div class="afmwrap">' + afmSvg(tr) + '</div></details>';
+      h += '<details class="afmchart" data-afm="' + c.k + '"' + (afmOpen[c.k] ? " open" : "") + '><summary>' + c.title + ' : ' + (c.kind === "to" ? "TODR" : "LDR") + ' ' + fmt(r.val, 0) + ' m, lecture sur le graphique AFM</summary><div class="afmbar"><button type="button" class="mini" data-zoom="' + c.k + '">Agrandir / zoom</button></div><div class="afmwrap">' + afmSvg(tr) + '</div><p class="rnote afmref">' + refCap(c.kind) + '</p></details>' + addCharts(c, r);
     });
-    box.innerHTML = n ? h + '<p class="rnote">Points de passage : ① température et altitude pression · ② ligne de référence de masse · ③ masse · ④ vent nul · ⑤ vent · ⑥ distance. Courbes numérisées de l’AFM (± 5 %) : ce n’est pas une reproduction de la page. Le graphique d’atterrissage est celui des volets LDG ; faire défiler pour voir tout le graphique sur téléphone.</p>' : '<p class="rnote">Les graphiques apparaissent dès que le TODR ou le LDR est calculé (masse, élévation, QNH, température, vent et axe de piste connus et vérifiés).</p>';
+    box.innerHTML = h ? h +'<p class="rnote">Points de passage : ① température et altitude pression · ② ligne de référence de masse · ③ masse · ④ vent nul · ⑤ vent · ⑥ distance. Courbes numérisées de l’AFM (± 5 %) : ce n’est pas une reproduction de la page. Le graphique d’atterrissage est celui des volets LDG ; faire défiler pour voir tout le graphique sur téléphone.</p>' : '<p class="rnote">Les graphiques apparaissent dès que le TODR ou le LDR est calculé (masse, élévation, QNH, température, vent et axe de piste connus et vérifiés).</p>';
   }
+  /* GRAPH+:début — graphiques complémentaires tracés par calcul (non numérisés) et aides de lecture */
+  function daOf(pa, t){ return pa + 120 * (t - Math.round(15 - 2 * pa / 1000)); }
+  function svgWrap(vw, vh, s, label){ return '<svg class="afmsvg" viewBox="0 0 ' + vw + ' ' + vh + '" role="img" aria-label="' + label + '" xmlns="http://www.w3.org/2000/svg">' + s + '</svg>'; }
+  function gL(x1, y1, x2, y2, st){ return '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" style="' + st + '"/>'; }
+  function gT(x, y, t, a, sz, st){ return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + (a || "middle") + '" font-size="' + (sz || 18) + '" style="fill:var(--ink);' + (st || "") + '">' + t + '</text>'; }
+  var G_THIN = "stroke:var(--muted);stroke-width:1.5;fill:none", G_GRID = "stroke:var(--line);stroke-width:1", G_PT = "fill:var(--sky);stroke:var(--panel);stroke-width:3", G_PATH = "stroke:var(--sky);stroke-width:3;fill:none";
+  /* Composantes de vent (AFM p. 5-8) : face = V·cos θ, traversier = V·sin θ ; θ = angle entre le vent et l’axe de piste */
+  function windSvg(hw, cr, ws, ang){
+    var S = 13, X = function(h){ return 90 + (h + 10) * S; }, Y = function(c){ return 70 + (40 - c) * S; }, s = "", i, th, w, pts;
+    s += '<rect x="' + X(-10) + '" y="' + Y(40) + '" width="' + 50 * S + '" height="' + 40 * S + '" style="fill:var(--panel);stroke:var(--ink);stroke-width:2"/>';
+    for (i = -10; i <= 40; i += 10){ s += gL(X(i), Y(40), X(i), Y(0), G_GRID) + gT(X(i), Y(0) + 24, i, "middle", 17); }
+    for (i = 0; i <= 40; i += 10){ s += gL(X(-10), Y(i), X(40), Y(i), G_GRID) + gT(X(-10) - 8, Y(i) + 6, i, "end", 17); }
+    for (th = 0; th <= 120; th += 15){
+      var rr = th > 90 ? Math.min(40, 10 / Math.abs(Math.cos(th * R))) : 40, ex = rr * Math.cos(th * R), ey = rr * Math.sin(th * R);
+      if (ey > 40) { ey = 40; ex = 40 / Math.tan(th * R); }
+      if (ex > 40) { ex = 40; ey = 40 * Math.tan(th * R); }
+      s += gL(X(0), Y(0), X(ex), Y(ey), G_GRID + ";stroke-dasharray:4 4") + gT(X(ex) + (th >= 90 ? 0 : 4), Y(ey) - 5, th + "°", th >= 90 ? "middle" : "start", 15, "fill:var(--muted)");
+    }
+    [10, 20, 30, 40].forEach(function(v){
+      pts = [];
+      for (th = 0; th <= 180; th += 2){ var h = v * Math.cos(th * R), c = v * Math.sin(th * R); if (h >= -10 && h <= 40 && c <= 40) pts.push(X(h).toFixed(1) + "," + Y(c).toFixed(1)); }
+      s += '<polyline points="' + pts.join(" ") + '" style="' + G_THIN + '"/>' + gT(X(v) - 4, Y(0) - 8, v + " kt", "end", 15, "fill:var(--muted)");
+    });
+    s += gL(X(-10), Y(20), X(40), Y(20), "stroke:#c0392b;stroke-width:2;stroke-dasharray:8 5") + gT(X(40) - 6, Y(20) - 7, "traversier démontré 20 kt", "end", 16, "fill:#c0392b");
+    var inside = hw >= -10 && hw <= 40 && cr <= 40;
+    if (inside){
+      s += gL(X(hw), Y(cr), X(hw), Y(0), G_PATH + ";stroke-dasharray:6 4") + gL(X(hw), Y(cr), X(-10), Y(cr), G_PATH + ";stroke-dasharray:6 4") + gL(X(0), Y(0), X(hw), Y(cr), G_PATH);
+      s += '<circle cx="' + X(hw).toFixed(1) + '" cy="' + Y(cr).toFixed(1) + '" r="9" style="' + G_PT + '"/>';
+      s += '<text x="' + (X(hw) + 12).toFixed(1) + '" y="' + (Y(cr) - 12).toFixed(1) + '" font-size="19" style="fill:var(--ink);font-weight:700;paint-order:stroke;stroke:var(--panel);stroke-width:6px">' + fmt(ws, 0) + " kt à " + ang + "° : " + (hw >= 0 ? "face " : "arrière ") + fmt(Math.abs(hw), 1) + " · trav. " + fmt(cr, 1) + '</text>';
+    } else { s += gT(X(15), Y(35), "Point hors du cadre (vent > 40 kt)", "middle", 19, "font-weight:700"); }
+    s += gT(X(15), Y(0) + 52, "Composante de face (+) / arrière (−) [kt]", "middle", 19) + gT(24, Y(20), "Composante traversière [kt]", "middle", 19, "").replace("<text ", '<text transform="rotate(-90 24 ' + Y(20) + ')" ');
+    s += gT(X(-10), 40, "Composantes de vent", "start", 24, "font-weight:700");
+    return svgWrap(820, 680, s, "Composantes de vent face et traversière");
+  }
+  /* Altitude pression / altitude densité : DA = PA + 120 × (OAT − ISA), formule de la fiche */
+  function paSvg(pa, t, da){
+    var X = function(x){ return 90 + (x + 40) * 7.2; }, Y = function(a){ return 70 + (18000 - a) * 0.02; }, s = "", i;
+    s += '<rect x="' + X(-40) + '" y="' + Y(18000) + '" width="' + 90 * 7.2 + '" height="' + 26000 * 0.02 + '" style="fill:var(--panel);stroke:var(--ink);stroke-width:2"/>';
+    for (i = -40; i <= 50; i += 10){ s += gL(X(i), Y(18000), X(i), Y(-8000), G_GRID) + gT(X(i), Y(-8000) + 24, i, "middle", 17); }
+    for (i = -8000; i <= 18000; i += 2000){ s += gL(X(-40), Y(i), X(50), Y(i), G_GRID) + gT(X(-40) - 8, Y(i) + 6, i, "end", 16); }
+    for (var p = 0; p <= 10000; p += 2000){
+      s += gL(X(-40), Y(daOf(p, -40)), X(50), Y(daOf(p, 50)), G_THIN) + gT(X(50) - 6, Y(daOf(p, 50)) - 6, "PA " + p, "end", 15, "fill:var(--muted)");
+      var ti = Math.round(15 - 2 * p / 1000); s += '<circle cx="' + X(ti).toFixed(1) + '" cy="' + Y(p).toFixed(1) + '" r="4" style="fill:var(--muted)"/>';
+    }
+    if (isFinite(pa) && isFinite(t) && t >= -40 && t <= 50 && da >= -8000 && da <= 18000){
+      s += gL(X(-40), Y(daOf(pa, -40)), X(50), Y(daOf(pa, 50)), G_PATH + ";stroke-dasharray:8 4");
+      s += gL(X(t), Y(da), X(t), Y(-8000), G_PATH + ";stroke-dasharray:6 4") + gL(X(t), Y(da), X(-40), Y(da), G_PATH + ";stroke-dasharray:6 4");
+      s += '<circle cx="' + X(t).toFixed(1) + '" cy="' + Y(da).toFixed(1) + '" r="9" style="' + G_PT + '"/>';
+      s += '<text x="' + (X(t) - 12).toFixed(1) + '" y="' + (Y(da) - 14).toFixed(1) + '" text-anchor="end" font-size="19" style="fill:var(--ink);font-weight:700;paint-order:stroke;stroke:var(--panel);stroke-width:6px">PA ' + fmt(Math.round(pa), 0) + " ft · " + fmt(t, 0) + " °C · DA " + fmt(Math.round(da), 0) + ' ft</text>';
+    } else { s += gT(X(5), Y(16000), "Point hors du cadre", "middle", 19, "font-weight:700"); }
+    s += gT(X(5), Y(-8000) + 52, "Température extérieure [°C] · points : ISA", "middle", 19) + gT(24, Y(5000), "Altitude densité [ft]", "middle", 19, "").replace("<text ", '<text transform="rotate(-90 24 ' + Y(5000) + ')" ');
+    s += gT(X(-40), 40, "Altitude pression → altitude densité", "start", 24, "font-weight:700");
+    return svgWrap(820, 680, s, "Altitude pression et altitude densité");
+  }
+  function chartBox(key, title, svg, cap){
+    return '<details class="afmchart" data-afm="' + key + '"' + (afmOpen[key] ? " open" : "") + '><summary>' + title + '</summary><div class="afmbar"><button type="button" class="mini" data-zoom="' + key + '">Agrandir / zoom</button></div><div class="afmwrap">' + svg + '</div><p class="rnote afmref">' + cap + '</p></details>';
+  }
+  function refCap(kind){
+    var to = kind === "to";
+    return "Référence : AFM DA 40 D, Doc. 6.01.05-E, " + (to ? "décollage (puissance MAX, volets T/O), p. 5-12" : "atterrissage (volets LDG), p. 5-20") + ". Unités : °C, ft, kg, kt (échelle de vent), m (distance au passage des 50 ft). Domaine de lecture : altitude pression 0–10 000 ft, −35 à +50 °C, "
+      + (to ? "750" : "850") + "–1 150 kg, vent de face ≤ 19,5 kt" + (to ? ", vent arrière ≤ 9,7 kt" : ", pas de vent arrière") + ". Hors de ce domaine, aucun résultat n’est donné (pas d’extrapolation).";
+  }
+  function addCharts(c, r){
+    var h = "", v = r.v;
+    if (r.wc && r.wc.known && v.ws > 0 && v.wd !== null && v.rwy !== null){
+      var d = Math.abs(((v.wd - v.rwy) % 360 + 540) % 360 - 180);
+      h += chartBox(c.k + "-w", c.title + " : composantes de vent (face " + fmt(r.wc.hw, 1) + " kt · traversier " + fmt(Math.abs(r.wc.cr), 1) + " kt)", windSvg(r.wc.hw, Math.abs(r.wc.cr), v.ws, Math.round(d)),
+        "Référence : AFM DA 40 D, p. 5-8 (exemple : 32° / 30 kt → 16 kt traversier). Courbes tracées par le calcul V·cos θ et V·sin θ (θ = angle entre le vent et l’axe de piste, " + Math.round(d) + "°), non numérisées. Unités : kt, °. Le trait rouge est le vent traversier maximal démontré (20 kt) : une valeur démontrée en essais, pas une limitation.");
+    }
+    if (r.pa !== null && v.temp !== null && r.da !== null){
+      h += chartBox(c.k + "-p", c.title + " : altitude pression " + fmt(Math.round(r.pa), 0) + " ft · altitude densité " + fmt(Math.round(r.da), 0) + " ft", paSvg(r.pa, v.temp, r.da),
+        "Référence : AFM DA 40 D, p. 5-5 (altitude densité). Tracé par la formule de la fiche : DA = PA + 120 × (OAT − ISA), ISA = 15 − 2 × PA/1 000 (°C). L’exemple de l’AFM (900 ft, +21 °C) donne environ 1 800 ft, écart de lecture ≤ 100 ft. Les distances AFM ci-dessus utilisent PA et OAT, pas la DA. Unités : ft, °C.");
+    }
+    return h;
+  }
+  /* Agrandissement : fenêtre plein écran, zoom par boutons, défilement dans les deux sens */
+  var zoomLvl = 1, zoomSvg = "";
+  function zoomApply(){
+    var b = $("afmzb"), s = b && b.querySelector("svg");
+    if (!s) return;
+    var w = Math.max(320, b.clientWidth - 4) * zoomLvl;
+    s.style.cssText = "min-width:0;max-width:none;width:" + Math.round(w) + "px;height:auto";
+    $("afmzl").textContent = Math.round(zoomLvl * 100) + " %";
+  }
+  function zoomOpen(key){
+    var d = document.querySelector('details[data-afm="' + key + '"]'), s = d && d.querySelector("svg");
+    if (!s) return;
+    var z = $("afmz");
+    if (!z){
+      z = document.createElement("div"); z.id = "afmz"; z.setAttribute("role", "dialog"); z.setAttribute("aria-modal", "true"); z.setAttribute("aria-label", "Graphique agrandi");
+      z.innerHTML = '<div class="zbar"><strong id="afmzt"></strong><span><button type="button" class="mini" data-z="-" aria-label="Réduire">−</button> <span id="afmzl">100 %</span> <button type="button" class="mini" data-z="+" aria-label="Agrandir">+</button> <button type="button" class="mini" data-z="fit">Ajuster</button> <button type="button" class="mini" data-z="x" id="afmzx">Fermer</button></span></div><div id="afmzb" tabindex="0"></div><p class="rnote" id="afmzc"></p>';
+      document.body.appendChild(z);
+      z.addEventListener("click", function(e){
+        var a = e.target.getAttribute && e.target.getAttribute("data-z");
+        if (!a) return;
+        if (a === "x") zoomClose(); else { zoomLvl = a === "+" ? Math.min(4, zoomLvl * 1.25) : a === "-" ? Math.max(1, zoomLvl / 1.25) : 1; zoomApply(); }
+      });
+    }
+    zoomLvl = 1;
+    $("afmzt").textContent = d.querySelector("summary").textContent;
+    $("afmzb").innerHTML = s.outerHTML;
+    $("afmzc").textContent = (d.querySelector(".afmref") || {}).textContent || "";
+    z.hidden = false; document.body.classList.add("afmzo");
+    zoomApply(); $("afmzx").focus();
+  }
+  function zoomClose(){ var z = $("afmz"); if (z) z.hidden = true; document.body.classList.remove("afmzo"); }
+  document.addEventListener("click", function(e){ var k = e.target.getAttribute && e.target.getAttribute("data-zoom"); if (k) zoomOpen(k); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") zoomClose(); });
+  window.addEventListener("resize", zoomApply);
+  /* GRAPH+:fin */
   function afmExtra(c, r){
     var a = afmApp(), to = c.kind === "to";
     var h = '<p class="rnote afmline ' + (a.ok ? "okc" : "warnc") + '">Graphiques : AFM DA 40 D (Doc. 6.01.05-E, rév. 7), ' + (to ? "décollage, puissance MAX, volets T/O, p. 5-12" : "atterrissage, moteur au ralenti, volets LDG, p. 5-20") + ", distance au passage des 50 ft, piste revêtue sèche et plane. "
@@ -1503,7 +1622,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function calcCard(c){
     var k = c.k, v = readCard(k), wc = windC(v), pa = null, da = null, to = c.kind === "to", mb = window.__mb;
     if (v.elev !== null && v.qnh !== null) pa = v.elev + 30 * (1013 - v.qnh);
-    if (pa !== null && v.temp !== null) da = pa + 120 * (v.temp - Math.round(15 - 2 * pa / 1000));
+    if (pa !== null && v.temp !== null) da = daOf(pa, v.temp);
     var m = mb ? (to ? mb.to : mb.ld) : null, manId = to ? "todr" : "ldr", man = num(pid(k, manId)), av = num(pid(k, c.av));
     var miss = [], err = null, val = null, how = "";
     if (man !== null){ val = man; how = "valeur saisie"; }

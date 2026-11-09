@@ -275,6 +275,11 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 .provbox{margin-top:12px;border:1.5px solid var(--warn);border-radius:8px;padding:8px 10px;font-size:.88rem}
 .provbox>b{display:block;color:var(--warn);font-size:.8rem;letter-spacing:.04em}
 .provnote{display:block;color:var(--muted);font-size:.8rem;margin:2px 0 4px}
+.provbox.alt{border-color:var(--sky)} .provbox.alt>b{color:var(--sky)}
+.altline{margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-left:4px solid var(--sky);border-radius:6px;font-size:.88rem;overflow-wrap:anywhere}
+.altline.no{border-left-color:var(--muted);color:var(--muted)}
+.altline .mini{margin-top:6px}
+.pdtx{margin-top:10px}.pdtx h4{margin:8px 0 2px;font:700 .95rem var(--body)}
 .rneed{margin:12px 0 0;font-weight:500;color:var(--ink);font-size:.9rem}
 .rneed>b{color:var(--warn);font-weight:700}
 .witems{display:grid;gap:6px;margin-top:6px}
@@ -887,7 +892,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   }
   function clearCard(k){
     FIELDS.concat(["wx", "rwyid"]).forEach(function(f){ var e = $(pid(k, f)); if (!e) return; e.value = ""; delete prov[pid(k, f)]; badge(pid(k, f)); });
-    delete wxi[k]; delete ints[k];
+    delete wxi[k]; delete ints[k]; delete regwx[k];
     if ($(pid(k, "rcond"))) $(pid(k, "rcond")).value = "";
     ["msrc", "mtime", "mver"].forEach(function(f){ if ($(pid(k, f))) $(pid(k, f)).value = ""; });
     $(k + "-rwys").innerHTML = ""; $(k + "-ints").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
@@ -1142,6 +1147,17 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       + "&format=onlycomma&tz=Etc%2FUTC&missing=empty&trace=T&direct=no&report_type=3&report_type=4";
     return fetchTO(u).then(function(r){ return r.text(); }).then(function(t){ return {ok: true, r: parseIem(t)}; }, function(){ return {ok: false}; });
   }
+  /* Un seul appel IEM par aérodrome pendant ttl ms, partagé entre les cartes (deux cartes sur le même aérodrome, météo régionale) :
+     la source limite le débit (HTTP 429) et un échec n'est pas conservé. */
+  var iemC = {};
+  function fetchIemC(icao, ttl){
+    var c = iemC[icao];
+    if (c && Date.now() - c.t < ttl) return c.p;
+    var p = fetchIem(icao);
+    iemC[icao] = {t: Date.now(), p: p};
+    p.then(function(r){ if (!r.ok && iemC[icao] && iemC[icao].p === p) delete iemC[icao]; });
+    return p;
+  }
   /* Contrôle des sources pour une carte. force = ignorer le délai de 5 min (ouverture du site, bouton) ; la pause de 30 s reste. */
   function checkWx(k, force){
     var icao = cur[k], w = wxi[k], now = Date.now();
@@ -1152,7 +1168,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     if (wxBusy[k]) return wxBusy[k];
     w = wxi[k] = wxi[k] || {};
     w.tried = now; w.busy = true; w.cool = 0; renderWxStatus(k);
-    wxBusy[k] = Promise.all([loadFile(force), fetchIem(icao)]).then(function(a){
+    wxBusy[k] = Promise.all([loadFile(force), fetchIemC(icao, 90000)]).then(function(a){
       if (cur[k] !== icao) return;
       var f = a[0], i = a[1], t = Date.now(), cands = [], fileOk = !!(f && f.d && !f.err), o = fileOk && f.d.metars && f.d.metars[icao];
       var w2 = wxi[k] = wxi[k] || {};
@@ -1168,7 +1184,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       }
     }).catch(function(){ var w3 = wxi[k]; if (w3){ w3.busy = false; w3.fail = true; } }).then(function(){
       delete wxBusy[k];
-      renderAll(); save();
+      renderAll();
+      return regLoad(k).then(function(){ renderAll(); save(); });
     });
     return wxBusy[k];
   }
@@ -1401,8 +1418,9 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<div class="f full"><label for="' + k + '-mtime">Heure de l’observation (UTC)</label><div class="in"><input id="' + k + '-mtime" type="datetime-local" class="txt"></div></div>'
       + '<div class="f full"><label for="' + k + '-mver">Vérification</label><div class="in"><select id="' + k + '-mver"><option value="">Non vérifiée</option><option value="1">Je déclare l’avoir relevée auprès de la source indiquée (déclaration, pas une certification)</option></select></div></div></details>'
       + '<div class="kv"><div><span>Vent de face / arrière</span><b id="' + k + '-hw">—</b></div><div><span>Vent traversier</span><b id="' + k + '-xw">—</b></div><div><span>Altitude pression</span><b id="' + k + '-pa">—</b></div><div><span>Altitude densité</span><b id="' + k + '-da">—</b></div></div>'
-      + '<h3>Distances</h3><div class="fields">' + fld(k, c.av, c.avLabel + " (AIP)", "m") + fld(k, man, (to ? "TODR" : "LDR") + " AFM saisi", "m") + '</div>'
-      + '<p class="hint">Laisse « ' + (to ? "TODR" : "LDR") + ' AFM saisi » vide pour utiliser le calcul d’après les graphiques de l’AFM.</p>'
+      + '<h3>Distances</h3><div class="fields">' + fld(k, c.av, c.avLabel + " (AIP)", "m") + '</div>'
+      + '<details class="f full mwx" id="' + k + '-mman"><summary>Valeur ' + (to ? "TODR" : "LDR") + ' relevée à la main sur l’AFM (facultatif)</summary><div class="fields">' + fld(k, man, (to ? "TODR" : "LDR") + " AFM saisi", "m") + '</div>'
+      + '<p class="hint">Inutile en temps normal : le site calcule la distance d’après les graphiques de l’AFM. Laisse ce champ vide pour utiliser ce calcul.</p></details>'
       + (to ? "" : '<div class="f full"><label for="' + k + '-rcond">État de la piste à l’atterrissage</label><div class="in"><select id="' + k + '-rcond"><option value="">À préciser</option><option value="ref">Sèche, revêtue, plane (conditions du graphique AFM)</option><option value="other">Herbe, mouillée, en pente ou contaminée</option></select></div><p class="hint">Les majorations de l’AFM pour ces autres états ne sont pas appliquées au LDR : le résultat reste « À VÉRIFIER ».</p></div>')
       + '<div id="' + k + '-res"></div></section>';
   }
@@ -1465,7 +1483,10 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     else if (s === "empty") put("rwy", "miss", rid ? "Renseigner l’orientation vraie de la piste " + rid + " (AIP AD 2.12)" : "Choisir une piste", rid ? pid(k, "rwy") : k + "-rwys", rid ? "orientation de piste manquante" : "piste non choisie");
     else put("rwy", "prov", s === "exp" ? "Axe de piste expiré : à vérifier à nouveau" : "Vérifier l’orientation vraie de la piste (OurAirports, provisoire)", pid(k, "rwy"), "orientation de piste à vérifier");
     /* météo : vent, QNH, température */
-    var wxMiss = "Aucun METAR : recharge-le ou saisis le vent, le QNH et la température", wxOld = "METAR ancien" + (st.age !== null ? " (il y a " + ageTxt(st.age) + ")" : "") + " : recharger le METAR";
+    var wxNone = !!(wxi[k] && wxi[k].none && !wxi[k].fail), rg = regwx[k] && regwx[k].ok ? regwx[k] : null;
+    var wxMiss = wxNone
+      ? "Pas de METAR pour " + (icao || "cet aérodrome") + " dans les sources interrogées. Saisis le vent, le QNH et la température relevés auprès de l’aérodrome (ATIS, tour, service météo) dans « Météo saisie à la main »" + (rg ? ". La météo régionale de " + rg.st + " affichée plus bas est une référence, pas une observation de " + icao : "")
+      : "Aucun METAR : recharge-le ou saisis le vent, le QNH et la température",wxOld = "METAR ancien" + (st.age !== null ? " (il y a " + ageTxt(st.age) + ")" : "") + " : recharger le METAR";
     function wxTok(t, f, text, short, target){
       s = fstate(k, f);
       if (s === "empty") st.wxEmpty ? put(t, "miss", wxMiss, k + "-wx", short, "wx") : put(t, "miss", text, target || pid(k, f), short);
@@ -1481,7 +1502,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     /* masse et AFM : seulement si la distance est calculée */
     if (r.man !== null){ put("mass", "ok"); put("afm", "ok"); }
     else {
-      if (!window.__mb) put("mass", "miss", "Compléter l’onglet Masse & centrage", "tab:mb", "masse manquante");
+      if (!window.__mb) put("mass", "miss", "Masse " + (to ? "au décollage" : "à l’atterrissage") + " absente : remplis l’onglet Masse & centrage, elle est reprise automatiquement ici", "tab:mb", "masse manquante");
       else if (!$("confirm").checked) put("mass", "prov", "Contrôler la masse à vide et son bras (onglet Masse & centrage)", "tab:mb#confirm", "masse à vide non contrôlée");
       else put("mass", "ok");
       var a = afmApp();
@@ -1500,7 +1521,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var T = st.tok, miss = deps.filter(function(t){ return T[t] && T[t].s === "miss"; }), prv = deps.filter(function(t){ return T[t] && T[t].s === "prov"; });
     if (value === null || value === undefined || !isFinite(value)){
       var oob = !miss.length && st.r.err;
-      return {v: null, cat: oob ? "oob" : "miss", why: oob ? st.r.err : (miss.length ? miss.map(function(t){ return T[t].short; }).filter(function(x, i, a){ return a.indexOf(x) === i; }).join(", ") : "donnée absente")};
+      return {v: null, cat: oob ? "oob" : "miss", tail: !!(oob && isTail(st)), why: oob ? (tailTxt(st) || st.r.err) : (miss.length ? miss.map(function(t){ return T[t].short; }).filter(function(x, i, a){ return a.indexOf(x) === i; }).join(", ") : "donnée absente")};
     }
     return {v: value, state: prv.length ? "prov" : "ok", prov: prv.map(function(t){ return T[t].short; }).filter(function(x, i, a){ return a.indexOf(x) === i; })};
   }
@@ -1531,7 +1552,11 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       var it = {kind: x.s, text: x.text, target: x.target, aff: aff, tok: t};
       seen[x.group] = it; out.push(it);
     });
-    if (st.r.err && st.r.man === null) out.push({kind: "oob", text: st.r.err + " Saisis la valeur de l’AFM si tu l’as relevée.", target: pid(st.k, st.c.kind === "to" ? "todr" : "ldr"), aff: [calcTxt], tok: "err"});
+    if (st.r.err && st.r.man === null){
+      var tl = tailTxt(st), al = tl && altRwys(st), okA = al ? al.filter(function(o){ return o.ldr !== undefined; }) : [];
+      if (tl) out.push({kind: "oob", text: tl + (okA.length ? " Piste compatible avec ce vent : " + okA.map(function(o){ return o.id + " (face " + fmt(o.hw, 1) + " kt)"; }).join(", ") + " : voir « Scénario alternatif ». La piste choisie n’est pas modifiée." : " Aucune autre piste connue n’est compatible avec ce vent."), target: st.k + "-rwys", aff: [calcTxt], tok: "err"});
+      else out.push({kind: "oob", text: st.r.err + " Saisis la valeur de l’AFM si tu l’as relevée.", target: pid(st.k, st.c.kind === "to" ? "todr" : "ldr"), aff: [calcTxt], tok: "err"});
+    }
     return out;
   }
   function goBtn(it){
@@ -1606,6 +1631,145 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     return out;
   }
 
+  /* ===== Piste alternative (vent arrière) et météo régionale de référence =====
+     Information seulement : ces blocs n'écrivent dans aucun champ, ne changent jamais la piste choisie et n'entrent
+     jamais dans le verdict (landVerdict). Les calculs passent par la fonction afm() inchangée. */
+  function srcLbl(s){ return s === "ver" ? "AIP vérifiée" : (s === "mem" ? "valeur mémorisée" : (s === "chk" ? "provisoire, à vérifier" : (s === "exp" ? "expirée" : "source inconnue"))); }
+  function deg3(n){ return ("00" + Math.round(n)).slice(-3) + "°"; }
+  function isTail(st){ return st.c.kind === "ld" && st.r.man === null && !!st.r.err && /^Vent arrière/.test(st.r.err) && !!st.r.wc && st.r.wc.known && st.r.wc.hw < 0; }
+  /* Explication chiffrée du refus : vent, axe de piste, composante arrière */
+  function tailTxt(st){
+    if (!isTail(st)) return null;
+    var v = st.r.v, wc = st.r.wc;
+    return "Vent " + deg3(v.wd) + "/" + fmt(v.ws, 0) + " kt sur la piste " + (st.rid || "") + " (axe " + fmt(v.rwy, 1) + "° vrai) = " + fmt(Math.abs(wc.hw), 1) + " kt de vent arrière"
+      + (v.gust !== null ? " (rafales " + fmt(v.gust, 0) + " kt)" : "") + ". Le graphique d’atterrissage de l’AFM (p. 5-20) ne prévoit aucun vent arrière : calcul refusé, sans extrapolation.";
+  }
+  /* Autres pistes de l'aérodrome, même météo, même masse, même AFM ; chaque piste utilise sa propre orientation et sa propre LDA */
+  function altRwys(st){
+    if (!isTail(st) || !st.icao || !st.rid) return null;
+    var r = st.r, v = r.v, out = [];
+    if (r.pa === null || v.temp === null || r.m === null) return null;
+    endsOf(st.icao).forEach(function(e){
+      if (e.id === st.rid) return;
+      var b = pickValue(srcFor(st.icao, e.id, "rwy"), Date.now()), l = pickValue(srcFor(st.icao, e.id, "lda"), Date.now());
+      var o = {id: e.id, surf: e.surf || "", brg: b.v, brgSrc: b.src, lda: l.v, ldaSrc: l.src};
+      if (b.v === null) o.err = "orientation vraie de cette piste inconnue : vent non calculable";
+      else {
+        var a = (v.wd - b.v) * R; o.hw = v.ws * Math.cos(a); o.cr = v.ws * Math.sin(a);
+        var q = afm("ld", r.pa, v.temp, r.m, o.hw);
+        if (q.err) o.err = o.hw < 0 ? "vent arrière " + fmt(Math.abs(o.hw), 1) + " kt : hors AFM" : q.err; else { o.ldr = q.val; o.margin = o.lda !== null ? o.lda - o.ldr : null; }
+      }
+      out.push(o);
+    });
+    out.sort(function(x, y){ return (x.ldr === undefined ? 1 : 0) - (y.ldr === undefined ? 1 : 0); });
+    return out;
+  }
+  function altHtml(st){
+    var alts = altRwys(st);
+    if (!alts) return "";
+    var ok = alts.filter(function(o){ return o.ldr !== undefined; });
+    var h = '<div class="provbox alt"><b>SCÉNARIO ALTERNATIF · non retenu</b><span class="provnote">' + esc(st.c.title + " " + st.icao) + ' : la piste sélectionnée (' + esc(st.rid) + ') reste inchangée. ' + esc(tailTxt(st)) + '</span>';
+    alts.forEach(function(o){
+      if (o.ldr === undefined){ h += '<div class="altline no"><b>Piste ' + esc(o.id) + '</b> : ' + esc(o.err) + '. Aucun LDR calculé.</div>'; return; }
+      var warn = [];
+      if (o.brgSrc !== "ver") warn.push("orientation " + srcLbl(o.brgSrc));
+      if (o.lda === null) warn.push("LDA de cette piste non enregistrée");
+      else if (o.ldaSrc !== "ver") warn.push("LDA " + srcLbl(o.ldaSrc));
+      if (/gras|turf/i.test(o.surf)) warn.push("piste en herbe : majorations AFM non appliquées");
+      h += '<div class="altline"><b>Piste ' + esc(o.id) + '</b> (axe ' + fmt(o.brg, 1) + '° vrai) : vent de face ' + fmt(o.hw, 1) + ' kt, traversier ' + fmt(Math.abs(o.cr), 1) + ' kt<br>'
+        + 'LDR AFM <b>' + fmt(o.ldr, 0) + ' m</b> (p. 5-20, ' + fmt(st.r.m, 0) + ' kg) · LDA ' + (o.lda === null ? 'à saisir' : fmt(o.lda, 0) + ' m') + (o.margin !== null ? ' · marge brute indicative ' + sgn(o.margin) : '')
+        + (warn.length ? '<br><span class="provnote">À vérifier : ' + esc(warn.join(" ; ")) + '</span>' : '')
+        + '<br><button type="button" class="mini" data-altrwy="' + st.k + ':' + esc(o.id) + '">Utiliser la piste ' + esc(o.id) + ' pour ' + esc(st.c.title.toLowerCase()) + '</button></div>';
+    });
+    h += '<span class="provnote">' + (ok.length ? 'Calcul indicatif d’après l’AFM, sans statut : ce n’est ni une validation ni une autorisation d’atterrir. La piste en service, l’état réel de la piste et les consignes locales décident.' : 'Aucune autre piste connue ne donne un vent de face ou nul : pas de scénario alternatif calculable avec ce vent.') + '</span></div>';
+    return h;
+  }
+  /* Météo régionale : aérodromes voisins avec METAR, coordonnées approximatives (degrés décimaux) pour classer par distance */
+  var COORD = {EBNM: [50.4922, 4.7686], EBCI: [50.4592, 4.4538], EBLG: [50.6374, 5.4432], EBBR: [50.9014, 4.4844], EBAW: [51.1894, 4.4603], EBKT: [50.8172, 3.2047], EBOS: [51.1989, 2.8622]};
+  var REG_MAX_KM = 80, regwx = {};
+  function kmBetween(a, b){
+    var p = Math.PI / 180, h = Math.pow(Math.sin((b[0] - a[0]) * p / 2), 2) + Math.cos(a[0] * p) * Math.cos(b[0] * p) * Math.pow(Math.sin((b[1] - a[1]) * p / 2), 2);
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  }
+  function regStations(icao){
+    var p = COORD[icao];
+    if (!p) return [];
+    return Object.keys(COORD).filter(function(c){ return c !== icao; }).map(function(c){ return {icao: c, km: kmBetween(p, COORD[c])}; }).filter(function(s){ return s.km <= REG_MAX_KM; }).sort(function(a, b){ return a.km - b.km; });
+  }
+  function metarVals(raw){
+    var m = String(raw || "").toUpperCase(), o = {wd: null, ws: null, gust: null, temp: null, qnh: null}, w = m.match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/), t = m.match(/\b(M?\d{2})\/(M?\d{2})?\b/), q = m.match(/\bQ(\d{4})\b/);
+    if (w){ o.wd = w[1] === "VRB" ? null : parseInt(w[1], 10); o.ws = parseInt(w[2], 10); o.gust = w[3] ? parseInt(w[3], 10) : null; }
+    if (t) o.temp = parseInt(t[1].replace("M", "-"), 10);
+    if (q) o.qnh = parseInt(q[1], 10);
+    return o;
+  }
+  /* Cherche, sans rien écrire dans la carte, la station voisine la plus proche avec un METAR récent */
+  function regLoad(k){
+    var icao = cur[k], has = $(pid(k, "wx")).value.trim() !== "" || ["wspd", "qnh", "temp"].some(function(f){ return $(pid(k, f)).value !== ""; });
+    if (!icao || has || !COORD[icao]){ delete regwx[k]; return Promise.resolve(); }
+    var stations = regStations(icao), g = regwx[k] = {icao: icao, ok: false, tried: stations.map(function(s){ return s.icao; })};
+    return loadFile(false).then(function(f){
+      var d = f && f.d && !f.err ? f.d : null;
+      function next(i){
+        if (i >= stations.length) return null;
+        var s = stations[i], o = d && d.metars && d.metars[s.icao], cands = [];
+        if (o && o.raw && o.obs) cands.push({src: "awc", raw: o.raw, obs: o.obs});
+        var b0 = bestWx(cands);
+        if (b0 && wxAgeAt(b0.obs, Date.now()) <= WX_STALE_MIN) return Promise.resolve({s: s, b: b0});
+        return fetchIemC(s.icao, 300000).then(function(r){
+          if (r.ok && r.r) cands.push({src: "iem", raw: r.r.raw, obs: r.r.obs});
+          var b = bestWx(cands);
+          return b && wxAgeAt(b.obs, Date.now()) <= WX_STALE_MIN ? {s: s, b: b} : next(i + 1);
+        });
+      }
+      return Promise.resolve(next(0)).then(function(hit){
+        if (cur[k] !== icao) return;
+        if (hit){ g.ok = true; g.st = hit.s.icao; g.km = hit.s.km; g.raw = hit.b.raw; g.obs = hit.b.obs; g.src = hit.b.src; g.vals = metarVals(hit.b.raw); }
+        g.done = true;
+      });
+    }).catch(function(){ if (regwx[k]) regwx[k].done = true; });
+  }
+  /* Estimation avec la météo de la station voisine appliquée à l'aérodrome de la carte : toujours étiquetée, jamais un verdict */
+  function regEst(st){
+    var g = regwx[st.k], r = st.r, v = r.v, c = st.c;
+    if (!g || !g.ok || r.man !== null || v.qnh !== null || v.temp !== null || v.ws !== null) return null;
+    var gv = g.vals, miss = [];
+    if (v.elev === null) miss.push("l’élévation de " + st.icao);
+    if (gv.ws === null || gv.qnh === null || gv.temp === null) miss.push("vent, QNH ou température absents du METAR de " + g.st);
+    else if (gv.ws > 0 && gv.wd === null) miss.push("direction du vent absente (variable)");
+    else if (gv.ws > 0 && v.rwy === null) miss.push("l’axe de la piste");
+    if (r.m === null) miss.push("la masse (onglet Masse & centrage)");
+    if (miss.length) return {miss: miss};
+    var pa = v.elev + 30 * (1013 - gv.qnh), hw = 0, cr = 0, o = {pa: pa};
+    if (gv.ws > 0){ var a = (gv.wd - v.rwy) * R; hw = gv.ws * Math.cos(a); cr = gv.ws * Math.sin(a); }
+    o.hw = hw; o.cr = cr;
+    var q = afm(c.kind, pa, gv.temp, r.m, hw);
+    if (q.err){ o.err = q.err; return o; }
+    o.val = q.val; o.req = c.kind === "to" ? Math.ceil(q.val * FACTOR) : q.val; o.margin = r.av !== null ? r.av - o.req : null;
+    return o;
+  }
+  function regHtml(st){
+    var g = regwx[st.k];
+    if (!st.used || !g) return "";
+    var to = st.c.kind === "to", what = esc(st.c.title + " " + st.icao);
+    if (!g.done) return '<div class="provbox alt"><b>MÉTÉO RÉGIONALE DE RÉFÉRENCE</b><span class="provnote">' + what + ' : aucun METAR propre. Recherche d’une station voisine ...</span></div>';
+    if (!g.ok) return '<div class="provbox alt"><b>MÉTÉO RÉGIONALE DE RÉFÉRENCE · indisponible</b><span class="provnote">' + what + ' : aucun METAR propre, et aucune station voisine (' + esc(g.tried.join(", ") || "aucune connue") + ') avec une observation de moins de ' + WX_STALE_MIN + ' min. Saisis la météo relevée auprès de l’aérodrome (ATIS, tour, service météo) dans « Météo saisie à la main ».</span></div>';
+    var gv = g.vals, age = wxAgeAt(g.obs, Date.now());
+    var h = '<div class="provbox alt"><b>MÉTÉO RÉGIONALE DE RÉFÉRENCE · PAS UNE OBSERVATION DE ' + esc(st.icao) + '</b>'
+      + '<span class="provnote">Origine : ' + esc(g.st) + ', à ≈ ' + fmt(g.km, 0) + ' km. METAR observé à ' + hhmm(g.obs * 1000) + ' UTC (il y a ' + esc(ageTxt(age)) + '), source : ' + esc(srcName(g.src)) + '.</span>'
+      + '<div class="altline">' + esc(g.raw) + '</div>';
+    var e = regEst(st);
+    if (e && e.miss) h += '<span class="provnote">Estimation impossible : il manque ' + esc(e.miss.join(" ; ")) + '.</span>';
+    else if (e && e.err) h += '<span class="provnote">Estimation hors AFM avec cette météo : ' + esc(e.err) + ' Aucun chiffre n’est donné.</span>';
+    else if (e){
+      h += '<div class="altline"><b>ESTIMATION RÉGIONALE (non validée)</b> : vent ' + (gv.ws === 0 ? 'nul' : deg3(gv.wd) + '/' + fmt(gv.ws, 0) + ' kt') + ', ' + fmt(gv.temp, 0) + ' °C, QNH ' + fmt(gv.qnh, 0) + ' de ' + esc(g.st) + ' appliqués à ' + esc(st.icao) + ' (élévation ' + fmt(st.r.v.elev, 0) + ' ft)<br>'
+        + 'Composante de face ' + fmt(e.hw, 1) + ' kt · traversière ' + fmt(Math.abs(e.cr), 1) + ' kt · altitude pression ' + fmt(Math.round(e.pa), 0) + ' ft<br>'
+        + (to ? 'TODR ≈ <b>' + fmt(e.val, 0) + ' m</b> · × 1,25 ≈ ' + fmt(e.req, 0) + ' m' : 'LDR ≈ <b>' + fmt(e.val, 0) + ' m</b>') + ' · ' + (to ? 'TODA ' : 'LDA ') + (st.r.av === null ? 'à saisir' : fmt(st.r.av, 0) + ' m') + (e.margin !== null ? ' · marge brute indicative ' + sgn(e.margin) : '') + '</div>';
+    }
+    h += '<span class="provnote">Cette météo n’a pas été observée à ' + esc(st.icao) + ' : vent, température et QNH locaux peuvent différer. Elle n’est jamais recopiée dans les champs, ne remplace pas un calcul validé avec la météo de ' + esc(st.icao) + ' et ne peut pas donner le statut « SUFFISANT » : le statut reste « À VÉRIFIER ».</span></div>';
+    return h;
+  }
+
   /* ===== Cartes de résultats ===== */
   function render(c, st){
     var k = c.k, to = c.kind === "to", r = st.r;
@@ -1652,6 +1816,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     }
     if (lv && lv.status === "ok") h += '<p class="rnote warnc">⚠ Statut favorable = les critères saisis sont respectés. Ce n’est pas une autorisation d’atterrir : la décision et la responsabilité restent au commandant de bord (état réel de la piste, météo à jour, instructions de l’école et de l’exploitant).</p>';
     landWarn(st, lv).forEach(function(t){ h += '<p class="rnote warnc">⚠ ' + esc(t) + '</p>'; });
+    h += altHtml(st) + regHtml(st);
     if (!to && margin !== null) { /* le bloc de marge générique est remplacé par les lignes ci-dessus */ }
     else if (margin !== null){
       h += '<div class="margin ' + cls + '"><span>Marge' + (to ? " (avec × 1,25)" : "") + (state === "prov" ? " · provisoire" : "") + '</span><b>' + sgn(margin) + '</b></div>';
@@ -1702,6 +1867,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     out.k = c.k; out.used = st.used; out.name = c.title; out.icao = st.icao;
     out.rwy = st.rid ? "RWY " + st.rid : (v.rwy !== null ? "QFU " + Math.round(v.rwy) + "°" : "");
     out.wx = raw; out.wxStale = st.stale; out.wxAge = st.age;
+    out.extra = st.used ? altHtml(st) + regHtml(st) : "";
     return out;
   }
   function refreshTable(sts){
@@ -1718,7 +1884,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var c = a[key];
     if (!c || c.v === null || c.v === undefined){
       var why = c && c.why ? c.why : "donnée absente";
-      return '<span class="nd" title="' + esc(why) + '" tabindex="0">N/D</span><small class="why">' + (c && c.cat === "oob" ? "hors AFM" : "manque") + '</small>';
+      return '<span class="nd" title="' + esc(why) + '" tabindex="0">N/D</span><small class="why">' + (c && c.cat === "oob" ? (c.tail ? "vent arrière · hors AFM" : "hors AFM") : "manque") + '</small>';
     }
     var prv = c.state === "prov";
     return '<b class="' + (c.bad ? "bad " : "") + (prv ? "prv" : "") + '"' + (prv ? ' title="' + esc("Provisoire : " + c.prov.join(", ")) + '"' : "") + '>' + esc(fmt(Math.round(c.v), 0)) + '</b>' + (unit ? ' <small>' + unit + '</small>' : "") + (prv ? '<small class="why chk">PROVISOIRE</small>' : "");
@@ -1752,6 +1918,8 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<td><span class="lbl">Destination LDA:</span>' + pcOne(A, "lda", "m") + '</td>'
       + '<td><span class="lbl">Alternate LDA:</span>' + pcOne(X, "lda", "m") + '</td></tr>'
       + '</tbody></table>';
+    var ex = apts.map(function(a){ return a.extra || ""; }).join("");
+    if (ex) h += '<div class="pdtx">' + ex + '</div>';
     box.innerHTML = h;
   }
 
@@ -1937,6 +2105,8 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     if (!t.closest) return;
     var li = t.closest(".sug li[data-icao]");
     if (li){ var lk = li.parentNode.id.split("-")[0]; if (lk === "x") altman = true; selectAd(lk, li.dataset.icao); return; }
+    var ar = t.closest("[data-altrwy]");
+    if (ar){ var ap2 = ar.dataset.altrwy.split(":"); selectRwy(ap2[0], ap2[1]); renderAll(); save(); return; }
     var ib = t.closest(".ints button");
     if (ib){ selectInt(ib.dataset.k, ib.dataset.int); renderAll(); save(); return; }
     var b = t.closest(".rwys button");

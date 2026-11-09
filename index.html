@@ -631,6 +631,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     for (x = 2.425; x < 2.6; x += 0.025) s += ln(sx(x), T, sx(x), H - B, "var(--line)", .6);
     for (y = 775; y < 1160; y += 25) s += ln(L, sy(y), W - R, sy(y), "var(--line)", .6);
     for (x = 2.40; x <= 2.6001; x += 0.05) s += txt(sx(x), H - B + 16, fmt(x, 2), {s:12, w:600, c:"var(--ink)"});
+    for (x = 2.425; x < 2.6; x += 0.05) s += txt(sx(x), H - B + 16, fmt(x, 3), {s:11, w:600, c:"var(--ink)"}); /* graduations intermédiaires 2,425 à 2,575, sur les traits du quadrillage */
     for (y = 750; y <= 1150; y += 50) s += txt(L - 6, sy(y) + 4, y, {a:"end", s:12, w:600, c:"var(--ink)"});
     s += txt((L + W - R) / 2, H - 10, "Position du centre de gravité [m]", {s:12.5, w:600, c:"var(--ink)"});
     s += txt(14, (T + H - B) / 2, "Masse [kg]", {s:12.5, w:600, c:"var(--ink)", t:"rotate(-90 14 " + ((T + H - B) / 2) + ")"});

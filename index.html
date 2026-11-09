@@ -427,7 +427,7 @@ body.afmzo{overflow:hidden}
 <li><b>Modèle et moteur :</b> DA 40 D (moteur TAE 125). L’AFM liste aussi des variantes (moteur TAE 125-02-99, suppléments G1000). Vérifie le numéro de série, l’inventaire d’équipement (section 6.5), les suppléments et la révision de l’AFM de l’avion.</li>
 <li><b>Masse à l’atterrissage :</b> 1 150 kg au maximum si les jambes de train modifiées (MÖM 40-123) sont installées, 1 092 kg sinon. L’application et la fiche New CAG utilisent 1 150 kg.</li>
 <li><b>Réservoir :</b> l’application suppose le réservoir standard (106 L, limite arrière 2,59 m). Avec le réservoir longue portée (MÖM 40-130), la limite arrière est 2,55 m : non géré.</li>
-<li><b>Piste :</b> herbe, piste mouillée ou en pente : l’AFM donne des majorations non appliquées ici (herbe : +10, 15 ou 25 % du roulage au décollage et +5, 15 ou 25 % à l’atterrissage ; pente montante de 2 % : environ +10 % au décollage ; pente descendante de 2 % : environ +10 % à l’atterrissage).</li>
+<li><b>Piste :</b> herbe, piste mouillée ou en pente : l’AFM donne des majorations, affichées à part comme indications non validées (jamais intégrées au résultat, à la marge ni au statut) (herbe : +10, 15 ou 25 % du roulage au décollage et +5, 15 ou 25 % à l’atterrissage ; pente montante de 2 % : environ +10 % au décollage ; pente descendante de 2 % : environ +10 % à l’atterrissage).</li>
 <li><b>Volets :</b> atterrissage volets LDG seulement. Volets UP non calculés (AFM p. 5-22 à 5-25, distances plus longues).</li>
 <li><b>Piste disponible :</b> l’AFM demande une longueur au moins égale à la distance au passage des 50 ft.</li>
 </ul>
@@ -968,6 +968,7 @@ body.afmzo{overflow:hidden}
     FIELDS.concat(["wx", "rwyid"]).forEach(function(f){ var e = $(pid(k, f)); if (!e) return; e.value = ""; delete prov[pid(k, f)]; badge(pid(k, f)); });
     delete wxi[k]; delete ints[k]; delete regwx[k];
     if ($(pid(k, "rcond"))) $(pid(k, "rcond")).value = "";
+    ["surf", "slope"].forEach(function(f){ if ($(pid(k, f))) $(pid(k, f)).value = ""; });
     ["msrc", "mtime", "mver"].forEach(function(f){ if ($(pid(k, f))) $(pid(k, f)).value = ""; });
     $(k + "-rwys").innerHTML = ""; $(k + "-ints").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
   }
@@ -1576,6 +1577,40 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") zoomClose(); });
   window.addEventListener("resize", zoomApply);
   /* GRAPH+:fin */
+  /* CORR:début — majorations indicatives du chapitre 5 de l'AFM (herbe, pente) : affichées à part, jamais intégrées au TODR/LDR,
+     à la marge ni au verdict. Valeurs : AFM DA 40 D p. 5-10 (décollage) et p. 5-19 / 5-23 (atterrissage). Aucune valeur n'est interpolée ni combinée. */
+  var GRASS = {
+    g1: {lab: "herbe coupée courte, jusqu’à 5 cm", to: 10, ld: 5, atLeast: false},
+    g2: {lab: "herbe coupée de 5 à 10 cm", to: 15, ld: 15, atLeast: false},
+    g3: {lab: "herbe de plus de 10 cm", to: 25, ld: 25, atLeast: true}
+  };
+  var SLOPE_PCT = 10; /* AFM : pente de 2 % défavorable (montante au décollage, descendante à l'atterrissage) ≈ +10 % de distance */
+  function surfCorr(kind, grass, slope, val){
+    var out = [], up = function(x){ return Math.ceil(x / 10) * 10; };
+    if (!isFinite(val) || val === null) return out;
+    var g = GRASS[grass];
+    if (g){
+      var p = g[kind], rn = kind === "to" ? "roulage au décollage" : "roulage à l’atterrissage";
+      if (g.atLeast) out.push({k: "grass", t: g.lab + " : au moins +" + p + " % sur le " + rn + " (AFM). L’AFM ne donne pas de maximum : aucune distance chiffrée."});
+      else out.push({k: "grass", t: g.lab + " : +" + p + " % sur le " + rn + " (AFM, valeurs typiques, herbe sèche). Le roulage n’étant qu’une partie de la distance, la distance totale n’augmente pas de plus de " + p + " % : au plus " + up(val * (1 + p / 100)) + " m (majorant indicatif).", max: up(val * (1 + p / 100))});
+    }
+    if (slope === "ap"){
+      out.push({k: "slope", t: "pente défavorable de 2 % (" + (kind === "to" ? "montante" : "descendante") + ") : environ +" + SLOPE_PCT + " % de distance selon l’AFM, soit environ " + up(val * (1 + SLOPE_PCT / 100)) + " m. L’effet sur le roulage peut être plus grand.", approx: up(val * (1 + SLOPE_PCT / 100))});
+    } else if (slope === "other"){
+      out.push({k: "slope", t: "autre pente : l’AFM ne donne de valeur que pour 2 % (" + (kind === "to" ? "montante" : "descendante") + "). Aucune correction calculée, ne rien extrapoler."});
+    }
+    if (g && slope === "ap") out.push({k: "both", t: "herbe et pente : l’AFM n’indique pas comment cumuler ces majorations, aucun total n’est calculé."});
+    return out;
+  }
+  function corrHtml(c, r){
+    var k = c.k, gs = $(k + "-surf"), sl = $(k + "-slope");
+    if (!gs || !sl || r.val === null) return "";
+    var L = surfCorr(c.kind, gs.value, sl.value, r.val);
+    if (!L.length) return '<p class="rnote">Herbe ou pente : choisis la surface et la pente ci-dessus pour afficher les majorations indicatives de l’AFM.</p>';
+    return '<div class="provbox"><b>MAJORATIONS AFM · INDICATIVES, NON VALIDÉES</b><span class="provnote">Elles ne modifient ni le ' + (c.kind === "to" ? "TODR" : "LDR") + ', ni la marge, ni le statut ci-dessus. Piste mouillée, souple ou contaminée : l’AFM ne donne aucun chiffre, la distance peut être nettement plus longue.</span><div class="witems">'
+      + L.map(function(x){ return '<span class="whyitem prov">' + esc(x.t) + '</span>'; }).join("") + '</div></div>';
+  }
+  /* CORR:fin */
   function afmExtra(c, r){
     var a = afmApp(), to = c.kind === "to";
     var h = '<p class="rnote afmline ' + (a.ok ? "okc" : "warnc") + '">Graphiques : AFM DA 40 D (Doc. 6.01.05-E, rév. 7), ' + (to ? "décollage, puissance MAX, volets T/O, p. 5-12" : "atterrissage, moteur au ralenti, volets LDG, p. 5-20") + ", distance au passage des 50 ft, piste revêtue sèche et plane. "
@@ -1609,6 +1644,9 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<details class="f full mwx" id="' + k + '-mman"><summary>Valeur ' + (to ? "TODR" : "LDR") + ' relevée à la main sur l’AFM (facultatif)</summary><div class="fields">' + fld(k, man, (to ? "TODR" : "LDR") + " AFM saisi", "m") + '</div>'
       + '<p class="hint">Inutile en temps normal : le site calcule la distance d’après les graphiques de l’AFM. Laisse ce champ vide pour utiliser ce calcul.</p></details>'
       + (to ? "" : '<div class="f full"><label for="' + k + '-rcond">État de la piste à l’atterrissage</label><div class="in"><select id="' + k + '-rcond"><option value="">À préciser</option><option value="ref">Sèche, revêtue, plane (conditions du graphique AFM)</option><option value="other">Herbe, mouillée, en pente ou contaminée</option></select></div><p class="hint">Les majorations de l’AFM pour ces autres états ne sont pas appliquées au LDR : le résultat reste « À VÉRIFIER ».</p></div>')
+      + '<details class="f full mwx" id="' + k + '-corr"><summary>Herbe ou pente : majorations indicatives de l’AFM</summary><div class="f full"><label for="' + k + '-surf">Surface (piste sèche)</label><div class="in"><select id="' + k + '-surf"><option value="">Revêtue (référence AFM)</option><option value="g1">Herbe coupée, jusqu’à 5 cm</option><option value="g2">Herbe coupée, 5 à 10 cm</option><option value="g3">Herbe de plus de 10 cm</option></select></div></div>'
+      + '<div class="f full"><label for="' + k + '-slope">Pente de la piste</label><div class="in"><select id="' + k + '-slope"><option value="">Plane ou non précisée</option><option value="ap">' + (to ? "Montante d’environ 2 %" : "Descendante d’environ 2 %") + '</option><option value="other">Autre pente</option></select></div></div>'
+      + '<p class="hint">Valeurs typiques du chapitre 5 de l’AFM, affichées à part : elles ne changent pas le résultat, la marge ni le statut.</p></details>'
       + '<div id="' + k + '-res"></div></section>';
   }
   function setT(id, t, cls){ var e = $(id); e.textContent = t; e.className = cls || ""; }
@@ -2020,7 +2058,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       ? "TODR × 1,25 : coefficient utilisé dans la fiche de préparation de l’école, appliqué au TODR de l’AFM comme marge de sécurité. Il ne vient pas de l’AFM. Il ne s’applique ici qu’au décollage, piste sèche, en dur et plane."
       : "Aucun coefficient n’est imposé par ce site : la LDR est la valeur brute de l’AFM, piste sèche, en dur et plane" + (c.k === "x" ? ", avec la masse à l’atterrissage prévue" : "") + ". Le statut favorable n’apparaît que si une marge opérationnelle validée (section « Marge opérationnelle d’atterrissage exigée ») est respectée et que toutes les conditions sont remplies.") + '</p></div>';
     lastCalc[c.k] = r;
-    h = h.replace(/<\/div>$/, afmExtra(c, r) + "</div>");
+    h = h.replace(/<\/div>$/, corrHtml(c, r) + afmExtra(c, r) + "</div>");
     $(k + "-res").innerHTML = h;
     var cf = document.querySelector('[data-confirm="' + k + '"]');
     if (cf) cf.hidden = !(["elev", "rwy", c.av].some(function(f){ var s = fstate(k, f); return s === "chk" || s === "exp"; }));

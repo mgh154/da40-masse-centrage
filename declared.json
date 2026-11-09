@@ -199,6 +199,7 @@
   },
   "EBNM": {
    "name": "Namur-Suarlée",
+   "notices": ["Utilisation de l'aérodrome soumise à l'autorisation préalable de l'exploitant (AIP AD 2.2, remarque 8) : à obtenir avant de le choisir comme dégagement."],
    "source": {
     "label": "AIP Belgique (eAIP skeyes), EB AD 2 EBNM",
     "url": "https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Main/html/eAIP/EB-AD-2.EBNM-en-GB.html"

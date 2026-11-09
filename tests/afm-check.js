@@ -5,7 +5,7 @@
 "use strict";
 const fs = require("fs"), path = require("path");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-const afmData = html.match(/var AFM = \{.*?\}\};\n/s)[0];
+const afmData = html.match(/var AFM = \{.*?\}\};\r?\n/s)[0];
 const i = html.indexOf("/* AFM:début"), j = html.indexOf("  /* Applicabilité des graphiques");
 const body = afmData + "\n" + html.slice(i, j) + "\nreturn {afm, toDist, ldDist, afmTrace, afmSvg};";
 const lib = new Function("fmt", body)((n, d) => Number(n).toFixed(d));

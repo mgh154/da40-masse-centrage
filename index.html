@@ -326,6 +326,16 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 
   <label id="lbl-ac">Avion</label>
   <div class="regs" id="regs" role="group" aria-labelledby="lbl-ac"></div>
+  <details class="afmapp" id="acp"><summary id="acpsum">Fiche de l’avion</summary>
+  <div class="afmapp-b">
+  <p class="hint">Version, moteur et suppléments décident si les graphiques de l’AFM DA 40 D s’appliquent. Rien n’est deviné : « À préciser » garde les distances provisoires. Seul le DA 40 D (TAE 125-01 ou TAE 125-02-99) est pris en charge ; pour une autre version, le site ne calcule aucune distance.</p>
+  <div class="fields">
+  <div class="f full"><label for="acp-ver">Version</label><div class="in"><select id="acp-ver"></select></div></div>
+  <div class="f full"><label for="acp-eng">Moteur</label><div class="in"><select id="acp-eng"></select></div></div>
+  <div class="f full"><label for="acp-supp">Suppléments d’AFM</label><div class="in"><select id="acp-supp"></select></div></div>
+  </div>
+  <p class="hint" id="acp-msg"></p>
+  </div></details>
 
   <h3>Masses</h3>
   <div class="fields">
@@ -477,6 +487,38 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   var DENS = 0.84, FUELMAX = 106, BAGMAX = 30, MTOM = 1150, MLM = 1150, MMIN = 780, AFT = 2.59, UTIL = 980;
   function fwd(m){ return m <= UTIL ? 2.40 : 2.40 + (m - UTIL) * 0.06 / 170; }
 
+  /* ===== Registre AFM : une seule architecture pour tous les DA 40 D =====
+     Une version absente de ce registre n'a AUCUN calcul de performance ni d'enveloppe de masse : elle ne retombe jamais sur les graphiques DA 40 D.
+     Ajouter une version = ajouter une entrée ici (avec son AFM) ; les formules AFM restent communes et inchangées. */
+  var AFM_REG = {
+    "DA40D": {label: "DA 40 D", engines: ["TAE 125-01", "TAE 125-02-99"], doc: "6.01.05-E", env: {MTOM: 1150, MLM: 1150, MMIN: 780, AFT: 2.59, UTIL: 980}}
+  };
+  var ACP_VERS = [["DA40D", "DA 40 D (diesel TAE 125)"], ["DA40NG", "DA 40 NG (diesel AE300)"], ["DA40P", "DA 40 / DA 40 F (essence)"], ["other", "Autre ou inconnue"]];
+  var ACP_ENGS = [["", "À préciser"], ["TAE 125-01", "TAE 125-01"], ["TAE 125-02-99", "TAE 125-02-99"], ["other", "Autre ou inconnu"]];
+  var ACP_SUPP = [["", "À préciser"], ["none", "Aucun supplément"], ["noperf", "Suppléments sans influence sur les performances (contrôlé dans l’AFM de l’avion)"], ["perf", "Au moins un supplément qui influence les performances"]];
+  var ACP_KEY = "da40-acp-v1";
+  function acpAll(){ try { return JSON.parse(localStorage.getItem(ACP_KEY) || "{}") || {}; } catch(e){ return {}; } }
+  /* Fiche de l'avion : version par défaut DA 40 D (à confirmer), moteur et suppléments jamais devinés */
+  function acp(r){ var o = acpAll()[r] || {}; return {ver: o.ver || "DA40D", eng: o.eng || "", supp: o.supp || ""}; }
+  function acGate(r){
+    var p = acp(r), reg = AFM_REG[p.ver], g = {reg: reg || null, p: p, mb: false, sup: false, complete: false, msg: ""};
+    if (!r){ g.msg = "Aucun avion choisi."; return g; }
+    if (!reg){ g.msg = "Calculs de performance non pris en charge pour cette version : les graphiques de l’AFM DA 40 D ne lui sont pas applicables et son propre AFM n’est pas intégré au site. Aucune distance n’est calculée ; saisis la valeur relevée dans son AFM."; return g; }
+    if (p.eng !== "" && reg.engines.indexOf(p.eng) < 0){ g.msg = "Moteur non couvert par les graphiques de l’AFM " + reg.label + " intégrés au site (TAE 125-01 et TAE 125-02-99). Aucune distance n’est calculée."; return g; }
+    g.mb = true;
+    if (p.supp === "perf"){ g.msg = "Supplément d’AFM influençant les performances déclaré pour cet avion : ses corrections ne sont pas intégrées au site. Aucune distance n’est calculée ; saisis la valeur de l’AFM de l’avion."; return g; }
+    g.sup = true;
+    g.complete = p.eng !== "" && p.supp !== "";
+    if (!g.complete) g.msg = "Fiche de l’avion incomplète : indique le moteur et les suppléments (onglet Masse & centrage, « Fiche de l’avion »).";
+    return g;
+  }
+  function acpApply(r){
+    var g = acGate(r), env = g.reg ? g.reg.env : null;
+    if (env){ MTOM = env.MTOM; MLM = env.MLM; MMIN = env.MMIN; AFT = env.AFT; UTIL = env.UTIL; }
+    return g;
+  }
+  window.__acGate = acGate; /* lu par le bloc de calcul des performances (autre fonction autonome) */
+
   var $ = function(id){ return document.getElementById(id); };
   var ids = ["front","rear","bag","fuel","trip","bem","arm","mom","taxi"];
   var state = {ac:"F-GUPL"};
@@ -498,8 +540,26 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     state.ac = r; window.__ac = r;
     Array.prototype.forEach.call(regs.children, function(b){ b.setAttribute("aria-pressed", b.dataset.reg === r ? "true" : "false"); });
     if (setData){ $("bem").value = fmt(AC[r].m,1); $("arm").value = fmt(AC[r].a,3); $("mom").value = fld(AC[r].mo,2); }
+    acpShow();
     update();
   }
+  function fillSel(id, list){ $(id).innerHTML = list.map(function(o){ return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join(""); }
+  function acpShow(){
+    var r = state.ac, p = acp(r), g = acGate(r);
+    $("acp-ver").value = p.ver; $("acp-eng").value = p.eng; $("acp-supp").value = p.supp;
+    var s = $("acpsum"); s.textContent = "Fiche de l’avion · " + r + " · " + (AFM_REG[p.ver] ? AFM_REG[p.ver].label : "version non prise en charge") + (g.sup && g.complete ? "" : (g.sup ? " · à compléter" : (g.reg ? " · performances non prises en charge" : "")));
+    s.className = g.sup ? (g.complete ? "okc" : "warnc") : "warnc";
+    $("acp-msg").textContent = g.msg;
+  }
+  fillSel("acp-ver", ACP_VERS); fillSel("acp-eng", ACP_ENGS); fillSel("acp-supp", ACP_SUPP);
+  ["ver", "eng", "supp"].forEach(function(f){
+    $("acp-" + f).addEventListener("change", function(){
+      var all = acpAll(), r = state.ac, o = all[r] || {};
+      o[f] = $("acp-" + f).value; all[r] = o;
+      try { localStorage.setItem(ACP_KEY, JSON.stringify(all)); } catch(e){}
+      acpShow(); update(); if (typeof renderAll === "function") renderAll();
+    });
+  });
 
   function save(){
     try {
@@ -537,6 +597,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 
   function update(){
     save();
+    var gate = acpApply(state.ac);
+    if (!gate.mb){ reset("Enveloppe de masse et de centrage non intégrée pour cette version ou ce moteur : aucune limite n’est contrôlée et aucune masse n’est transmise aux calculs de performance."); return; }
     var front = num("front"), rear = num("rear"), bag = num("bag"), fuelL = num("fuel"), tripL = num("trip");
     var bem = num("bem"), arm = num("arm"), mom = num("mom"), taxi = num("taxi");
     rear = rear === null ? 0 : rear; bag = bag === null ? 0 : bag; tripL = tripL === null ? 0 : tripL; taxi = taxi === null ? 0 : taxi;
@@ -778,6 +840,10 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
   };
   var prov = {}, cur = {}, wxi = {}, ints = {}, mem = {}, ap = null, apP = null, declD = null, declP = null, wxP = null;
 
+  /* Verrou de la fiche avion (défini dans le bloc masse & centrage) : s'il manque, aucun calcul AFM n'est fait */
+  function acGate(r){
+    return typeof window.__acGate === "function" ? window.__acGate(r) : {reg: null, p: {}, mb: false, sup: false, complete: false, msg: "Registre des avions indisponible : aucune distance n’est calculée."};
+  }
   /* AIP:début — dates AIRAC, validité des données et priorité des sources (fonctions pures, testées par tests/aip-check.js) */
   var AIP_VALID_DAYS = 84;   /* une donnée AIP vérifiée reste utilisable 3 cycles AIRAC, puis elle est à refaire */
   var WX_STALE_MIN = 120;    /* un METAR de plus de 2 h est ancien */
@@ -1366,14 +1432,16 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   /* Applicabilité des graphiques et graphique de lecture dans chaque carte de résultat */
   var AFM_KEY = "da40-afm-v1", afmOpen = {};
   function afmConf(){ try { return JSON.parse(localStorage.getItem(AFM_KEY) || "{}") || {}; } catch(e){ return {}; } }
-  function afmApp(){ var ac = window.__ac || ""; return {ac: ac, ok: !!(ac && afmValid(afmConf()[ac], Date.now()))}; }
+  function afmApp(){ var ac = window.__ac || "", g = acGate(ac); return {ac: ac, gate: g, ok: !!(ac && g.sup && g.complete && afmValid(afmConf()[ac], Date.now()))}; }
   function afmChip(){
     var a = afmApp(), s = $("afmsum");
     if (!s) return;
     s.textContent = "Conditions d’application des graphiques AFM · DA 40 D rév. 7" + (a.ac ? " · " + a.ac + (a.ok ? " : confirmé" : " : à confirmer") : "");
     s.className = a.ac && !a.ok ? "warnc" : (a.ok ? "okc" : "");
     $("afmac").textContent = a.ac || "l’avion choisi";
-    $("afmok").checked = a.ok; $("afmok").disabled = !a.ac;
+    if (a.ac && !a.gate.sup){ s.textContent += " — non pris en charge : " + a.gate.msg; s.className = "warnc"; }
+    else if (a.ac && !a.gate.complete){ s.textContent += " — fiche de l’avion incomplète"; s.className = "warnc"; }
+    $("afmok").checked = a.ok; $("afmok").disabled = !(a.ac && a.gate.sup && a.gate.complete);
   }
   var lastCalc = {};
   function afmCharts(){
@@ -1440,12 +1508,13 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var miss = [], err = null, val = null, how = "";
     if (man !== null){ val = man; how = "valeur saisie"; }
     else {
-      if (m === null) miss.push("la masse (onglet Masse & centrage)");
+      var gate = acGate(window.__ac || "");
+      if (m === null && gate.mb) miss.push("la masse (onglet Masse & centrage)");
       if (pa === null) miss.push("l’élévation et le QNH");
       if (v.temp === null) miss.push("la température");
       if (!wc) miss.push("le vent"); else if (!wc.known) miss.push("l’axe de piste");
       if (!miss.length){
-        var r = afm(c.kind, pa, v.temp, m, wc.hw);
+        var r = gate.sup ? afm(c.kind, pa, v.temp, m, wc.hw) : {err: gate.msg};
         if (r.err) err = r.err; else { val = r.val; how = "AFM " + (to ? "p. 5-12" : "p. 5-20") + " · " + fmt(m, 0) + " kg"; }
       }
     }
@@ -1502,11 +1571,12 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     /* masse et AFM : seulement si la distance est calculée */
     if (r.man !== null){ put("mass", "ok"); put("afm", "ok"); }
     else {
-      if (!window.__mb) put("mass", "miss", "Masse " + (to ? "au décollage" : "à l’atterrissage") + " absente : remplis l’onglet Masse & centrage, elle est reprise automatiquement ici", "tab:mb", "masse manquante");
+      if (!window.__mb && !acGate(window.__ac || "").mb) put("mass", "ok");
+      else if (!window.__mb) put("mass", "miss", "Masse " + (to ? "au décollage" : "à l’atterrissage") + " absente : remplis l’onglet Masse & centrage, elle est reprise automatiquement ici", "tab:mb", "masse manquante");
       else if (!$("confirm").checked) put("mass", "prov", "Contrôler la masse à vide et son bras (onglet Masse & centrage)", "tab:mb#confirm", "masse à vide non contrôlée");
       else put("mass", "ok");
       var a = afmApp();
-      put("afm", a.ok ? "ok" : "prov", "Confirmer que l’AFM de " + (a.ac || "l’avion") + " correspond aux graphiques DA 40 D", "afm", "AFM non confirmée");
+      put("afm", a.ok ? "ok" : "prov", a.gate.sup && !a.gate.complete ? a.gate.msg : "Confirmer que l’AFM de " + (a.ac || "l’avion") + " correspond aux graphiques DA 40 D", a.gate.sup && !a.gate.complete ? "tab:mb" : "afm", a.gate.sup && !a.gate.complete ? "fiche de l’avion incomplète" : "AFM non confirmée");
     }
     /* distance disponible */
     s = fstate(k, c.av);
@@ -1646,7 +1716,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
   /* Autres pistes de l'aérodrome, même météo, même masse, même AFM ; chaque piste utilise sa propre orientation et sa propre LDA */
   function altRwys(st){
-    if (!isTail(st) || !st.icao || !st.rid) return null;
+    if (!isTail(st) || !st.icao || !st.rid || !acGate(window.__ac || "").sup) return null;
     var r = st.r, v = r.v, out = [];
     if (r.pa === null || v.temp === null || r.m === null) return null;
     endsOf(st.icao).forEach(function(e){
@@ -1743,7 +1813,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var pa = v.elev + 30 * (1013 - gv.qnh), hw = 0, cr = 0, o = {pa: pa};
     if (gv.ws > 0){ var a = (gv.wd - v.rwy) * R; hw = gv.ws * Math.cos(a); cr = gv.ws * Math.sin(a); }
     o.hw = hw; o.cr = cr;
-    var q = afm(c.kind, pa, gv.temp, r.m, hw);
+    var gt = acGate(window.__ac || ""), q = gt.sup ? afm(c.kind, pa, gv.temp, r.m, hw) : {err: gt.msg};
     if (q.err){ o.err = q.err; return o; }
     o.val = q.val; o.req = c.kind === "to" ? Math.ceil(q.val * FACTOR) : q.val; o.margin = r.av !== null ? r.av - o.req : null;
     return o;

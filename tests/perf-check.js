@@ -52,6 +52,13 @@ check("coefficient validé respecté : favorable", v({}).status === "ok");
 check("marge en mètres validée respectée : favorable", v({ldr: 680, lda: 800, op: {val: 100, unit: "m", ok: true}}).status === "ok");
 check("marge en mètres validée non respectée : INSUFFISANT", v({ldr: 680, lda: 750, op: {val: 100, unit: "m", ok: true}}).status === "bad");
 
+console.log("\n4b. Deux marges distinctes (essai Namur : LDR 500, LDA 690, × 1,2)");
+const t12 = v({ldr: 500, lda: 690, op: {val: 1.2, unit: "x", ok: true}});
+check("marge brute +190 m", t12.gross === 190);
+check("distance requise corrigée 600 m", t12.need === 600);
+check("marge restante après coefficient +90 m, distincte de la marge brute", t12.opMargin === 90 && t12.opMargin !== t12.gross);
+check("sans coefficient : aucune distance corrigée ni marge restante (rien n'est imposé)", (r => r.need === null && r.opMargin === null && r.gross === 190)(v({ldr: 500, lda: 690, op: {val: null, unit: "x", ok: false}})));
+
 console.log("\n5. Données absentes");
 check("LDR absente : incomplet", v({ldr: null}).status === "na");
 check("LDA absente : incomplet", v({lda: null}).status === "na");

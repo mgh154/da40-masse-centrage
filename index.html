@@ -411,7 +411,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 </div></details>
 <details class="afmapp" id="opm"><summary id="opmsum">Marge opérationnelle d’atterrissage exigée (école ou réglementation)</summary>
 <div class="afmapp-b">
-<p>Aucune marge n’est imposée par ce site : l’AFM ne prescrit pas de coefficient d’atterrissage. Renseigne ici l’exigence de ton école ou de la réglementation, avec sa source, puis marque-la « validée » une fois contrôlée. Tant que ce n’est pas fait, l’atterrissage reste « À VÉRIFIER », même avec une marge brute positive.</p>
+<p>Aucune marge n’est imposée par ce site : l’AFM ne prescrit pas de coefficient d’atterrissage. Renseigne ici l’exigence de ton école ou de la réglementation, avec sa source, puis marque-la « validée » une fois contrôlée. Tant que ce n’est pas fait, l’atterrissage reste « À VÉRIFIER », même avec une marge brute positive. Le champ est vide par défaut : une valeur d’essai (par exemple × 1,2) n’est pas une exigence.</p>
 <div class="fields">
 <div class="f"><label for="lm-val">Valeur exigée</label><div class="in"><input id="lm-val" inputmode="decimal" autocomplete="off" placeholder="vide = non définie"></div></div>
 <div class="f"><label for="lm-unit">Forme</label><div class="in"><select id="lm-unit"><option value="x">Coefficient × LDR</option><option value="m">Mètres en plus de la LDR</option></select></div></div>
@@ -1398,7 +1398,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       + '<p class="hint">Saisis le vent, le QNH et la température dans les champs ci-dessus (ils sont alors marqués « saisi »), puis renseigne la source, l’heure d’observation en UTC et confirme que tu as vérifié ces données. Sans ces trois éléments, l’atterrissage reste « À VÉRIFIER ».</p>'
       + '<div class="f full"><label for="' + k + '-msrc">Source de la météo</label><div class="in"><input id="' + k + '-msrc" class="txt" autocomplete="off" placeholder="Ex. ATIS / tour / service météo de l’aérodrome"></div></div>'
       + '<div class="f full"><label for="' + k + '-mtime">Heure de l’observation (UTC)</label><div class="in"><input id="' + k + '-mtime" type="datetime-local" class="txt"></div></div>'
-      + '<div class="f full"><label for="' + k + '-mver">Vérification</label><div class="in"><select id="' + k + '-mver"><option value="">Non vérifiée</option><option value="1">Vérifiée par moi auprès de la source indiquée</option></select></div></div></details>'
+      + '<div class="f full"><label for="' + k + '-mver">Vérification</label><div class="in"><select id="' + k + '-mver"><option value="">Non vérifiée</option><option value="1">Je déclare l’avoir relevée auprès de la source indiquée (déclaration, pas une certification)</option></select></div></div></details>'
       + '<div class="kv"><div><span>Vent de face / arrière</span><b id="' + k + '-hw">—</b></div><div><span>Vent traversier</span><b id="' + k + '-xw">—</b></div><div><span>Altitude pression</span><b id="' + k + '-pa">—</b></div><div><span>Altitude densité</span><b id="' + k + '-da">—</b></div></div>'
       + '<h3>Distances</h3><div class="fields">' + fld(k, c.av, c.avLabel + " (AIP)", "m") + fld(k, man, (to ? "TODR" : "LDR") + " AFM saisi", "m") + '</div>'
       + '<p class="hint">Laisse « ' + (to ? "TODR" : "LDR") + ' AFM saisi » vide pour utiliser le calcul d’après les graphiques de l’AFM.</p>'
@@ -1597,7 +1597,10 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function landWarn(st, lv){
     var k = st.k, a = declAp(st.icao), out = [];
     if (a && a.notices) a.notices.forEach(function(t){ out.push(t); });
-    if (lv && lv.wxKind === "manual") out.push("Météo saisie à la main" + (lv.reasons.length ? " : voir les points ouverts ci-dessus." : ", source et heure indiquées, vérifiée par toi : elle ne remplace pas un METAR et ne suffit pas seule à un verdict favorable."));
+    if (lv && lv.wxKind === "manual"){
+      var ms = $(pid(k, "msrc")).value.trim(), mt = $(pid(k, "mtime")).value;
+      out.push("Météo SAISIE À LA MAIN par l’utilisateur" + (ms ? " (source indiquée : " + ms : " (source non indiquée") + (mt ? ", observation " + mt.replace("T", " ") + " UTC" : ", heure non indiquée") + "). Donnée non certifiée : « vérifiée » est une déclaration de l’utilisateur, pas une garantie de fiabilité météorologique, et elle ne remplace pas un METAR.");
+    }
     if (k === "x" && st.icao && lv && lv.wxKind !== "auto") out.push("Météo de " + st.icao + " non relevée par le site : la météo de Charleroi n’est jamais recopiée automatiquement.");
     return out;
   }
@@ -1627,7 +1630,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       lv = landVerdict(landInput(st));
       if (lv.status === "bad"){ cls = "bad"; pill = "✗ INSUFFISANT"; slabel = "marge insuffisante"; }
       else if (lv.status === "check"){ cls = "prov"; pill = "À VÉRIFIER"; slabel = "à vérifier"; }
-      else if (lv.status === "ok"){ cls = "ok"; pill = "✓ SUFFISANT (marge opérationnelle validée)"; slabel = "marge opérationnelle respectée"; }
+      else if (lv.status === "ok"){ cls = "ok"; pill = "✓ SUFFISANT (aide à la décision)"; slabel = "critères de marge respectés"; }
     }
     var h = '<div class="rescard"><div class="rhead"><div class="rtitle">' + c.rtitle + '</div><div class="pill ' + cls + '">' + pill + '</div></div>';
     h += row((to ? "TODR" : "LDR") + " AFM", how, val === null ? "—" : fmt(val, 0) + " m", M[to ? "todr" : "ldr"].state === "prov" ? "prv" : "");
@@ -1636,11 +1639,17 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var iss = issuesOf(st, false);
     if (!to && lv && lv.gross !== null){
       var op0 = opMargin();
-      h += row("Marge brute", "LDA − LDR · information seulement", sgn(lv.gross), lv.gross < 0 ? "bad" : "");
-      h += row("Marge opérationnelle applicable", lv.need === null ? "non définie ou non valable" : (op0.ok && op0.src ? "validée" : "non validée") + " · exigée " + (op0.unit === "m" ? "+" + fmt(op0.val, 0) + " m" : "× " + fmt(op0.val, 2)) + " → " + fmt(lv.need, 0) + " m", lv.opMargin === null ? "À DÉFINIR" : sgn(lv.opMargin), lv.opMargin === null ? "prv" : (lv.opMargin < 0 ? "bad" : ""));
-      h += '<div class="margin ' + cls + '"><span>Marge brute (pas une validation)</span><b>' + sgn(lv.gross) + '</b></div>';
+      h += row("Marge brute", "LDA − LDR, sans coefficient · information seulement", sgn(lv.gross), lv.gross < 0 ? "bad" : "");
+      if (lv.need !== null){
+        var opTxt = (op0.unit === "m" ? "LDR + " + fmt(op0.val, 0) + " m" : "LDR × " + fmt(op0.val, 2).replace(".", ","));
+        h += row("Distance requise corrigée", opTxt + " · exigence " + (op0.ok && op0.src ? "déclarée validée (" + esc(op0.src) + ")" : "NON validée"), fmt(lv.need, 0) + " m", "");
+        h += row("Marge restante après coefficient", "LDA − distance requise corrigée", sgn(lv.opMargin), lv.opMargin < 0 ? "bad" : "");
+      } else h += row("Marge après coefficient", "aucune marge opérationnelle définie", "À DÉFINIR", "prv");
+      h += '<div class="margin"><span>Marge brute (sans coefficient)</span><b>' + sgn(lv.gross) + '</b></div>';
+      if (lv.opMargin !== null) h += '<div class="margin ' + (lv.opMargin < 0 ? "bad" : "ok") + '"><span>Marge restante après coefficient</span><b>' + sgn(lv.opMargin) + '</b></div>';
       if (lv.reasons.length) h += '<div class="provbox"><b>' + (lv.status === "bad" ? "MARGE INSUFFISANTE" : "À VÉRIFIER") + '</b><span class="provnote">Une marge brute positive ne vaut pas validation opérationnelle. ' + (lv.status === "bad" ? "Motif :" : "Points ouverts :") + '</span><div class="witems">' + lv.reasons.map(function(t){ return '<span class="whyitem prov">' + esc(t) + '</span>'; }).join("") + '</div></div>';
     }
+    if (lv && lv.status === "ok") h += '<p class="rnote warnc">⚠ Statut favorable = les critères saisis sont respectés. Ce n’est pas une autorisation d’atterrir : la décision et la responsabilité restent au commandant de bord (état réel de la piste, météo à jour, instructions de l’école et de l’exploitant).</p>';
     landWarn(st, lv).forEach(function(t){ h += '<p class="rnote warnc">⚠ ' + esc(t) + '</p>'; });
     if (!to && margin !== null) { /* le bloc de marge générique est remplacé par les lignes ci-dessus */ }
     else if (margin !== null){
@@ -1660,14 +1669,14 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     $(k + "-res").innerHTML = h;
     var cf = document.querySelector('[data-confirm="' + k + '"]');
     if (cf) cf.hidden = !(["elev", "rwy", c.av].some(function(f){ var s = fstate(k, f); return s === "chk" || s === "exp"; }));
-    return {margin: margin, state: state, cls: cls, label: slabel};
+    return {margin: margin, state: state, cls: cls, label: slabel, chip: lv && lv.gross !== null ? (lv.opMargin !== null ? sgn(lv.opMargin) + " après coef." : sgn(lv.gross) + " brute") : null};
   }
   function renderAll(){
     var sts = CARDS.map(cardStatus), res = CARDS.map(function(c, i){ return render(c, sts[i]); }), s = "";
     CARDS.forEach(function(c, i){
       var r = res[i], t = r.state === "idle" ? "non choisi" : (r.margin === null ? "incomplet" : (r.state === "prov" ? (r.margin >= 0 ? "provisoire · à vérifier" : "marge négative (provisoire)") : (r.margin >= 0 ? "marge suffisante" : "marge insuffisante")));
       if (r.label) t = r.label;
-      s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.margin === null ? "—" : sgn(r.margin)) + '</div><div class="s">' + t + '</div></button>';
+      s += '<button type="button" class="sumchip ' + r.cls + '" data-goto="' + c.k + '"><div class="t">' + c.sum + '</div><div class="m">' + (r.chip ? r.chip : (r.margin === null ? "—" : sgn(r.margin))) + '</div><div class="s">' + t + '</div></button>';
     });
     $("sum").innerHTML = s;
     CARDS.forEach(function(c){ renderWxStatus(c.k); });

@@ -64,5 +64,14 @@ Object.keys(file.airports || {}).forEach(icao => {
 });
 check("toutes les entrées de declared.json ont source, date d'effet et date de vérification", bad.length === 0, n + " donnée(s) officielle(s) enregistrée(s)" + (bad.length ? " : " + bad.join(" ; ") : ""));
 
+console.log("\n6. LDA publiées (AIP) : chaque aérodrome et chaque piste a sa propre valeur");
+const lda = (i, r) => { const x = L.declRwyOf(file, i, r); return x ? x.lda : null; };
+check("EBCI 06 : LDA 2600 m", lda("EBCI", "06") === 2600);
+check("EBCI 24 : LDA 2405 m", lda("EBCI", "24") === 2405);
+check("EBNM 06R et 24L (asphalte) : LDA 690 m", lda("EBNM", "06R") === 690 && lda("EBNM", "24L") === 690);
+check("EBNM 06L et 24R (herbe) : LDA 529 m", lda("EBNM", "06L") === 529 && lda("EBNM", "24R") === 529);
+check("EBNM : élévation 586 ft", L.declElevOf(file, "EBNM") && L.declElevOf(file, "EBNM").ft === 586);
+check("la LDA de Namur n'est pas celle de Charleroi", lda("EBNM", "06R") !== lda("EBCI", "06"));
+
 console.log("\n" + (fails ? fails + " échec(s)" : "Tout est conforme."));
 process.exit(fails ? 1 : 0);

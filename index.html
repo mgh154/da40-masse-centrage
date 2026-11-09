@@ -875,7 +875,16 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     delete wxi[k]; delete ints[k];
     $(k + "-rwys").innerHTML = ""; $(k + "-ints").innerHTML = ""; $(k + "-rwyinfo").textContent = ""; $(k + "-adinfo").textContent = ""; $(k + "-wxs").textContent = "";
   }
-  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur, wxi: wxi, ints: ints})); } catch(e){} }
+  /* Dégagement de référence de l'instructeur : au départ de Charleroi, Namur (piste asphaltée) est présélectionné tant que
+     l'utilisateur n'a pas choisi lui-même un dégagement (altman). Chaque LDA vient uniquement de son propre aérodrome / piste. */
+  var altman = false;
+  var DEF_ALT = {EBCI: {icao: "EBNM", rwy: "06R"}};
+  function defaultAlt(){
+    var d = cur.d && DEF_ALT[cur.d];
+    if (!d || altman || cur.x || $(pid("x", "ad")).value.trim() !== "") return;
+    selectAd("x", d.icao, d.rwy);
+  }
+  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur, wxi: wxi, ints: ints, altman: altman})); } catch(e){} }
 
   /* Valeurs AIP mémorisées sur cet appareil : provenance, piste, date et cycle AIRAC, source au moment de la saisie */
   function memLoad(){ try { mem = JSON.parse(localStorage.getItem(MEMKEY) || "{}") || {}; } catch(e){ mem = {}; } }
@@ -981,7 +990,7 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
     if (raw === "" || v === null) memDel(icao, rid, f); else memPut(icao, rid, f, v, "saisi", null);
   }
 
-  function selectAd(k, icao){
+  function selectAd(k, icao, defRwy){
     var same = cur[k] === icao;
     cur[k] = icao; $(pid(k, "ad")).value = icao; hideSug(k);
     if (!same) clearCard(k);
@@ -991,8 +1000,10 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
       adInfo(k);
       autoField(k, "elev");
       drawRwys(k);
+      if (defRwy && $(pid(k, "rwyid")).value === "" && rwyEnds(k).some(function(x){ return x.id === defRwy; })) selectRwy(k, defRwy);
       return checkWx(k, true);
     }).then(function(){ renderAll(); save(); });
+    if (k === "d") defaultAlt();
   }
   function adInfo(k){
     var p = $(k + "-adinfo"), icao = cur[k], a = ap && icao && ap.a[icao], d = declAp(icao);
@@ -1010,7 +1021,8 @@ button.sumchip{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:p
 
   function chipLabel(icao, e){
     var r = pickValue(srcFor(icao, e.id, "rwy"), Date.now());
-    return "Piste " + e.id + " · " + (r.v === null ? "orientation ?" : ("00" + Math.round(r.v)).slice(-3) + "°");
+    var sf = /asp|con|pem/i.test(e.surf || "") ? " · asphalte" : (/gras|turf/i.test(e.surf || "") ? " · herbe" : "");
+    return "Piste " + e.id + " · " + (r.v === null ? "orientation ?" : ("00" + Math.round(r.v)).slice(-3) + "°") + sf;
   }
   function drawRwys(k){
     var box = $(k + "-rwys"), sel = $(pid(k, "rwyid")).value, ends = rwyEnds(k), icao = cur[k];
@@ -1799,7 +1811,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var m = t.closest("#panel-performance") && /^([dax])-(.+)$/.exec(t.id || "");
     if (m){
       var k = m[1], f = m[2];
-      if (f === "ad") onAd(k, t);
+      if (f === "ad"){ if (k === "x") altman = t.value.trim() !== ""; onAd(k, t); }
       else if (f === "wx"){ wxi[k] = {manual: true}; parseWx(k, "man"); }
       else if (FIELDS.indexOf(f) >= 0){ if (t.value === "") delete prov[t.id]; else prov[t.id] = "man"; badge(t.id); memTyped(k, f, t.value); if (f === "rwy" && cur[k]) drawRwys(k); }
     }
@@ -1810,7 +1822,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var t = e.target;
     if (!t.closest) return;
     var li = t.closest(".sug li[data-icao]");
-    if (li){ selectAd(li.parentNode.id.split("-")[0], li.dataset.icao); return; }
+    if (li){ var lk = li.parentNode.id.split("-")[0]; if (lk === "x") altman = true; selectAd(lk, li.dataset.icao); return; }
     var ib = t.closest(".ints button");
     if (ib){ selectInt(ib.dataset.k, ib.dataset.int); renderAll(); save(); return; }
     var b = t.closest(".rwys button");
@@ -1832,7 +1844,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     var t = e.target;
     if (!t.id || !/^[dax]-ad$/.test(t.id)) return;
     var k = t.id.charAt(0), u = $(k + "-sug");
-    if (e.key === "Enter"){ var li = u.querySelector("li[data-icao]"); if (li){ e.preventDefault(); selectAd(k, li.dataset.icao); } }
+    if (e.key === "Enter"){ var li = u.querySelector("li[data-icao]"); if (li){ e.preventDefault(); if (k === "x") altman = true; selectAd(k, li.dataset.icao); } }
     else if (e.key === "Escape") hideSug(k);
   });
 
@@ -1843,7 +1855,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   } catch(e){}
   try {
     var pv = JSON.parse(localStorage.getItem(PKEY) || "null");
-    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; }
+    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; altman = !!pv.altman; }
     Object.keys(prov).forEach(function(id){ if (prov[id] === "conf") prov[id] = "chk"; });
     Object.keys(wxi).forEach(function(k){ if (wxi[k]) wxi[k].busy = false; });
   } catch(e){}

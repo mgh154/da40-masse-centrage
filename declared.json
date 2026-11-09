@@ -196,6 +196,62 @@
     }
    },
    "intersectionsRemark": "AD 2.13 : seule la TORA d'intersection est publiée ; la TODA d'intersection n'est pas publiée."
+  },
+  "EBNM": {
+   "name": "Namur-Suarlée",
+   "source": {
+    "label": "AIP Belgique (eAIP skeyes), EB AD 2 EBNM",
+    "url": "https://ops.skeyes.be/html/belgocontrol_static/eaip/eAIP_Main/html/eAIP/EB-AD-2.EBNM-en-GB.html"
+   },
+   "elev": {
+    "ft": 586,
+    "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBNM AD 2.2, élévation 586 FT",
+    "effective": "2026-10-29",
+    "verified": "2026-11-09"
+   },
+   "runways": {
+    "06R": {
+     "trueBearing": 64,
+     "tora": 690,
+     "toda": 690,
+     "asda": 690,
+     "lda": 690,
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBNM AD 2.12 (orientation vraie 064°) et AD 2.13 (distances déclarées) ; asphalte 690 x 25 m",
+     "effective": "2026-10-29",
+     "verified": "2026-11-09"
+    },
+    "24L": {
+     "trueBearing": 244,
+     "tora": 690,
+     "toda": 690,
+     "asda": 690,
+     "lda": 690,
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBNM AD 2.12 (orientation vraie 244°) et AD 2.13 (distances déclarées) ; asphalte 690 x 25 m",
+     "effective": "2026-10-29",
+     "verified": "2026-11-09"
+    },
+    "06L": {
+     "trueBearing": 64,
+     "tora": 629,
+     "toda": 629,
+     "asda": 629,
+     "lda": 529,
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBNM AD 2.12 (orientation vraie 064°) et AD 2.13 (distances déclarées) ; herbe 629 x 50 m",
+     "effective": "2026-10-29",
+     "verified": "2026-11-09"
+    },
+    "24R": {
+     "trueBearing": 244,
+     "tora": 629,
+     "toda": 629,
+     "asda": 629,
+     "lda": 529,
+     "src": "AIP Belgique (eAIP skeyes, édition valide du 29 OCT 2026, AIRAC 2611) : EBNM AD 2.12 (orientation vraie 244°) et AD 2.13 (distances déclarées) ; herbe 629 x 50 m",
+     "effective": "2026-10-29",
+     "verified": "2026-11-09"
+    }
+   },
+   "intersectionsRemark": "Aucune intersection publiée. Utilisation de l'aérodrome soumise à autorisation préalable de l'exploitant (AD 2.2, remarque 8)."
   }
  }
 }

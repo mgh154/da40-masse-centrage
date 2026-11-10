@@ -143,6 +143,8 @@ td.neg{color:var(--muted)}
 .rwys button{font:600 .95rem var(--cond);letter-spacing:.03em;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--input);color:var(--ink);cursor:pointer}
 .rwys button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:var(--on)}
 .pc .wxbox{margin-top:12px}
+/* Dégagement : on ne garde que l'essentiel (aérodrome, piste, élévation, vent/QNH/température, LDA, résultat). Les champs restent dans la page : le calcul est inchangé. */
+#x-wx, #x-wxs{display:none}.pc.xalt .wxbox,.pc.xalt .mwx,.pc.xalt #x-adinfo,.pc.xalt .f:has(#x-gust){display:none}
 .rescard{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:var(--input);padding:14px}
 .rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .rtitle{font:700 1.2rem var(--cond);letter-spacing:.07em}
@@ -1257,10 +1259,19 @@ body.afmzo{overflow:hidden}
       }
     }).catch(function(){ var w3 = wxi[k]; if (w3){ w3.busy = false; w3.fail = true; } }).then(function(){
       delete wxBusy[k];
+      repairCard(k);
       renderAll();
       return regLoad(k).then(function(){ renderAll(); save(); });
     });
     return wxBusy[k];
+  }
+  /* Carte restaurée avec un METAR mais sans valeurs (sauvegarde incomplète, ou METAR identique donc non réappliqué) : on relit le METAR
+     affiché et on remplit élévation, vent, QNH et température, étiquetés « auto ». Rien n'est écrasé : seulement si ces champs sont tous vides. */
+  function repairCard(k){
+    if (!cur[k]) return;
+    var w = wxi[k];
+    if ($(pid(k, "elev")).value.trim() === "") autoField(k, "elev");
+    if ($(pid(k, "wx")).value.trim() !== "" && !(w && w.manual) && ["wdir", "wspd", "qnh", "temp"].every(function(f){ return $(pid(k, f)).value.trim() === ""; })) parseWx(k, "auto");
   }
   function checkAllWx(force){ CARDS.forEach(function(c){ if (cur[c.k]) checkWx(c.k, force); }); }
   /* Affichage : heure UTC d'observation, âge réel, dernière récupération, alertes */
@@ -1620,7 +1631,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
   function cardHtml(c){
     var k = c.k, to = c.kind === "to", man = to ? "todr" : "ldr";
-    return '<section class="card pc" aria-labelledby="h-' + k + '"><h2 id="h-' + k + '">' + c.title + '</h2>'
+    return '<section class="card pc' + (k === "x" ? " xalt" : "") + '" aria-labelledby="h-' + k + '"><h2 id="h-' + k + '">' + c.title + '</h2>'
       + '<div class="f full srch"><label for="' + k + '-ad">Aérodrome (code OACI ou nom)</label>'
       + '<div class="in"><input id="' + k + '-ad" class="txt" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + k + '-sug" autocomplete="off" spellcheck="false" placeholder="Ex. EBCI ou Charleroi"></div>'
       + '<ul class="sug" id="' + k + '-sug" role="listbox" hidden></ul><p class="hint" id="' + k + '-adinfo"></p></div>'
@@ -1972,7 +1983,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
   function regHtml(st){
     var g = regwx[st.k];
-    if (!st.used || !g) return "";
+    if (!st.used || !g || st.k === "x") return ""; /* dégagement : pas de bloc météo régionale */
     var to = st.c.kind === "to", what = esc(st.c.title + " " + st.icao);
     if (!g.done) return '<div class="provbox alt"><b>MÉTÉO RÉGIONALE DE RÉFÉRENCE</b><span class="provnote">' + what + ' : aucun METAR propre. Recherche d’une station voisine ...</span></div>';
     if (!g.ok) return '<div class="provbox alt"><b>MÉTÉO RÉGIONALE DE RÉFÉRENCE · indisponible</b><span class="provnote">' + what + ' : aucun METAR propre, et aucune station voisine (' + esc(g.tried.join(", ") || "aucune connue") + ') avec une observation de moins de ' + WX_STALE_MIN + ' min. Saisis la météo relevée auprès de l’aérodrome (ATIS, tour, service météo) dans « Météo saisie à la main ».</span></div>';
@@ -2369,7 +2380,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
     FIELDS.forEach(function(f){ var id = pid(c.k, f); if (!$(id)) return; if (!prov[id] && $(id).value !== "") prov[id] = "man"; if (prov[id] && $(id).value === "") delete prov[id]; badge(id); });
     if (!cur[c.k]) return;
     if ($(pid(c.k, "ad")).value.trim() === "") $(pid(c.k, "ad")).value = cur[c.k]; /* le code OACI mémorisé reste visible après rechargement */
-    Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); renderAll(); save(); checkWx(c.k, true); });
+    Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); repairCard(c.k); renderAll(); save(); checkWx(c.k, true); });
   });
   /* Première ouverture : départ et arrivée à Charleroi (EBCI), dégagement Namur piste asphaltée (06R, via defaultAlt). Tout reste modifiable ;
      une seule fois par appareil, pour ne pas remplir de nouveau une carte que l'utilisateur a vidée. */

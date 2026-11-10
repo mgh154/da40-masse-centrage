@@ -31,6 +31,12 @@ check("libellé « ESTIMATION RÉGIONALE (non validée) » présent", /ESTIMATIO
 check("origine, distance, heure UTC et source affichées", /Origine :/.test(html) && /UTC/.test(regAll) && /source :/.test(regAll));
 check("fraîcheur limitée (≤ 120 min) et rayon borné", /REG_MAX_KM\s*=\s*\d+/.test(html) && /WX_STALE_MIN/.test(regAll));
 
+console.log("\n2b. Valeurs par défaut à la première ouverture");
+check("départ et arrivée EBCI présélectionnés une seule fois, sans écraser une saisie", /dfltDone/.test(html) && /selectAd\("d", "EBCI"\)/.test(html) && /selectAd\("a", "EBCI"\)/.test(html) && /!cur\.d && \$\(pid\("d", "ad"\)\)\.value\.trim\(\) === ""/.test(html));
+check("dégagement par défaut : Namur 06R (asphalte)", /DEF_ALT = \{EBCI: \{icao: "EBNM", rwy: "06R"\}\}/.test(html));
+
+check("la sauvegarde locale couvre les champs de saisie de l'onglet Performance (QNH, vent, température)", /var scope = "#panel-performance input, #panel-performance select, #panel-performance textarea/.test(html));
+
 console.log("\n3. Cache IEM");
 check("fetchIemC mémorise la promesse et oublie les échecs", /iemC\[icao\]\s*=\s*\{/.test(html) && /delete iemC\[icao\]/.test(html));
 

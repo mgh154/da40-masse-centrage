@@ -972,14 +972,14 @@ body.afmzo{overflow:hidden}
   }
   /* Dégagement de référence de l'instructeur : au départ de Charleroi, Namur (piste asphaltée) est présélectionné tant que
      l'utilisateur n'a pas choisi lui-même un dégagement (altman). Chaque LDA vient uniquement de son propre aérodrome / piste. */
-  var altman = false;
+  var altman = false, dfltDone = false;
   var DEF_ALT = {EBCI: {icao: "EBNM", rwy: "06R"}};
   function defaultAlt(){
     var d = cur.d && DEF_ALT[cur.d];
     if (!d || altman || cur.x || $(pid("x", "ad")).value.trim() !== "") return;
     selectAd("x", d.icao, d.rwy);
   }
-  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur, wxi: wxi, ints: ints, altman: altman})); } catch(e){} }
+  function saveProv(){ try { localStorage.setItem(PKEY, JSON.stringify({prov: prov, cur: cur, wxi: wxi, ints: ints, altman: altman, dflt: dfltDone})); } catch(e){} }
 
   /* Valeurs AIP mémorisées sur cet appareil : provenance, piste, date et cycle AIRAC, source au moment de la saisie */
   function memLoad(){ try { mem = JSON.parse(localStorage.getItem(MEMKEY) || "{}") || {}; } catch(e){ mem = {}; } }
@@ -2297,7 +2297,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
 
   function all(){ renderAll(); wind(); crp(); }
-  var scope = "#panel-performance select, #panel-performance textarea, #panel-wind input, #panel-crp input";
+  var scope = "#panel-performance input, #panel-performance select, #panel-performance textarea, #panel-wind input, #panel-crp input";
   function save(){
     try { var o = {}; Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ o[e.id] = e.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
     saveProv();
@@ -2361,15 +2361,24 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   } catch(e){}
   try {
     var pv = JSON.parse(localStorage.getItem(PKEY) || "null");
-    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; altman = !!pv.altman; }
+    if (pv){ prov = pv.prov || {}; cur = pv.cur || {}; wxi = pv.wxi || {}; ints = pv.ints || {}; altman = !!pv.altman; dfltDone = !!pv.dflt; }
     Object.keys(prov).forEach(function(id){ if (prov[id] === "conf") prov[id] = "chk"; });
     Object.keys(wxi).forEach(function(k){ if (wxi[k]) wxi[k].busy = false; });
   } catch(e){}
   CARDS.forEach(function(c){
     FIELDS.forEach(function(f){ var id = pid(c.k, f); if (!$(id)) return; if (!prov[id] && $(id).value !== "") prov[id] = "man"; if (prov[id] && $(id).value === "") delete prov[id]; badge(id); });
     if (!cur[c.k]) return;
+    if ($(pid(c.k, "ad")).value.trim() === "") $(pid(c.k, "ad")).value = cur[c.k]; /* le code OACI mémorisé reste visible après rechargement */
     Promise.all([loadAp(), loadDecl()]).then(function(){ reevaluate(c.k); adInfo(c.k); drawRwys(c.k); renderAll(); save(); checkWx(c.k, true); });
   });
+  /* Première ouverture : départ et arrivée à Charleroi (EBCI), dégagement Namur piste asphaltée (06R, via defaultAlt). Tout reste modifiable ;
+     une seule fois par appareil, pour ne pas remplir de nouveau une carte que l'utilisateur a vidée. */
+  if (!dfltDone){
+    dfltDone = true;
+    if (!cur.d && $(pid("d", "ad")).value.trim() === "") selectAd("d", "EBCI");
+    if (!cur.a && $(pid("a", "ad")).value.trim() === "") selectAd("a", "EBCI");
+    saveProv();
+  }
   /* Le METAR est revérifié à l'ouverture, au retour sur l'onglet, au retour du réseau, puis toutes les 5 min tant que la page est visible */
   setInterval(function(){ refreshBadges(); renderAll(); if (!document.hidden) checkAllWx(false); }, 60000);
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) checkAllWx(false); });

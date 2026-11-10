@@ -431,7 +431,6 @@ body.afmzo{overflow:hidden}
 <li><b>Volets :</b> atterrissage volets LDG seulement. Volets UP non calculés (AFM p. 5-22 à 5-25, distances plus longues).</li>
 <li><b>Piste disponible :</b> l’AFM demande une longueur au moins égale à la distance au passage des 50 ft.</li>
 </ul>
-<label class="check"><input type="checkbox" id="afmok" disabled><span>J’ai vérifié que l’AFM de <b id="afmac">l’avion choisi</b> correspond à ces graphiques (numéro de série, moteur, équipements, suppléments, révision).</span></label>
 </div></details>
 <details class="afmapp" id="opm"><summary id="opmsum">Marge opérationnelle d’atterrissage exigée (école ou réglementation)</summary>
 <div class="afmapp-b">
@@ -516,8 +515,7 @@ body.afmzo{overflow:hidden}
     g.mb = true;
     if (p.supp === "perf"){ g.msg = "Supplément d’AFM influençant les performances déclaré pour cet avion : ses corrections ne sont pas intégrées au site. Aucune distance n’est calculée ; saisis la valeur de l’AFM de l’avion."; return g; }
     g.sup = true;
-    g.complete = p.eng !== "" && p.supp !== "";
-    if (!g.complete) g.msg = "Fiche de l’avion incomplète : indique le moteur et les suppléments (onglet Masse & centrage, « Fiche de l’avion »).";
+    g.complete = true; /* les graphiques DA 40 D intégrés valent pour tous les avions du site ; seule une déclaration contraire (autre version, moteur non couvert, supplément) les bloque */
     return g;
   }
   function acpApply(r){
@@ -1441,16 +1439,13 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   /* Applicabilité des graphiques et graphique de lecture dans chaque carte de résultat */
   var AFM_KEY = "da40-afm-v1", afmOpen = {};
   function afmConf(){ try { return JSON.parse(localStorage.getItem(AFM_KEY) || "{}") || {}; } catch(e){ return {}; } }
-  function afmApp(){ var ac = window.__ac || "", g = acGate(ac); return {ac: ac, gate: g, ok: !!(ac && g.sup && g.complete && afmValid(afmConf()[ac], Date.now()))}; }
+  function afmApp(){ var ac = window.__ac || "", g = acGate(ac); return {ac: ac, gate: g, ok: !!(ac && g.sup && g.complete)}; }
   function afmChip(){
     var a = afmApp(), s = $("afmsum");
     if (!s) return;
-    s.textContent = "Conditions d’application des graphiques AFM · DA 40 D rév. 7" + (a.ac ? " · " + a.ac + (a.ok ? " : confirmé" : " : à confirmer") : "");
+    s.textContent = "Conditions d’application des graphiques AFM · DA 40 D rév. 7" + (a.ac ? " · " + a.ac + (a.ok ? " : applicable" : " : non applicable") : "");
     s.className = a.ac && !a.ok ? "warnc" : (a.ok ? "okc" : "");
-    $("afmac").textContent = a.ac || "l’avion choisi";
     if (a.ac && !a.gate.sup){ s.textContent += " — non pris en charge : " + a.gate.msg; s.className = "warnc"; }
-    else if (a.ac && !a.gate.complete){ s.textContent += " — fiche de l’avion incomplète"; s.className = "warnc"; }
-    $("afmok").checked = a.ok; $("afmok").disabled = !(a.ac && a.gate.sup && a.gate.complete);
   }
   var lastCalc = {};
   function afmCharts(){
@@ -1614,7 +1609,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   function afmExtra(c, r){
     var a = afmApp(), to = c.kind === "to";
     var h = '<p class="rnote afmline ' + (a.ok ? "okc" : "warnc") + '">Graphiques : AFM DA 40 D (Doc. 6.01.05-E, rév. 7), ' + (to ? "décollage, puissance MAX, volets T/O, p. 5-12" : "atterrissage, moteur au ralenti, volets LDG, p. 5-20") + ", distance au passage des 50 ft, piste revêtue sèche et plane. "
-      + (a.ac ? (a.ok ? a.ac + " : correspondance avec l’AFM de l’avion confirmée par toi." : a.ac + " : correspondance avec l’AFM de l’avion à confirmer (voir « Conditions d’application des graphiques AFM »).") : "") + '</p>';
+      + (a.ac ? (a.ok ? "Ces graphiques valent pour " + a.ac + " (tous les avions du site sont des DA 40 D)." : "") : "") + '</p>';
     return h;
   }
 
@@ -1733,7 +1728,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
       else if (!$("confirm").checked) put("mass", "prov", "Contrôler la masse à vide et son bras (onglet Masse & centrage)", "tab:mb#confirm", "masse à vide non contrôlée");
       else put("mass", "ok");
       var a = afmApp();
-      put("afm", a.ok ? "ok" : "prov", a.gate.sup && !a.gate.complete ? a.gate.msg : "Confirmer que l’AFM de " + (a.ac || "l’avion") + " correspond aux graphiques DA 40 D", a.gate.sup && !a.gate.complete ? "tab:mb" : "afm", a.gate.sup && !a.gate.complete ? "fiche de l’avion incomplète" : "AFM non confirmée");
+      put("afm", a.ok ? "ok" : "prov", "Graphiques AFM non applicables à " + (a.ac || "l’avion"), "tab:mb", "AFM non applicable");
     }
     /* distance disponible */
     s = fstate(k, c.av);
@@ -2302,7 +2297,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
 
   function all(){ renderAll(); wind(); crp(); }
-  var scope = "#panel-performance input:not(#afmok), #panel-performance select, #panel-performance textarea, #panel-wind input, #panel-crp input";
+  var scope = "#panel-performance select, #panel-performance textarea, #panel-wind input, #panel-crp input";
   function save(){
     try { var o = {}; Array.prototype.forEach.call(document.querySelectorAll(scope), function(e){ o[e.id] = e.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
     saveProv();
@@ -2316,7 +2311,7 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   }
   document.addEventListener("input", function(e){
     var t = e.target;
-    if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp") || t.id === "afmok") return;
+    if (!t.closest || !t.closest("#panel-performance, #panel-wind, #panel-crp")) return;
     var m = t.closest("#panel-performance") && /^([dax])-(.+)$/.exec(t.id || "");
     if (m){
       var k = m[1], f = m[2];
@@ -2382,13 +2377,6 @@ var AFM = {"to":{"p1":[[[40.0,543.0],[60.0,536.0],[80.0,529.0],[100.0,522.0],[14
   window.addEventListener("online", function(){ checkAllWx(true); });
   try { localStorage.removeItem("da40-tpl-v1"); if (window.indexedDB) indexedDB.deleteDatabase("da40-newcag"); } catch(e){}
   ["d-elev", "a-elev", "x-elev", "d-temp", "a-temp", "x-temp", "w-var", "c-oat"].forEach(addSign);
-  $("afmok").addEventListener("change", function(){
-    var ac = window.__ac, c = afmConf();
-    if (!ac) return;
-    if ($("afmok").checked) c[ac] = {d: ymd(Date.now()), ref: AFM_REF}; else delete c[ac];
-    try { localStorage.setItem(AFM_KEY, JSON.stringify(c)); } catch(e){}
-    renderAll();
-  });
   document.addEventListener("toggle", function(e){ var d = e.target; if (d && d.dataset && d.dataset.afm) afmOpen[d.dataset.afm] = d.open; }, true);
   document.addEventListener("click", function(e){
     var t = e.target;

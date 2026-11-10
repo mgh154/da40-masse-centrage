@@ -26,7 +26,7 @@ console.log("\n3. Fiche par défaut : jamais devinée");
 delete store["da40-acp-v1"];
 let g = lib.acGate("F-GUPL");
 check("version par défaut DA 40 D, moteur et suppléments à préciser", g.p.ver === "DA40D" && g.p.eng === "" && g.p.supp === "");
-check("calcul autorisé mais fiche incomplète (reste provisoire)", g.sup && !g.complete && /incomplète/.test(g.msg));
+check("par défaut : les graphiques DA 40 D valent pour les avions du site, sans fiche à compléter", g.sup && g.complete && g.msg === "");
 
 console.log("\n4. Version, moteur, suppléments");
 setProf("F-GUPL", {ver: "DA40D", eng: "TAE 125-02-99", supp: "none"});
@@ -52,7 +52,7 @@ const calls = html.split(/\r?\n/).filter(l => /[^.\w]afm\(/.test(l) && !/functio
 check("tous les appels à afm() (carte, estimation régionale) passent par le verrou", calls.length === 2 && calls.every(l => /\b(gate|gt)\.sup \? afm\(/.test(l)), calls.length + " appel(s) direct(s)");
 const altBody = html.slice(html.indexOf("function altRwys("), html.indexOf("function altHtml("));
 check("le scénario d'une autre piste est coupé si le verrou refuse (altRwys)", /acGate\(window\.__ac \|\| ""\)\.sup/.test(altBody) && /afm\("ld"/.test(altBody));
-check("la confirmation AFM exige une fiche complète et prise en charge", /g\.sup && g\.complete && afmValid/.test(html));
+check("applicabilité AFM : seulement si l'avion est pris en charge (plus de confirmation manuelle)", /ok: !!\(ac && g\.sup && g\.complete\)/.test(html) && !/id="afmok"/.test(html));
 check("l'enveloppe de masse dépend de la version (acpApply)", /MTOM = env\.MTOM/.test(html) && /acpApply\(state\.ac\)/.test(html));
 
 console.log("\n" + (fails ? fails + " échec(s)" : "Tout est conforme."));
